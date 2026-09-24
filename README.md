@@ -116,3 +116,47 @@ Para rodar a mesma validação no ambiente de desenvolvimento local:
 powershell -ExecutionPolicy Bypass -File .\run_ci_local.ps1
 ```
 
+---
+
+## 7. Deploy em Kubernetes & OpenShift (Passo 5)
+
+O laboratório disponibiliza manifests declarativos compilados via Kustomize e um Helm Chart pronto para clusters gerenciados (EKS, GKE, AKS, OpenShift e K3s):
+
+### Opção A: Validação e Deploy via Script Automatizado
+```powershell
+# Valida a compilação offline dos manifests Kustomize
+powershell -ExecutionPolicy Bypass -File .\deploy_k8s.ps1 -Action validate
+
+# Submete ao cluster ativo (com Rota OpenShift opcional)
+powershell -ExecutionPolicy Bypass -File .\deploy_k8s.ps1 -Action apply -IncludeOpenShiftRoute
+```
+
+### Opção B: Deploy Nativo via `kubectl`
+```bash
+# Aplica ConfigMap, Service, Deployments, HPA e Ingress
+kubectl apply -k k8s/
+
+# Acompanha o rollout com sondas de startup e liveness
+kubectl rollout status deployment/arkhe-card-auth-lab
+```
+
+### Opção C: Deploy via Helm Chart
+```bash
+helm install arkhe-benchmark ./helm/arkhe-benchmark-lab
+```
+
+---
+
+## 8. Matriz Expandida de Injeção de Caos (Passo 6)
+
+O painel interativo e os endpoints de caos suportam **7 cenários físicos** controlados por 1 clique ou comandos via WebSocket:
+
+1. **Operação Nominal:** $W_s = 45\text{ms}$, ocupação de pool $\approx 10\%$, SLA 100%.
+2. **Drift Silencioso:** $W_s = 255\text{ms}$, ocupação de pool sobe para $68\%$, sem timeouts imediatos.
+3. **Ruptura de Concorrência:** $W_s = 420\text{ms}$, demanda $> 30$ conexões, fila explode, timeouts em cascata.
+4. **Autocura / Restauração:** Retorno imediato ao estado nominal de fábrica com estabilização do Burn Rate.
+5. **Gargalo de HSM / Criptografia:** $+120\text{ms}$ de CPU contention na validação EMV/PCI de limites do cartão.
+6. **Flapping na Adquirente:** $35\%$ de falhas intermitentes com retries na borda (simulação de Circuit Breaker aberto).
+7. **Jitter de Rede Assimétrico:** Distribuição com cauda longa pesada ($10\%$ das transações sofrem atraso de $1.200\text{ms}$).
+
+
