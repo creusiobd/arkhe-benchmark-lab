@@ -1,0 +1,62 @@
+# Configurações Padrão para o ARKHÉ Benchmark Lab
+
+lab:
+  image:
+    repository: arkhe-card-auth-lab
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  port: 8080
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+
+loadGenerator:
+  enabled: true
+  image:
+    repository: arkhe-load-generator
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  targetTPS: 80
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/websocket-services: arkhe-card-auth-lab-service
+  hosts:
+    - host: arkhe-lab.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+openshift:
+  enabled: false
+  route:
+    timeout: 3600s
+    tls:
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect

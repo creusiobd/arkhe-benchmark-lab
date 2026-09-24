@@ -1,0 +1,33 @@
+{{- if .Values.loadGenerator.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "arkhe.fullname" . }}-loadgen
+  labels:
+    {{- include "arkhe.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ include "arkhe.name" . }}-loadgen
+    app.kubernetes.io/component: load-generator
+spec:
+  replicas: {{ .Values.loadGenerator.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "arkhe.name" . }}-loadgen
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "arkhe.name" . }}-loadgen
+    spec:
+      containers:
+        - name: load-generator
+          image: "{{ .Values.loadGenerator.image.repository }}:{{ .Values.loadGenerator.image.tag }}"
+          imagePullPolicy: {{ .Values.loadGenerator.image.pullPolicy }}
+          env:
+            - name: TARGET_URL
+              value: "http://{{ include "arkhe.fullname" . }}-service:{{ .Values.service.port }}/v1/charge"
+            - name: TARGET_TPS
+              value: "{{ .Values.loadGenerator.targetTPS }}"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          resources:
+            {{- toYaml .Values.loadGenerator.resources | nindent 12 }}
+{{- end }}

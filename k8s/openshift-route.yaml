@@ -1,0 +1,19 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: arkhe-cockpit-route
+  labels:
+    app.kubernetes.io/name: arkhe-card-auth-lab
+    app.kubernetes.io/part-of: arkhe-sentinel-ecosystem
+  annotations:
+    haproxy.router.openshift.io/timeout: 3600s
+spec:
+  to:
+    kind: Service
+    name: arkhe-card-auth-lab-service
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

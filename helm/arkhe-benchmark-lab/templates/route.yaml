@@ -1,0 +1,21 @@
+{{- if .Values.openshift.enabled }}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ include "arkhe.fullname" . }}-route
+  labels:
+    {{- include "arkhe.labels" . | nindent 4 }}
+  annotations:
+    haproxy.router.openshift.io/timeout: {{ .Values.openshift.route.timeout | default "3600s" }}
+spec:
+  to:
+    kind: Service
+    name: {{ include "arkhe.fullname" . }}-service
+    weight: 100
+  port:
+    targetPort: http
+  {{- with .Values.openshift.route.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

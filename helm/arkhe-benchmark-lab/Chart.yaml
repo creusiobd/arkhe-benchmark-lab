@@ -1,0 +1,16 @@
+apiVersion: v2
+name: arkhe-benchmark-lab
+description: Helm Chart de Produção para o Laboratório de Validação e Torre de Controle ARKHÉ SENTINEL
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - arkhe
+  - fintech
+  - little-law
+  - sre
+  - opentelemetry
+  - observability
+maintainers:
+  - name: ARKHÉ Engineering
+    email: engineering@arkhe.io

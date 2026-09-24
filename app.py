@@ -1,5 +1,6 @@
 import asyncio
 import os
+import random
 import time
 import uuid
 from collections import deque
@@ -122,6 +123,11 @@ class SimulationEnvironment:
         self.prevented_failures_count: int = 0
         self.prevented_downtime_sec: float = 0.0
 
+        # Vetores Adicionais de Caos (Passo 6)
+        self.hsm_extra_delay_ms: float = 0.0
+        self.acquirer_flapping_rate: float = 0.0
+        self.network_jitter_p99_active: bool = False
+
     def add_log(self, message: str, level: str = "info"):
         timestamp_str = time.strftime("%H:%M:%S")
         self.event_logs.appendleft({
@@ -222,9 +228,13 @@ async def stage_validate_limits(intent: PaymentIntent) -> float:
     t0 = time.perf_counter()
     with tracer.start_as_current_span("validation.card_and_limits") as span:
         _ = [hash(intent.card_token + str(i)) for i in range(1500)]
+        if sim_env.hsm_extra_delay_ms > 0:
+            await asyncio.sleep(sim_env.hsm_extra_delay_ms / 1000.0)
+            span.set_attribute("validation.hsm_delay_ms", sim_env.hsm_extra_delay_ms)
+        else:
+            await asyncio.sleep(0.004)
         elapsed = (time.perf_counter() - t0) * 1000.0
         span.set_attribute("validation.cpu_cost_ms", elapsed)
-        await asyncio.sleep(0.004)
     return (time.perf_counter() - t0) * 1000.0
 
 async def stage_antifraud_analysis(intent: PaymentIntent) -> Tuple[float, float, float]:
@@ -288,11 +298,22 @@ async def stage_card_authorization(intent: PaymentIntent, risk_score: float) -> 
     with tracer.start_as_current_span("authorizer.network") as span:
         span.set_attribute("authorizer.network_name", "CIELO_SIMULATOR")
         
+        # 1. Simulação de Flapping / Circuit Breaker da Adquirente Externa
+        if sim_env.acquirer_flapping_rate > 0 and random.random() < sim_env.acquirer_flapping_rate:
+            await asyncio.sleep(0.120)
+            span.set_attribute("authorizer.error", "ACQUIRER_FLAPPING_503")
+            return "TECHNICAL_ERROR", (time.perf_counter() - t0) * 1000.0
+
         if risk_score > 85:
             span.set_attribute("authorization.declined_reason", "HIGH_RISK")
             return "DECLINED_ANTIFRAUD", (time.perf_counter() - t0) * 1000.0
 
-        await asyncio.sleep(0.080)
+        # 2. Simulação de Jitter Assimétrico de Rede (Cauda Longa P99)
+        if sim_env.network_jitter_p99_active and random.random() < 0.10:
+            await asyncio.sleep(1.200) # Outlier extremo na cauda P99
+            span.set_attribute("network.jitter_outlier", True)
+        else:
+            await asyncio.sleep(0.080)
 
         token_num = "".join([c for c in intent.card_token if c.isdigit()])
         if token_num and (int(token_num[-3:]) % 25 == 0):
@@ -372,6 +393,23 @@ async def process_charge(
                         "stages": stages_breakdown
                     })
                     return {"status": "AUTHORIZED", "transaction_id": tx_id, "latency_ms": elapsed}
+                elif auth_result == "TECHNICAL_ERROR":
+                    sim_env.technical_timeouts_total += 1
+                    root_span.set_attribute("payment.technical_error", "ACQUIRER_FLAPPING")
+                    elapsed = (time.perf_counter() - global_start) * 1000.0
+                    sim_env.recent_latencies.append(elapsed)
+                    sim_env.recent_journeys.appendleft({
+                        "tx_id": tx_id,
+                        "attempt_id": attempt_id,
+                        "card_token": intent.card_token,
+                        "amount_brl": round(intent.amount_cents / 100.0, 2),
+                        "timestamp": time.strftime("%H:%M:%S"),
+                        "total_ms": round(elapsed, 1),
+                        "status": "ACQUIRER_503",
+                        "sla_impact": "BREACH_CRITICAL",
+                        "stages": stages_breakdown
+                    })
+                    raise HTTPException(status_code=503, detail="Acquirer network flapping / circuit breaker open")
                 else:
                     sim_env.business_declined_total += 1
                     root_span.set_attribute("payment.business_decline", auth_result)
@@ -685,6 +723,9 @@ async def trigger_scenario(scenario_name: str):
     if scenario_name == "nominal":
         sim_env.antifraud_latency_base_ms = 45.0
         sim_env.antifraud_jitter_ms = 10.0
+        sim_env.hsm_extra_delay_ms = 0.0
+        sim_env.acquirer_flapping_rate = 0.0
+        sim_env.network_jitter_p99_active = False
         sim_env.scenario_description = "1. Operação Nominal (45ms, Pool ~10%)"
         sim_env.mitigation_active = False
         sim_env.mitigation_fast_path_active = False
@@ -694,18 +735,27 @@ async def trigger_scenario(scenario_name: str):
     elif scenario_name == "drift":
         sim_env.antifraud_latency_base_ms = 255.0
         sim_env.antifraud_jitter_ms = 15.0
+        sim_env.hsm_extra_delay_ms = 0.0
+        sim_env.acquirer_flapping_rate = 0.0
+        sim_env.network_jitter_p99_active = False
         sim_env.scenario_description = "2. Drift Silencioso no Antifraude (255ms, Pool ~68%)"
         sim_env.add_log("Caos Injetado: Drift no Antifraude para 255ms.", "warning")
 
     elif scenario_name == "rupture":
         sim_env.antifraud_latency_base_ms = 420.0
         sim_env.antifraud_jitter_ms = 25.0
+        sim_env.hsm_extra_delay_ms = 0.0
+        sim_env.acquirer_flapping_rate = 0.0
+        sim_env.network_jitter_p99_active = False
         sim_env.scenario_description = "3. Ruptura de Concorrência (420ms, Demanda > 30 slots)"
         sim_env.add_log("Caos Injetado: Ruptura de Concorrência (420ms).", "danger")
 
     elif scenario_name == "recover":
         sim_env.antifraud_latency_base_ms = 45.0
         sim_env.antifraud_jitter_ms = 10.0
+        sim_env.hsm_extra_delay_ms = 0.0
+        sim_env.acquirer_flapping_rate = 0.0
+        sim_env.network_jitter_p99_active = False
         sim_env.scenario_description = "4. Autocura / Restauração do Sistema (45ms)"
         sim_env.t_sentinel_alert = None
         sim_env.t_sre_alert = None
@@ -715,6 +765,21 @@ async def trigger_scenario(scenario_name: str):
         sim_env.mitigation_fast_path_active = False
         antifraud_pool.scale_to(30)
         sim_env.add_log("Sistema restaurado para estado saudável de fábrica.", "success")
+
+    elif scenario_name == "hsm_saturation":
+        sim_env.hsm_extra_delay_ms = 120.0
+        sim_env.scenario_description = "5. Gargalo de HSM / Criptografia (120ms CPU Contention)"
+        sim_env.add_log("Caos Injetado: Gargalo de HSM / Criptografia (120ms).", "danger")
+
+    elif scenario_name == "acquirer_flapping":
+        sim_env.acquirer_flapping_rate = 0.35
+        sim_env.scenario_description = "6. Flapping na Adquirente Externa (35% Falhas / Flapping)"
+        sim_env.add_log("Caos Injetado: Flapping na Adquirente Externa (35%).", "warning")
+
+    elif scenario_name == "network_jitter":
+        sim_env.network_jitter_p99_active = True
+        sim_env.scenario_description = "7. Jitter Assimétrico de Rede (P99 Outlier > 1200ms)"
+        sim_env.add_log("Caos Injetado: Jitter Assimétrico de Rede P99.", "warning")
     else:
         raise HTTPException(status_code=400, detail="Cenário desconhecido")
 
@@ -728,6 +793,9 @@ async def trigger_scenario(scenario_name: str):
 async def reset_simulation():
     sim_env.antifraud_latency_base_ms = 45.0
     sim_env.antifraud_jitter_ms = 10.0
+    sim_env.hsm_extra_delay_ms = 0.0
+    sim_env.acquirer_flapping_rate = 0.0
+    sim_env.network_jitter_p99_active = False
     sim_env.unique_transactions_total = 0
     sim_env.attempts_total = 0
     sim_env.approved_total = 0
@@ -1126,6 +1194,18 @@ async def serve_cockpit():
                 <button class="btn-scenario" id="btn-recover" onclick="setScenario('recover')">
                     🔄 4. Restaurar / Autocura
                     <span class="sub">Volta para 45ms nominais • Estabiliza Burn Rate</span>
+                </button>
+                <button class="btn-scenario" id="btn-hsm_saturation" onclick="setScenario('hsm_saturation')">
+                    ⚡ 5. Gargalo de HSM / Cripto
+                    <span class="sub">+120ms na validação EMV • Contenção de CPU • Fila no Gateway</span>
+                </button>
+                <button class="btn-scenario" id="btn-acquirer_flapping" onclick="setScenario('acquirer_flapping')">
+                    🌪️ 6. Flapping na Adquirente
+                    <span class="sub">35% erros 503 intermitentes • Tempestade de Retries</span>
+                </button>
+                <button class="btn-scenario" id="btn-network_jitter" onclick="setScenario('network_jitter')">
+                    🌊 7. Jitter de Rede (P99 Outlier)
+                    <span class="sub">10% com atraso de 1200ms • Saturação de conexões</span>
                 </button>
             </div>
         </div>

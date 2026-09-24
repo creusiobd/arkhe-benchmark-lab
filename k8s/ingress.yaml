@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: arkhe-cockpit-ingress
+  labels:
+    app.kubernetes.io/name: arkhe-card-auth-lab
+    app.kubernetes.io/part-of: arkhe-sentinel-ecosystem
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/websocket-services: arkhe-card-auth-lab-service
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: arkhe-card-auth-lab-service
+                port:
+                  number: 8080

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: arkhe-card-auth-lab-service
+  labels:
+    app.kubernetes.io/name: arkhe-card-auth-lab
+    app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: arkhe-sentinel-ecosystem
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: arkhe-card-auth-lab
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP

@@ -47,10 +47,26 @@ class TestApiEndpoints(unittest.TestCase):
         self.assertEqual(res.json()["scenario"], "drift")
         self.assertEqual(sim_env.current_scenario, "drift")
 
+        # Aciona novos cenários expandidos
+        res_hsm = self.client.post("/admin/chaos/scenario/hsm_saturation")
+        self.assertEqual(res_hsm.status_code, 200)
+        self.assertEqual(sim_env.hsm_extra_delay_ms, 120.0)
+
+        res_flap = self.client.post("/admin/chaos/scenario/acquirer_flapping")
+        self.assertEqual(res_flap.status_code, 200)
+        self.assertEqual(sim_env.acquirer_flapping_rate, 0.35)
+
+        res_jit = self.client.post("/admin/chaos/scenario/network_jitter")
+        self.assertEqual(res_jit.status_code, 200)
+        self.assertTrue(sim_env.network_jitter_p99_active)
+
         # Reseta para nominal
         res_reset = self.client.post("/admin/chaos/reset")
         self.assertEqual(res_reset.status_code, 200)
         self.assertEqual(sim_env.current_scenario, "nominal")
+        self.assertEqual(sim_env.hsm_extra_delay_ms, 0.0)
+        self.assertEqual(sim_env.acquirer_flapping_rate, 0.0)
+        self.assertFalse(sim_env.network_jitter_p99_active)
 
     def test_mitigation_toggle(self):
         # Garante estado inicial desativado
