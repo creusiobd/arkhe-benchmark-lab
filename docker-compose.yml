@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  card-auth-lab:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: arkhe-card-auth-lab:latest
+    container_name: arkhe-card-auth-lab
+    ports:
+      - "8080:8080"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PORT=8080
+      - OTEL_CONSOLE_EXPORT=false
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1024M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/telemetry/as_of"]
+      interval: 3s
+      timeout: 2s
+      retries: 5
+      start_period: 3s
+    restart: unless-stopped
+    networks:
+      - arkhe-network
+
+  load-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile.load
+    image: arkhe-load-generator:latest
+    container_name: arkhe-load-generator
+    depends_on:
+      card-auth-lab:
+        condition: service_healthy
+    environment:
+      - TARGET_URL=http://card-auth-lab:8080/v1/charge
+      - TARGET_TPS=80
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - arkhe-network
+
+  benchmark-runner:
+    image: arkhe-card-auth-lab:latest
+    container_name: arkhe-benchmark-runner
+    profiles: ["benchmark"]
+    depends_on:
+      card-auth-lab:
+        condition: service_healthy
+    environment:
+      - LAB_HOST=http://card-auth-lab:8080
+      - PYTHONUNBUFFERED=1
+      - BENCHMARK_SCALE=${BENCHMARK_SCALE:-10.0}
+      - BENCHMARK_ROUNDS=${BENCHMARK_ROUNDS:-3}
+    volumes:
+      - ./:/app/artifacts
+    command: ["python", "benchmark_runner.py"]
+    networks:
+      - arkhe-network
+
+networks:
+  arkhe-network:
+    driver: bridge

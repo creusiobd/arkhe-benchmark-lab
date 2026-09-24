@@ -1,0 +1,131 @@
+name: ARKHÉ CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-quality:
+    name: Code Quality & Syntax Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Linting Tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+
+      - name: Run Syntax & Lint Checks
+        run: |
+          ruff check . --select=E9,F63,F7,F82
+
+  unit-and-mathematical-tests:
+    name: Unit & Queue Physics Tests (Py ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: lint-and-quality
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Execute Full Test Suite (20 Automated Tests)
+        run: |
+          python -m unittest discover tests -v
+
+  docker-compose-e2e:
+    name: Docker Compose Build & E2E Validation
+    runs-on: ubuntu-latest
+    needs: unit-and-mathematical-tests
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install Client Test Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install httpx websockets numpy scipy
+
+      - name: Build Docker Stack
+        run: |
+          docker compose build
+
+      - name: Start ARKHÉ Cluster (Daemon Mode)
+        run: |
+          docker compose up -d
+
+      - name: Wait for Card-Auth-Lab Healthcheck
+        run: |
+          echo "Aguardando microserviço atingir estado saudável..."
+          for i in {1..30}; do
+            status=$(docker inspect --format='{{json .State.Health.Status}}' arkhe-card-auth-lab 2>/dev/null || echo '"starting"')
+            if [ "$status" = '"healthy"' ]; then
+              echo "✓ arkhe-card-auth-lab está HEALTHY!"
+              break
+            fi
+            echo "Tentativa $i: status=$status..."
+            sleep 1
+          done
+
+      - name: Test WebSocket Streaming (10 FPS @ <15ms)
+        run: |
+          python test_websocket_stream.py
+
+      - name: Test Closed-Loop Autonomous Mitigation
+        run: |
+          python test_autonomous_mitigation.py
+
+      - name: Run Headless Benchmark Runner (Statistical Audit)
+        run: |
+          docker compose --profile benchmark run --rm benchmark-runner
+
+      - name: Upload Scientific Benchmark Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arkhe-audit-dossier
+          path: |
+            benchmark_results.json
+            arkhe_benchmark_report.html
+          retention-days: 14
+
+      - name: Teardown Docker Cluster
+        if: always()
+        run: |
+          docker compose down -v

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARKHÉ SENTINEL — Monitoramento de Trajetória em Tempo Real</title>
+    <style>
+        :root {
+            --bg: #090d13;
+            --panel: #131923;
+            --border: #212c3d;
+            --text: #e6edf3;
+            --muted: #8b949e;
+            --arkhe: #388bfd;
+            --green: #3fb950;
+            --yellow: #d29922;
+            --red: #f85149;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 24px;
+        }
+        .container {
+            max-width: 1250px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 18px;
+            margin-bottom: 24px;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #1f6feb, #8957e5);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 20px;
+        }
+        .live-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(46, 160, 67, 0.15);
+            border: 1px solid rgba(46, 160, 67, 0.4);
+            border-radius: 20px;
+            color: var(--green);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 10px var(--green);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .card-title {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .metric {
+            font-size: 34px;
+            font-weight: 700;
+            margin: 6px 0;
+        }
+        .status-pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .pill-healthy { background: rgba(63, 185, 80, 0.2); color: var(--green); border: 1px solid var(--green); }
+        .pill-attention { background: rgba(210, 153, 34, 0.2); color: var(--yellow); border: 1px solid var(--yellow); }
+        .pill-critical { background: rgba(248, 81, 73, 0.2); color: var(--red); border: 1px solid var(--red); }
+        .bar-container {
+            width: 100%;
+            height: 10px;
+            background: #21262d;
+            border-radius: 5px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            transition: width 0.4s ease, background-color 0.4s ease;
+        }
+        .comparison-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .lead-time-box {
+            background: linear-gradient(135deg, rgba(56, 139, 253, 0.1), rgba(137, 87, 229, 0.1));
+            border: 1px solid rgba(56, 139, 253, 0.4);
+            border-radius: 10px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .lead-time-val {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--arkhe);
+            margin: 8px 0;
+        }
+        .evidence-item {
+            background: #18202c;
+            border-left: 3px solid var(--arkhe);
+            padding: 12px 16px;
+            border-radius: 0 6px 6px 0;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <div class="brand-logo">A</div>
+                <div>
+                    <h2 style="margin:0; font-size: 20px;">ARKHÉ SENTINEL — Torre de Controle</h2>
+                    <span style="font-size: 13px; color: var(--muted);">Monitoramento Ativo de Autorizações de Cartão Simultâneas</span>
+                </div>
+            </div>
+            <div class="live-tag">
+                <span class="pulse"></span>
+                <span>MONITORAMENTO ATIVO</span>
+            </div>
+        </header>
+
+        <!-- Banner de Antecedência -->
+        <div class="lead-time-box">
+            <div style="font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;">
+                Vantagem Operacional do ARKHÉ sobre o Baseline SRE
+            </div>
+            <div class="lead-time-val" id="lead-time-display">+0.0s</div>
+            <div style="font-size: 15px; color: #a5d6ff;" id="lead-time-desc">
+                Aguardando convergência de tráfego...
+            </div>
+        </div>
+
+        <!-- Métricas em Tempo Real -->
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Sentinel Risk Score</div>
+                <div class="metric" id="risk-score">0.0</div>
+                <span class="status-pill pill-healthy" id="risk-pill">HEALTHY</span>
+                <div class="bar-container">
+                    <div class="bar-fill" id="risk-bar" style="width: 0%; background: var(--green);"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Saturação do Pool Antifraude (Lei de Little)</div>
+                <div class="metric" id="pool-in-use">0 / 30</div>
+                <span style="font-size: 13px; color: var(--muted);" id="pool-pct">0% de ocupação</span>
+                <div class="bar-container">
+                    <div class="bar-fill" id="pool-bar" style="width: 0%; background: var(--arkhe);"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Tráfego de Cartões Simultâneo</div>
+                <div class="metric" id="traffic-txs">0</div>
+                <span style="font-size: 13px; color: var(--muted);" id="traffic-sub">80 TPS Nominais</span>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Latência P95 e Fila</div>
+                <div class="metric" id="latency-p95">0 ms</div>
+                <span style="font-size: 13px; color: var(--muted);" id="queue-waiters">0 requisições aguardando</span>
+            </div>
+        </div>
+
+        <!-- Comparação ARKHÉ vs SRE Tradicional -->
+        <div class="comparison-panel">
+            <div class="card" style="border-top: 3px solid var(--arkhe);">
+                <h3>Diagnóstico ARKHÉ SENTINEL</h3>
+                <p><strong>Estado da Trajetória:</strong> <span id="traj-state">Aguardando...</span></p>
+                <p><strong>Desfecho Provável:</strong> <span id="traj-outcome">Aguardando...</span></p>
+                <div id="evidence-container">
+                    <!-- Evidências preenchidas dinamicamente -->
+                </div>
+            </div>
+
+            <div class="card" style="border-top: 3px solid var(--red);">
+                <h3>Baseline SRE Tradicional (Prometheus / Google SRE)</h3>
+                <p><strong>Alarme de Erro Técnico (>5%):</strong> <span id="sre-error-status" class="status-pill pill-healthy">NORMAL</span></p>
+                <p><strong>Alarme de SLA P95 (>1500ms):</strong> <span id="sre-latency-status" class="status-pill pill-healthy">NORMAL</span></p>
+                <p style="font-size: 13px; color: var(--muted); margin-top: 20px;">
+                    * Monitores reativos tradicionais só disparam após timeouts acumulados atingirem o consumidor.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function updateDashboard() {
+            try {
+                const res = await fetch('live_sentinel_state.json?t=' + Date.now());
+                if (!res.ok) return;
+                const d = await res.json();
+
+                // 1. Risk Score
+                document.getElementById('risk-score').textContent = d.sentinel.score.toFixed(1);
+                const pill = document.getElementById('risk-pill');
+                const bar = document.getElementById('risk-bar');
+                pill.textContent = d.sentinel.level.toUpperCase();
+                bar.style.width = Math.min(100, d.sentinel.score) + '%';
+                
+                if (d.sentinel.score < 50) {
+                    pill.className = 'status-pill pill-healthy';
+                    bar.style.backgroundColor = 'var(--green)';
+                } else if (d.sentinel.score < 75) {
+                    pill.className = 'status-pill pill-attention';
+                    bar.style.backgroundColor = 'var(--yellow)';
+                } else {
+                    pill.className = 'status-pill pill-critical';
+                    bar.style.backgroundColor = 'var(--red)';
+                }
+
+                // 2. Pool Saturation
+                const used = d.resources.antifraud_pool_in_use;
+                const cap = d.resources.antifraud_pool_capacity;
+                const ratio = d.resources.antifraud_pool_utilization_ratio * 100;
+                document.getElementById('pool-in-use').textContent = `${used} / ${cap}`;
+                document.getElementById('pool-pct').textContent = `${ratio.toFixed(1)}% de ocupação`;
+                document.getElementById('pool-bar').style.width = ratio + '%';
+
+                // 3. Traffic
+                document.getElementById('traffic-txs').textContent = d.traffic.unique_transactions_total;
+                document.getElementById('traffic-sub').textContent = `${d.traffic.attempts_total} tentativas (R_retry: ${d.traffic.retry_amplification_ratio})`;
+
+                // 4. Latency
+                document.getElementById('latency-p95').textContent = `${d.latency.p95.toFixed(1)} ms`;
+                document.getElementById('queue-waiters').textContent = `${d.resources.antifraud_waiters_count} conexões em fila física`;
+
+                // 5. Trajectory
+                document.getElementById('traj-state').textContent = d.sentinel.state;
+                document.getElementById('traj-outcome').textContent = d.sentinel.probable_outcome;
+
+                // 6. Evidence
+                const evCont = document.getElementById('evidence-container');
+                evCont.innerHTML = '';
+                (d.sentinel.evidence || []).forEach(e => {
+                    const div = document.createElement('div');
+                    div.className = 'evidence-item';
+                    div.innerHTML = `<strong>[${e.kind}]</strong> ${e.title} &mdash; <em>${e.interpretation}</em>`;
+                    evCont.appendChild(div);
+                });
+
+                // 7. Lead Time
+                const leadSec = d.sentinel.lead_time_seconds;
+                if (leadSec > 0 && !d.sre_baseline.triggered) {
+                    document.getElementById('lead-time-display').textContent = `+${leadSec.toFixed(1)}s (+${(leadSec/60).toFixed(1)} min)`;
+                    document.getElementById('lead-time-desc').textContent = 'ARKHÉ SENTINEL emitiu alerta antecipado. O alarme SRE tradicional ainda não percebeu!';
+                } else if (d.sre_baseline.triggered) {
+                    document.getElementById('lead-time-desc').textContent = 'Alarme SRE disparou após colapso! Antecedência comprovada.';
+                }
+
+                // 8. SRE Status
+                const srePill = document.getElementById('sre-error-status');
+                if (d.sre_baseline.triggered) {
+                    srePill.className = 'status-pill pill-critical';
+                    srePill.textContent = 'ALARME SRE DISPARADO';
+                }
+            } catch (err) {
+                // aguarda próximo ciclo
+            }
+        }
+        setInterval(updateDashboard, 1500);
+        updateDashboard();
+    </script>
+</body>
+</html>
