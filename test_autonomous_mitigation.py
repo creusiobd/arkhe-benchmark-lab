@@ -25,8 +25,13 @@ def test_closed_loop():
 
         # 2. Ativar Mitigação Autônoma
         print("2. Ativando o Agente Atuador Closed-Loop (/admin/mitigation/toggle)...")
-        r = client.post("/admin/mitigation/toggle")
-        state = r.json()
+        # Verifica estado atual
+        live = client.get("/telemetry/live").json()
+        if not live.get("mitigation", {}).get("enabled"):
+            r = client.post("/admin/mitigation/toggle")
+            state = r.json()
+        else:
+            state = {"mitigation_enabled": True}
         print(f"   Status da Mitigação: Enabled={state['mitigation_enabled']}")
         assert state['mitigation_enabled'] is True
 

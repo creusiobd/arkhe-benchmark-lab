@@ -739,6 +739,7 @@ async def reset_simulation():
     sim_env.t_sre_alert = None
     sim_env.current_scenario = "nominal"
     sim_env.scenario_description = "Operação Nominal e Estável"
+    sim_env.mitigation_enabled = False
     sim_env.mitigation_active = False
     sim_env.mitigation_fast_path_active = False
     sim_env.prevented_failures_count = 0

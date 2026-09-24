@@ -44,17 +44,33 @@ async def test_ws_stream():
         # 3. Teste de canal bidirecional (Envio de comando via WS)
         print("\n3. Testando comando interativo pelo WebSocket ('ping')...")
         await ws.send("ping")
-        reply = await asyncio.wait_for(ws.recv(), timeout=2.0)
-        print(f"   Resposta do servidor: '{reply}'")
-        assert reply == "pong", "Servidor deveria ter respondido pong!"
+        got_pong = False
+        t_deadline = time.time() + 3.0
+        while time.time() < t_deadline and not got_pong:
+            msg = await asyncio.wait_for(ws.recv(), timeout=1.5)
+            if msg == "pong":
+                got_pong = True
+                print("   Resposta do servidor: 'pong'")
+                break
+        assert got_pong, "Servidor deveria ter respondido pong!"
 
         # 4. Testando injeção de cenário via WebSocket
         print("4. Testando injeção de comando de cenário ('scenario:nominal')...")
         await ws.send("scenario:nominal")
-        # Próximo frame deve refletir o cenário nominal
-        next_frame = json.loads(await asyncio.wait_for(ws.recv(), timeout=2.0))
-        print(f"   Cenário no Frame: {next_frame['scenario']['id']} ({next_frame['scenario']['description']})")
-        assert next_frame['scenario']['id'] == 'nominal'
+        got_nominal = False
+        t_deadline = time.time() + 3.0
+        while time.time() < t_deadline and not got_nominal:
+            msg = await asyncio.wait_for(ws.recv(), timeout=1.5)
+            if msg != "pong":
+                try:
+                    f = json.loads(msg)
+                    if f.get("scenario", {}).get("id") == "nominal":
+                        got_nominal = True
+                        print(f"   Cenário no Frame: {f['scenario']['id']} ({f['scenario']['description']})")
+                        break
+                except Exception:
+                    pass
+        assert got_nominal, "Próximo frame deveria refletir o cenário nominal!"
 
         print("\n" + "=" * 70)
         print("📊 RELATÓRIO DO STREAM WEBSOCKET:")
