@@ -94,3 +94,25 @@ $$\text{COI}(\Delta t) = \sum_{t \in \Delta t} \lambda_{\text{unique}}(t) \times
 * **Probabilidade de Churn por Fricção ($P_{\text{churn}}$):** 38%
 * **Custo de Aquisição / LTV Impactado ($LTV_{\text{impact}}$):** R\$ 45,00
 * **Perda Total por Pedido Frustrado:** R\$ 21,60
+
+---
+
+## 6. Pipeline de CI/CD (GitHub Actions & Local Runner)
+
+O repositório conta com uma esteira de automação industrial configurada em `.github/workflows/ci.yml`:
+
+1. **Lint & Code Quality:** Validação de sintaxe e padrões PEP com `ruff`.
+2. **Matriz de Testes Python (3.11 & 3.12):** Execução da suíte completa de **20 testes automatizados** sem dependências externas (`tests/` cobrindo o motor de derivadas $\vec{S}_{\text{ARKHÉ}}$, o baseline do SRE clássico, o cálculo do COI, a consistência física da Lei de Little e os contratos de API).
+3. **Auditoria E2E em Containers Docker:**
+   - Build das imagens `arkhe-card-auth-lab` e `arkhe-load-generator`.
+   - Inicialização da stack com verificação de integridade (`healthcheck`).
+   - Validação de streaming WebSocket a 10 FPS (<15ms de latência).
+   - Validação de autorrecuperação autônoma em malha fechada (Predictive HPA).
+   - Execução headless do benchmark estatístico com upload automático dos relatórios (`benchmark_results.json` e `arkhe_benchmark_report.html`) como artefatos do workflow.
+
+### Execução Local da Pipeline (Pré-Commit)
+Para rodar a mesma validação no ambiente de desenvolvimento local:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\run_ci_local.ps1
+```
+
