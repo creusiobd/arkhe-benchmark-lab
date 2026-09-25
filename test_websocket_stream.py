@@ -40,6 +40,11 @@ async def test_ws_stream():
         effective_fps = len(frames) / max(0.001, total_elapsed)
         print(f"\n   Taxa Efetiva de Transmissão: {effective_fps:.1f} frames/segundo (Alvo: 10 FPS)")
         assert len(frames) == 10, "Deveria ter recebido 10 frames de telemetria"
+        assert "topology" in frames[0], "Frame deveria conter dados de 'topology'"
+        assert len(frames[0]["topology"]["nodes"]) == 6, "Grafo topológico deveria conter exatamente 6 nós arquiteturais"
+        assert "projection" in frames[0], "Frame deveria conter dados de 'projection'"
+        assert "horizon_points" in frames[0]["projection"], "Projeção deveria conter 'horizon_points'"
+        print("   ✅ Validação de Payload: Grafo Topológico (6 Hops) e Cone de Incerteza recebidos perfeitamente!")
 
         # 3. Teste de canal bidirecional (Envio de comando via WS)
         print("\n3. Testando comando interativo pelo WebSocket ('ping')...")

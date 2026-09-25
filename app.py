@@ -1,4 +1,5 @@
 import asyncio
+import math
 import os
 import random
 import time
@@ -615,6 +616,202 @@ async def build_telemetry_payload() -> dict:
     elif score >= 50: level = "unstable"
     elif score >= 30: level = "attention"
 
+    # 6. Grafo Topológico Interativo (DAG dos 6 Hops Arquiteturais)
+    antifraud_lat = sim_env.antifraud_latency_base_ms
+    hsm_lat = 8.0 + sim_env.hsm_extra_delay_ms
+    sem_wait = obs["queueing"]["avg_queue_wait_ms"]
+    acq_lat = 35.0 if not sim_env.network_jitter_p99_active else 1200.0
+
+    gw_status = "healthy"
+    if sim_env.event_loop_lag_ms > 25.0:
+        gw_status = "warning"
+
+    hsm_status = "healthy"
+    if sim_env.hsm_extra_delay_ms > 0:
+        hsm_status = "critical"
+
+    sem_status = "healthy"
+    if sim_env.antifraud_waiters > 15 or obs["queueing"]["wq_ws_ratio"] > 0.6:
+        sem_status = "critical"
+    elif sim_env.antifraud_waiters > 0 or obs["queueing"]["wq_ws_ratio"] > 0.2:
+        sem_status = "warning"
+
+    af_status = "healthy"
+    if sim_env.mitigation_active:
+        af_status = "mitigated"
+    elif obs["resources"]["antifraud_pool_utilization_ratio"] >= 0.8:
+        af_status = "critical"
+    elif obs["resources"]["antifraud_pool_utilization_ratio"] >= 0.5:
+        af_status = "warning"
+
+    acq_status = "healthy"
+    if sim_env.acquirer_flapping_rate > 0 or sim_env.network_jitter_p99_active:
+        acq_status = "critical"
+
+    ledger_status = "healthy"
+    if technical_errors > 0:
+        ledger_status = "warning"
+
+    topology_data = {
+        "nodes": [
+            {
+                "id": "gateway",
+                "label": "Gateway Ingestão",
+                "role": "Envoy / API Ingress",
+                "icon": "🌐",
+                "status": gw_status,
+                "latency_ms": 8.0,
+                "load": "80 TPS",
+                "metrics": {"lag_ms": obs["runtime"]["event_loop_lag_ms"], "concurrency": "Non-blocking"}
+            },
+            {
+                "id": "hsm_limits",
+                "label": "HSM & Limites",
+                "role": "Cripto EMV & Cache",
+                "icon": "🔐",
+                "status": hsm_status,
+                "latency_ms": round(hsm_lat, 1),
+                "load": "EMV Pin-Block",
+                "metrics": {"hsm_delay_ms": sim_env.hsm_extra_delay_ms, "cpu": "Contenção" if sim_env.hsm_extra_delay_ms > 0 else "Normal"}
+            },
+            {
+                "id": "semaphore",
+                "label": "Fila Little (Semáforo)",
+                "role": "Portão de Concorrência",
+                "icon": "⏳",
+                "status": sem_status,
+                "latency_ms": round(sem_wait, 1),
+                "load": f"{sim_env.antifraud_waiters} em espera",
+                "metrics": {"wq_ws_ratio": obs["queueing"]["wq_ws_ratio"], "waiters": sim_env.antifraud_waiters}
+            },
+            {
+                "id": "antifraud",
+                "label": "Pool Antifraude",
+                "role": "Cluster IA / Scoring",
+                "icon": "🧠",
+                "status": af_status,
+                "latency_ms": round(obs["queueing"]["avg_service_time_ms"], 1),
+                "load": f"{obs['resources']['antifraud_pool_in_use']}/{obs['resources']['antifraud_pool_capacity']} slots",
+                "metrics": {
+                    "rho": obs["resources"]["antifraud_pool_utilization_ratio"],
+                    "capacity": obs["resources"]["antifraud_pool_capacity"],
+                    "fast_path": sim_env.mitigation_fast_path_active
+                }
+            },
+            {
+                "id": "acquirer",
+                "label": "Adquirente Externa",
+                "role": "Redes Cielo / Stone",
+                "icon": "🏛️",
+                "status": acq_status,
+                "latency_ms": round(acq_lat, 1),
+                "load": f"Flapping: {int(sim_env.acquirer_flapping_rate*100)}%",
+                "metrics": {
+                    "flapping_rate": sim_env.acquirer_flapping_rate,
+                    "jitter_outlier": sim_env.network_jitter_p99_active
+                }
+            },
+            {
+                "id": "ledger",
+                "label": "Ledger Contábil",
+                "role": "Distributed Commit",
+                "icon": "📒",
+                "status": ledger_status,
+                "latency_ms": 3.0,
+                "load": f"{sim_env.approved_total} aprovadas",
+                "metrics": {"timeouts": technical_errors, "acid_guarantee": "Strict"}
+            }
+        ],
+        "edges": [
+            {"from": "gateway", "to": "hsm_limits", "tps": 80, "status": "normal"},
+            {"from": "hsm_limits", "to": "semaphore", "tps": 80, "status": "degraded" if hsm_status != "healthy" else "normal"},
+            {"from": "semaphore", "to": "antifraud", "tps": 80 if sem_status == "healthy" else 45, "status": "congested" if sem_status != "healthy" else "normal"},
+            {"from": "antifraud", "to": "acquirer", "tps": 80 if af_status != "critical" else 30, "status": "congested" if af_status == "critical" else "normal"},
+            {"from": "acquirer", "to": "ledger", "tps": int(80 * (1.0 - sim_env.acquirer_flapping_rate)), "status": "congested" if acq_status != "healthy" else "normal"}
+        ]
+    }
+
+    # 7. Cálculo da Projeção de Trajetória Futura (Forward Horizon Cone)
+    history = sim_env.arkhe_engine.window_history
+    past_points = []
+    if history:
+        t_last = history[-1].get("timestamp", now)
+        for s in history[-20:]:
+            past_points.append({
+                "offset_sec": round(s.get("timestamp", t_last) - t_last, 1),
+                "rho": round(s["resources"]["antifraud_pool_utilization_ratio"], 3)
+            })
+    else:
+        past_points.append({"offset_sec": 0.0, "rho": round(obs["resources"]["antifraud_pool_utilization_ratio"], 3)})
+
+    current_rho = obs["resources"]["antifraud_pool_utilization_ratio"]
+    d_rho_dt = arkhe_res.vector.get("d_rho_dt_per_min", 0.0)
+    ttc = arkhe_res.predicted_time_to_collapse_sec
+
+    if sim_env.current_scenario == "drift" and current_rho >= 0.4:
+        target_rho = 0.68
+    elif sim_env.current_scenario == "rupture":
+        target_rho = 1.0
+    elif sim_env.current_scenario == "hsm_saturation":
+        target_rho = min(1.0, current_rho + 0.35)
+    else:
+        target_rho = 0.12
+
+    future_points = []
+    horizon_steps = [0, 30, 60, 90, 120, 180, 240, 300]
+    for h_sec in horizon_steps:
+        fraction = h_sec / 300.0
+        h_min = h_sec / 60.0
+        if sim_env.mitigation_active:
+            proj_rho = max(0.12, round(current_rho * math.exp(-0.02 * h_sec), 3))
+            upper_bound = min(1.0, round(proj_rho + 0.04 * (1.0 + fraction * 0.5), 3))
+            lower_bound = max(0.05, round(proj_rho - 0.04 * (1.0 + fraction * 0.5), 3))
+            mitigated_rho = proj_rho
+        else:
+            if target_rho > current_rho:
+                proj_rho = min(1.0, round(current_rho + (target_rho - current_rho) * (1.0 - math.exp(-0.015 * h_sec)), 3))
+            else:
+                proj_rho = max(0.10, round(current_rho - (current_rho - target_rho) * (1.0 - math.exp(-0.02 * h_sec)), 3))
+            cone_width = 0.03 + 0.12 * fraction
+            upper_bound = min(1.0, round(proj_rho + cone_width, 3))
+            lower_bound = max(0.0, round(proj_rho - cone_width, 3))
+            mitigated_rho = max(0.12, round(current_rho * math.exp(-0.018 * h_sec), 3))
+
+        future_points.append({
+            "offset_sec": h_sec,
+            "label": f"+{h_sec}s" if h_sec < 60 else f"+{h_min:.1f}m",
+            "rho_expected": proj_rho,
+            "rho_upper": upper_bound,
+            "rho_lower": lower_bound,
+            "rho_mitigated": mitigated_rho
+        })
+
+    if ttc is not None and ttc < 300:
+        collapse_display = f"{round(ttc, 0)}s ({round(ttc/60, 1)} min)"
+        collapse_status = "CRITICAL" if ttc < 60 else "WARNING"
+    elif current_rho >= 0.90:
+        collapse_display = "IMINENTE / COLAPSADO (rho >= 0.9)"
+        collapse_status = "CRITICAL"
+    elif d_rho_dt > 0.03:
+        est_sec = max(20.0, (1.0 - current_rho) / (d_rho_dt / 60.0))
+        collapse_display = f"~{round(est_sec, 0)}s ({round(est_sec/60, 1)} min)"
+        collapse_status = "WARNING"
+    else:
+        collapse_display = "ESTÁVEL / INFINITO (∞)"
+        collapse_status = "HEALTHY"
+
+    projection_data = {
+        "current_rho": round(current_rho, 3),
+        "d_rho_dt_per_min": round(d_rho_dt, 3),
+        "time_to_collapse_sec": ttc,
+        "time_to_collapse_display": collapse_display,
+        "collapse_status": collapse_status,
+        "past_trajectory": past_points,
+        "horizon_points": future_points,
+        "stability_basin_limit": 0.50,
+        "critical_rupture_limit": 0.80
+    }
+
     return {
         "scenario": {
             "id": sim_env.current_scenario,
@@ -654,6 +851,8 @@ async def build_telemetry_payload() -> dict:
             "downtime_avoided_min": round(sim_env.prevented_downtime_sec / 60.0, 1),
             "actions": list(sim_env.mitigation_actions)
         },
+        "topology": topology_data,
+        "projection": projection_data,
         "recent_journeys": list(sim_env.recent_journeys)[:15],
         "event_logs": list(sim_env.event_logs),
         "stream_meta": {
@@ -1147,6 +1346,150 @@ async def serve_cockpit():
             display: flex; gap: 12px;
         }
         .log-time { color: var(--text-muted); font-family: monospace; }
+
+        /* --- GRAFO TOPOLÓGICO INTERATIVO DOS 6 HOPS --- */
+        .topology-deck {
+            background: linear-gradient(180deg, #111827 0%, #0d131f 100%);
+            border: 1px solid #1f293d;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .topology-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px; border-bottom: 1px solid #1f2937; padding-bottom: 12px;
+        }
+        .topo-legend { display: flex; gap: 14px; align-items: center; font-size: 11px; }
+        .topo-leg-item { display: inline-flex; align-items: center; gap: 6px; color: #94a3b8; }
+        .topo-indicator { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .ind-healthy { background: #3fb950; box-shadow: 0 0 6px #3fb950; }
+        .ind-warning { background: #d29922; box-shadow: 0 0 6px #d29922; }
+        .ind-critical { background: #f85149; box-shadow: 0 0 8px #f85149; }
+        .ind-mitigated { background: #38bdf8; box-shadow: 0 0 8px #38bdf8; }
+
+        .topo-flow-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            position: relative;
+            overflow-x: auto;
+            padding: 10px 4px 14px 4px;
+        }
+        .topo-node {
+            flex: 1;
+            min-width: 175px;
+            background: rgba(23, 32, 48, 0.9);
+            border: 1px solid #26354a;
+            border-radius: 10px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+            user-select: none;
+        }
+        .topo-node:hover {
+            transform: translateY(-3px);
+            border-color: var(--arkhe-blue);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        .topo-node.active-selected {
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 16px rgba(56, 189, 248, 0.4) !important;
+        }
+        .node-healthy { border-color: rgba(63, 185, 80, 0.6); box-shadow: 0 0 10px rgba(35, 134, 54, 0.15); }
+        .node-warning { border-color: rgba(210, 153, 34, 0.8); box-shadow: 0 0 14px rgba(210, 153, 34, 0.25); }
+        .node-critical { border-color: rgba(248, 81, 73, 0.9); box-shadow: 0 0 20px rgba(218, 54, 51, 0.4); animation: pulse-critical 1.5s infinite; }
+        .node-mitigated { border-color: rgba(56, 189, 248, 0.9); box-shadow: 0 0 18px rgba(56, 189, 248, 0.35); }
+
+        @keyframes pulse-critical {
+            0% { box-shadow: 0 0 10px rgba(248, 81, 73, 0.3); }
+            50% { box-shadow: 0 0 22px rgba(248, 81, 73, 0.7); }
+            100% { box-shadow: 0 0 10px rgba(248, 81, 73, 0.3); }
+        }
+
+        .topo-node-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+        }
+        .node-step-tag {
+            font-size: 10px; font-weight: 800; color: #94a3b8; background: #0f172a; padding: 2px 6px; border-radius: 4px;
+        }
+        .node-status-pill {
+            font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;
+        }
+        .pill-healthy { background: rgba(35, 134, 54, 0.25); color: #4ade80; }
+        .pill-warning { background: rgba(210, 153, 34, 0.25); color: #fbbf24; }
+        .pill-critical { background: rgba(218, 54, 51, 0.25); color: #f87171; }
+        .pill-mitigated { background: rgba(56, 189, 248, 0.25); color: #38bdf8; }
+
+        .topo-node-title { font-size: 13px; font-weight: 700; color: #f1f5f9; display: flex; align-items: center; gap: 6px; }
+        .topo-node-role { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+        .topo-node-metrics {
+            margin-top: 10px; display: flex; justify-content: space-between; font-size: 11px; background: rgba(15, 23, 42, 0.6); padding: 6px 8px; border-radius: 6px;
+        }
+        .node-m-val { font-weight: 700; color: #e2e8f0; }
+
+        /* Conector e link com partículas de fluxo */
+        .topo-edge {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 44px; position: relative;
+        }
+        .edge-arrow {
+            width: 100%; height: 2px; background: #334155; position: relative; overflow: visible;
+        }
+        .edge-flow-dot {
+            width: 6px; height: 6px; border-radius: 50%; background: #38bdf8; position: absolute; top: -2px; left: 0;
+            box-shadow: 0 0 8px #38bdf8;
+            animation: flow-particle 1.2s infinite linear;
+        }
+        .edge-congested .edge-flow-dot {
+            background: #f87171; box-shadow: 0 0 8px #f87171; animation-duration: 2.2s;
+        }
+        .edge-degraded .edge-flow-dot {
+            background: #fbbf24; box-shadow: 0 0 8px #fbbf24; animation-duration: 1.8s;
+        }
+        @keyframes flow-particle {
+            0% { left: 0%; opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { left: 100%; opacity: 0; }
+        }
+        .edge-tps-badge {
+            font-size: 9px; font-weight: 700; color: #64748b; margin-top: 4px; white-space: nowrap;
+        }
+
+        .topo-inspector-bar {
+            margin-top: 12px; background: #0b1120; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 14px;
+            font-size: 12px; color: #cbd5e1; display: flex; align-items: center; justify-content: space-between;
+        }
+
+        /* --- VISIBILIDADE DA TRAJETÓRIA ANTECIPADA (FORWARD HORIZON & CONE) --- */
+        .horizon-deck {
+            background: linear-gradient(180deg, #0e172a 0%, #0a0f1d 100%);
+            border: 1px solid #233044;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .horizon-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #1e293b; padding-bottom: 12px;
+        }
+        .horizon-stats-row {
+            display: flex; gap: 16px; align-items: center;
+        }
+        .horizon-kpi-chip {
+            background: #172033; border: 1px solid #28374d; border-radius: 8px; padding: 6px 12px; display: flex; align-items: center; gap: 8px;
+        }
+        .hz-kpi-lbl { font-size: 10px; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px; }
+        .hz-kpi-val { font-size: 13px; font-weight: 800; }
+        .horizon-chart-box {
+            position: relative; width: 100%; height: 180px; margin-bottom: 12px;
+        }
+        .horizon-legend {
+            display: flex; flex-wrap: wrap; gap: 18px; font-size: 11px; color: #94a3b8; justify-content: center; border-top: 1px solid #1e293b; padding-top: 10px;
+        }
+        .hz-legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -1273,7 +1616,200 @@ async def serve_cockpit():
             </div>
         </div>
 
-        <!-- 4. Governança SRE: SLA, SLI & Error Budget -->
+        <!-- 4. GRAFO TOPOLÓGICO INTERATIVO DE SERVIÇOS (6 HOPS DA ARQUITETURA ARKHÉ) -->
+        <div class="topology-deck">
+            <div class="topology-header">
+                <div>
+                    <div style="font-weight: 800; font-size: 14px; letter-spacing: 0.5px; color: #f1f5f9; display: flex; align-items: center; gap: 8px;">
+                        <span>🌐 GRAFO TOPOLÓGICO DE CONCORRÊNCIA E FLUXO (6 HOPS ARQUITETURAIS)</span>
+                        <span class="status-badge badge-healthy" style="font-size: 10px; padding: 2px 8px;">DAG AO VIVO (10 FPS)</span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                        Visualização e rastreamento topológico de propagação de gargalos, latências e física de filas de Little
+                    </div>
+                </div>
+                <div class="topo-legend">
+                    <span class="topo-leg-item"><span class="topo-indicator ind-healthy"></span> Nominal</span>
+                    <span class="topo-leg-item"><span class="topo-indicator ind-warning"></span> Drift / Fila</span>
+                    <span class="topo-leg-item"><span class="topo-indicator ind-critical"></span> Saturação</span>
+                    <span class="topo-leg-item"><span class="topo-indicator ind-mitigated"></span> Auto-Cura Ativa</span>
+                </div>
+            </div>
+
+            <!-- Fluxo Sequencial com 6 Nós Interativos e 5 Conectores com Partículas de Fluxo -->
+            <div class="topo-flow-container">
+                <!-- Hop 1: Gateway Ingestão -->
+                <div class="topo-node node-healthy" id="node-gateway" onclick="selectTopoNode('gateway')">
+                    <div class="topo-node-header">
+                        <span class="node-step-tag">[1] INGESTÃO</span>
+                        <span class="node-status-pill pill-healthy" id="pill-gateway">NOMINAL</span>
+                    </div>
+                    <div class="topo-node-title"><span>🌐</span> Gateway Ingestão</div>
+                    <div class="topo-node-role">Envoy / API Ingress</div>
+                    <div class="topo-node-metrics">
+                        <span>Latência: <strong class="node-m-val" id="topo-lat-gateway">8.0 ms</strong></span>
+                        <span>Carga: <strong class="node-m-val" id="topo-load-gateway">80 TPS</strong></span>
+                    </div>
+                </div>
+
+                <!-- Conector 1 -> 2 -->
+                <div class="topo-edge" id="edge-0">
+                    <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
+                    <span class="edge-tps-badge" id="edge-tps-0">80 TPS ➔</span>
+                </div>
+
+                <!-- Hop 2: HSM & Limites -->
+                <div class="topo-node node-healthy" id="node-hsm_limits" onclick="selectTopoNode('hsm_limits')">
+                    <div class="topo-node-header">
+                        <span class="node-step-tag">[2] SEGURANÇA</span>
+                        <span class="node-status-pill pill-healthy" id="pill-hsm_limits">NOMINAL</span>
+                    </div>
+                    <div class="topo-node-title"><span>🔐</span> HSM & Limites</div>
+                    <div class="topo-node-role">Cripto EMV & Cache</div>
+                    <div class="topo-node-metrics">
+                        <span>Latência: <strong class="node-m-val" id="topo-lat-hsm_limits">8.0 ms</strong></span>
+                        <span>CPU: <strong class="node-m-val" id="topo-load-hsm_limits">Normal</strong></span>
+                    </div>
+                </div>
+
+                <!-- Conector 2 -> 3 -->
+                <div class="topo-edge" id="edge-1">
+                    <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
+                    <span class="edge-tps-badge" id="edge-tps-1">80 TPS ➔</span>
+                </div>
+
+                <!-- Hop 3: Fila Little (Semáforo) -->
+                <div class="topo-node node-healthy" id="node-semaphore" onclick="selectTopoNode('semaphore')">
+                    <div class="topo-node-header">
+                        <span class="node-step-tag">[3] CONCORRÊNCIA</span>
+                        <span class="node-status-pill pill-healthy" id="pill-semaphore">NOMINAL</span>
+                    </div>
+                    <div class="topo-node-title"><span>⏳</span> Fila Little (Semáforo)</div>
+                    <div class="topo-node-role">Portão Little: L = λW</div>
+                    <div class="topo-node-metrics">
+                        <span>Espera: <strong class="node-m-val" id="topo-lat-semaphore">0.0 ms</strong></span>
+                        <span>Fila: <strong class="node-m-val" id="topo-load-semaphore">0 waiters</strong></span>
+                    </div>
+                </div>
+
+                <!-- Conector 3 -> 4 -->
+                <div class="topo-edge" id="edge-2">
+                    <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
+                    <span class="edge-tps-badge" id="edge-tps-2">80 TPS ➔</span>
+                </div>
+
+                <!-- Hop 4: Pool Antifraude -->
+                <div class="topo-node node-healthy" id="node-antifraud" onclick="selectTopoNode('antifraud')">
+                    <div class="topo-node-header">
+                        <span class="node-step-tag">[4] INTELIGÊNCIA</span>
+                        <span class="node-status-pill pill-healthy" id="pill-antifraud">NOMINAL</span>
+                    </div>
+                    <div class="topo-node-title"><span>🧠</span> Pool Antifraude</div>
+                    <div class="topo-node-role">Cluster IA / Scoring</div>
+                    <div class="topo-node-metrics">
+                        <span>Serviço: <strong class="node-m-val" id="topo-lat-antifraud">45.0 ms</strong></span>
+                        <span>Uso: <strong class="node-m-val" id="topo-load-antifraud">3/30 slots</strong></span>
+                    </div>
+                </div>
+
+                <!-- Conector 4 -> 5 -->
+                <div class="topo-edge" id="edge-3">
+                    <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
+                    <span class="edge-tps-badge" id="edge-tps-3">80 TPS ➔</span>
+                </div>
+
+                <!-- Hop 5: Adquirente Externa -->
+                <div class="topo-node node-healthy" id="node-acquirer" onclick="selectTopoNode('acquirer')">
+                    <div class="topo-node-header">
+                        <span class="node-step-tag">[5] BANDEIRAS</span>
+                        <span class="node-status-pill pill-healthy" id="pill-acquirer">NOMINAL</span>
+                    </div>
+                    <div class="topo-node-title"><span>🏛️</span> Adquirente Externa</div>
+                    <div class="topo-node-role">Redes Cielo / Stone</div>
+                    <div class="topo-node-metrics">
+                        <span>Latência: <strong class="node-m-val" id="topo-lat-acquirer">35.0 ms</strong></span>
+                        <span>Flap: <strong class="node-m-val" id="topo-load-acquirer">0%</strong></span>
+                    </div>
+                </div>
+
+                <!-- Conector 5 -> 6 -->
+                <div class="topo-edge" id="edge-4">
+                    <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
+                    <span class="edge-tps-badge" id="edge-tps-4">80 TPS ➔</span>
+                </div>
+
+                <!-- Hop 6: Ledger Contábil -->
+                <div class="topo-node node-healthy" id="node-ledger" onclick="selectTopoNode('ledger')">
+                    <div class="topo-node-header">
+                        <span class="node-step-tag">[6] ASSENTAMENTO</span>
+                        <span class="node-status-pill pill-healthy" id="pill-ledger">NOMINAL</span>
+                    </div>
+                    <div class="topo-node-title"><span>📒</span> Ledger Contábil</div>
+                    <div class="topo-node-role">Commit Distribuído ACID</div>
+                    <div class="topo-node-metrics">
+                        <span>Latência: <strong class="node-m-val" id="topo-lat-ledger">3.0 ms</strong></span>
+                        <span>Status: <strong class="node-m-val" id="topo-load-ledger">100% ACID</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barra de Auditoria / Inspeção de Nó Físico -->
+            <div class="topo-inspector-bar">
+                <div>
+                    <strong style="color: #60a5fa;" id="inspector-node-title">ℹ️ Inspetor Topológico:</strong>
+                    <span style="margin-left: 8px;" id="inspector-node-desc">Clique em qualquer nó do grafo para visualizar equações de fila, parâmetros operacionais e telemetria interna.</span>
+                </div>
+                <div style="font-family: monospace; font-size: 11px; color: #94a3b8;" id="inspector-node-formula">
+                    Modelo de Rede: Jackson Network Aberta / FIFO M/M/c
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. VISIBILIDADE DA TRAJETÓRIA ANTECIPADA & CONE DE INCERTEZA (FORWARD HORIZON PROJECTION) -->
+        <div class="horizon-deck">
+            <div class="horizon-header">
+                <div>
+                    <div style="font-weight: 800; font-size: 14px; letter-spacing: 0.5px; color: #f1f5f9; display: flex; align-items: center; gap: 8px;">
+                        <span>📈 VISIBILIDADE DA TRAJETÓRIA ANTECIPADA (FORWARD HORIZON & CONE DE INCERTEZA)</span>
+                        <span class="status-badge badge-healthy" style="font-size: 10px; padding: 2px 8px;">EXTRAPOLAÇÃO ESTOCÁSTICA T₀ ➔ T₊₅min</span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                        Projeção matemática contínua da saturação de concorrência com cone de confiança de 95% e ponto de colapso predito
+                    </div>
+                </div>
+
+                <div class="horizon-stats-row">
+                    <div class="horizon-kpi-chip">
+                        <span class="hz-kpi-lbl">Tempo até Colapso:</span>
+                        <span class="hz-kpi-val" id="hz-collapse-val" style="color: var(--green-glow);">ESTÁVEL (∞)</span>
+                    </div>
+                    <div class="horizon-kpi-chip">
+                        <span class="hz-kpi-lbl">Derivada (dρ/dt):</span>
+                        <span class="hz-kpi-val" id="hz-drift-val" style="color: #60a5fa;">+0.00 /min</span>
+                    </div>
+                    <div class="horizon-kpi-chip">
+                        <span class="hz-kpi-lbl">Estado da Trajetória:</span>
+                        <span class="hz-kpi-val" id="hz-status-badge" style="color: var(--green-glow);">BACIA ESTÁVEL</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico Panorâmico de Horizonte Futuro com Cone Shaded de 95% -->
+            <div class="horizon-chart-box">
+                <canvas id="chartForwardHorizon"></canvas>
+            </div>
+
+            <!-- Legenda da Projeção Estocástica -->
+            <div class="horizon-legend">
+                <span><span class="hz-legend-dot" style="background:#388bfd;"></span> <strong>Histórico Observado</strong> (-60s até T₀)</span>
+                <span><span class="hz-legend-dot" style="background:#d29922;"></span> <strong>Projeção Mediana Inercial</strong> (T₀ até T₊₅min)</span>
+                <span><span class="hz-legend-dot" style="background:rgba(218, 54, 51, 0.3); border:1px solid #da3633;"></span> <strong>Cone de Incerteza Estocástica 95%</strong></span>
+                <span><span class="hz-legend-dot" style="background:#3fb950;"></span> <strong>Trajetória Mitigada (Closed-Loop)</strong></span>
+                <span><span class="hz-legend-dot" style="background:#da3633;"></span> <strong>Limiar Crítico de Ruptura (ρ = 80%)</strong></span>
+            </div>
+        </div>
+
+        <!-- 6. Governança SRE: SLA, SLI & Error Budget -->
         <div class="sre-deck">
             <div class="sre-deck-header">
                 <div>
@@ -1494,6 +2030,154 @@ async def serve_cockpit():
                 scales: { y: { beginAtZero: true, max: 65 } }
             }
         });
+
+        // Chart.js: Projeção de Trajetória Antecipada com Cone de Incerteza 95%
+        const horizonLabels = ['-60s', '-45s', '-30s', '-15s', 'T₀ (Agora)', '+30s', '+1m', '+1.5m', '+2m', '+3m', '+4m', '+5m'];
+        const ctxHorizon = document.getElementById('chartForwardHorizon').getContext('2d');
+        const chartHorizon = new Chart(ctxHorizon, {
+            type: 'line',
+            data: {
+                labels: horizonLabels,
+                datasets: [
+                    {
+                        label: 'Cone Superior 95%',
+                        data: Array(horizonLabels.length).fill(null),
+                        borderColor: 'transparent',
+                        backgroundColor: 'transparent',
+                        pointRadius: 0,
+                        fill: false
+                    },
+                    {
+                        label: 'Cone de Incerteza Estocástica 95%',
+                        data: Array(horizonLabels.length).fill(null),
+                        borderColor: 'transparent',
+                        backgroundColor: 'rgba(218, 54, 51, 0.18)',
+                        pointRadius: 0,
+                        fill: '-1'
+                    },
+                    {
+                        label: 'Histórico Observado',
+                        data: Array(horizonLabels.length).fill(null),
+                        borderColor: '#388bfd',
+                        backgroundColor: 'rgba(56, 139, 253, 0.2)',
+                        borderWidth: 2.5,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#388bfd',
+                        fill: false,
+                        tension: 0.2
+                    },
+                    {
+                        label: 'Projeção Mediana Inercial',
+                        data: Array(horizonLabels.length).fill(null),
+                        borderColor: '#d29922',
+                        borderWidth: 2.5,
+                        borderDash: [5, 4],
+                        pointRadius: 3,
+                        pointBackgroundColor: '#d29922',
+                        fill: false,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Trajetória com Mitigação Autônoma',
+                        data: Array(horizonLabels.length).fill(null),
+                        borderColor: '#3fb950',
+                        borderWidth: 2.5,
+                        borderDash: [4, 4],
+                        pointRadius: 3,
+                        pointBackgroundColor: '#3fb950',
+                        fill: false,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Limiar de Ruptura (80%)',
+                        data: Array(horizonLabels.length).fill(0.80),
+                        borderColor: 'rgba(218, 54, 51, 0.7)',
+                        borderWidth: 1.5,
+                        borderDash: [4, 4],
+                        pointRadius: 0,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1.05,
+                        grid: { color: 'rgba(255,255,255,0.06)' },
+                        ticks: {
+                            color: '#94a3b8',
+                            callback: function(v) { return (v * 100).toFixed(0) + '%'; }
+                        }
+                    },
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.04)' },
+                        ticks: { color: '#94a3b8' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                if (ctx.raw === null || ctx.raw === undefined) return '';
+                                return ctx.dataset.label + ': ' + (ctx.raw * 100).toFixed(1) + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Inspetor Interativo do Grafo Topológico
+        const nodeDescriptions = {
+            "gateway": {
+                "title": "🌐 Hop 1: Gateway de Ingestão (Envoy / API Ingress)",
+                "desc": "Ponto de entrada único HTTP/2 & gRPC. Executa buffer de requisições, terminação TLS e roteamento não-bloqueante para a malha interna.",
+                "formula": "Taxa de Chegada: λ = 80 TPS nominais | Event Loop Lag < 1ms"
+            },
+            "hsm_limits": {
+                "title": "🔐 Hop 2: Validação Criptográfica HSM & Limites de Cartão",
+                "desc": "Descriptografia do Pin-Block e validação do CVC/CVV via Hardware Security Module (HSM). Em saturação, gera contenção severa de CPU criptográfica.",
+                "formula": "Custo Cripto: T_crypto = 8ms + Contenção CPU HSM | Chaves EMV ZMK/PVK"
+            },
+            "semaphore": {
+                "title": "⏳ Hop 3: Fila Little & Semáforo Físico de Concorrência",
+                "desc": "Portão de admissão baseado na Lei de Little. Quando a demanda excede a capacidade do pool, retém conexões e gera fila física exponencial.",
+                "formula": "Lei de Little: L_q = λ * W_q | Equação de Kingman: W_q ≈ (ρ / (1 - ρ)) * W_s"
+            },
+            "antifraud": {
+                "title": "🧠 Hop 4: Pool de Inteligência Antifraude (Cluster IA)",
+                "desc": "Execução de modelos preditivos de detecção de fraude e risco. O gatilho primário do colapso de Little ocorre quando sua latência de serviço sofre drift silencioso.",
+                "formula": "Utilização: ρ = (λ * W_s) / C | Demanda Little: L(t) = λ(t) * W_s(t)"
+            },
+            "acquirer": {
+                "title": "🏛️ Hop 5: Adquirente Externa & Redes de Bandeiras (Cielo / Stone)",
+                "desc": "Conexão de rede externa ISO 8583. Sujeita a flapping intermitente (503s), instabilidade de jitter P99 e tempestades de retries descontroladas.",
+                "formula": "Amplificação: R_retry = Tentativas / Txs Únicas | Jitter P99 > 1200ms"
+            },
+            "ledger": {
+                "title": "📒 Hop 6: Ledger Contábil Distribuído (Double-Entry Commit)",
+                "desc": "Efetivação de crédito/débito e commit distribuído idempotente. Garante consistência financeira estrita sob qualquer condição de tráfego.",
+                "formula": "Idempotência Estrita UUIDv4 | Garantia ACID 100%"
+            }
+        };
+
+        function selectTopoNode(nodeId) {
+            document.querySelectorAll('.topo-node').forEach(n => n.classList.remove('active-selected'));
+            const nodeEl = document.getElementById('node-' + nodeId);
+            if (nodeEl) nodeEl.classList.add('active-selected');
+
+            const info = nodeDescriptions[nodeId];
+            if (info) {
+                document.getElementById('inspector-node-title').textContent = info.title;
+                document.getElementById('inspector-node-desc').textContent = info.desc;
+                document.getElementById('inspector-node-formula').textContent = info.formula;
+            }
+        }
 
         // Espaço de Fase 2D (Atrator de Lyapunov & Teoria de Filas)
         const phaseCanvas = document.getElementById('canvasPhaseSpace');
@@ -1821,6 +2505,111 @@ async def serve_cockpit():
             } else {
                 sreBadge.className = 'status-badge badge-healthy';
                 sreBadge.textContent = 'EM SILÊNCIO (0 ALARMES)';
+            }
+
+            // 7. Atualização do Grafo Topológico Interativo (6 Hops)
+            if (d.topology && d.topology.nodes) {
+                d.topology.nodes.forEach(n => {
+                    const nodeEl = document.getElementById('node-' + n.id);
+                    const pillEl = document.getElementById('pill-' + n.id);
+                    const latEl = document.getElementById('topo-lat-' + n.id);
+                    const loadEl = document.getElementById('topo-load-' + n.id);
+
+                    if (nodeEl && pillEl && latEl && loadEl) {
+                        latEl.textContent = n.latency_ms.toFixed(1) + ' ms';
+                        loadEl.textContent = n.load;
+
+                        let borderClass = 'node-healthy';
+                        let pillClass = 'pill-healthy';
+                        let pillText = 'NOMINAL';
+
+                        if (n.status === 'critical') {
+                            borderClass = 'node-critical';
+                            pillClass = 'pill-critical';
+                            pillText = 'SATURADO';
+                        } else if (n.status === 'warning') {
+                            borderClass = 'node-warning';
+                            pillClass = 'pill-warning';
+                            pillText = 'DRIFT / FILA';
+                        } else if (n.status === 'mitigated') {
+                            borderClass = 'node-mitigated';
+                            pillClass = 'pill-mitigated';
+                            pillText = 'AUTO-CURA';
+                        }
+
+                        const isSel = nodeEl.classList.contains('active-selected');
+                        nodeEl.className = 'topo-node ' + borderClass + (isSel ? ' active-selected' : '');
+                        pillEl.className = 'node-status-pill ' + pillClass;
+                        pillEl.textContent = pillText;
+                    }
+                });
+
+                if (d.topology.edges) {
+                    d.topology.edges.forEach((e, idx) => {
+                        const edgeEl = document.getElementById('edge-' + idx);
+                        const tpsEl = document.getElementById('edge-tps-' + idx);
+                        if (edgeEl && tpsEl) {
+                            tpsEl.textContent = e.tps + ' TPS ➔';
+                            edgeEl.className = 'topo-edge ' + (e.status === 'congested' ? 'edge-congested' : (e.status === 'degraded' ? 'edge-degraded' : ''));
+                        }
+                    });
+                }
+            }
+
+            // 8. Atualização da Visibilidade da Trajetória Antecipada (Forward Horizon & Cone)
+            if (d.projection) {
+                const proj = d.projection;
+                const colValEl = document.getElementById('hz-collapse-val');
+                const driftValEl = document.getElementById('hz-drift-val');
+                const statBadgeEl = document.getElementById('hz-status-badge');
+
+                if (colValEl && driftValEl && statBadgeEl) {
+                    colValEl.textContent = proj.time_to_collapse_display;
+                    driftValEl.textContent = (proj.d_rho_dt_per_min >= 0 ? '+' : '') + proj.d_rho_dt_per_min.toFixed(2) + ' /min';
+
+                    if (proj.collapse_status === 'CRITICAL') {
+                        colValEl.style.color = 'var(--red-glow)';
+                        statBadgeEl.textContent = 'RUPTURA IMINENTE';
+                        statBadgeEl.style.color = 'var(--red-glow)';
+                    } else if (proj.collapse_status === 'WARNING') {
+                        colValEl.style.color = 'var(--yellow)';
+                        statBadgeEl.textContent = 'DERIVA ACELERADA';
+                        statBadgeEl.style.color = 'var(--yellow)';
+                    } else {
+                        colValEl.style.color = 'var(--green-glow)';
+                        statBadgeEl.textContent = 'BACIA ESTÁVEL';
+                        statBadgeEl.style.color = 'var(--green-glow)';
+                    }
+                }
+
+                // Amostra dados no gráfico de horizonte a cada 5 frames (~500ms para estabilidade e fluidez)
+                if (chartCounter % 5 === 0) {
+                    const past = proj.past_trajectory || [];
+                    const curRho = proj.current_rho;
+                    const pLen = past.length;
+
+                    const p1 = pLen >= 15 ? past[pLen - 15].rho : (pLen >= 1 ? past[0].rho : curRho);
+                    const p2 = pLen >= 10 ? past[pLen - 10].rho : (pLen >= 1 ? past[0].rho : curRho);
+                    const p3 = pLen >= 6 ? past[pLen - 6].rho : (pLen >= 1 ? past[0].rho : curRho);
+                    const p4 = pLen >= 3 ? past[pLen - 3].rho : curRho;
+
+                    const histData = [p1, p2, p3, p4, curRho, null, null, null, null, null, null, null];
+                    chartHorizon.data.datasets[2].data = histData;
+
+                    const fut = proj.horizon_points || [];
+                    if (fut.length >= 8) {
+                        const coneUpper = [null, null, null, null, curRho, fut[1].rho_upper, fut[2].rho_upper, fut[3].rho_upper, fut[4].rho_upper, fut[5].rho_upper, fut[6].rho_upper, fut[7].rho_upper];
+                        const coneLower = [null, null, null, null, curRho, fut[1].rho_lower, fut[2].rho_lower, fut[3].rho_lower, fut[4].rho_lower, fut[5].rho_lower, fut[6].rho_lower, fut[7].rho_lower];
+                        const projMedian = [null, null, null, null, curRho, fut[1].rho_expected, fut[2].rho_expected, fut[3].rho_expected, fut[4].rho_expected, fut[5].rho_expected, fut[6].rho_expected, fut[7].rho_expected];
+                        const projMit = [null, null, null, null, curRho, fut[1].rho_mitigated, fut[2].rho_mitigated, fut[3].rho_mitigated, fut[4].rho_mitigated, fut[5].rho_mitigated, fut[6].rho_mitigated, fut[7].rho_mitigated];
+
+                        chartHorizon.data.datasets[0].data = coneUpper;
+                        chartHorizon.data.datasets[1].data = coneLower;
+                        chartHorizon.data.datasets[3].data = projMedian;
+                        chartHorizon.data.datasets[4].data = projMit;
+                    }
+                    chartHorizon.update();
+                }
             }
 
             // 7. Amostragem de Gráficos (A cada 5 frames = 500ms para estabilidade visual)

@@ -39,6 +39,10 @@ class TestApiEndpoints(unittest.TestCase):
         self.assertIn("sre_governance", data)
         self.assertIn("mitigation", data)
         self.assertIn("recent_journeys", data)
+        self.assertIn("topology", data)
+        self.assertEqual(len(data["topology"]["nodes"]), 6)
+        self.assertIn("projection", data)
+        self.assertIn("horizon_points", data["projection"])
 
     def test_chaos_scenario_trigger_and_reset(self):
         # Aciona cenário drift
