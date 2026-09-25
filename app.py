@@ -2,8 +2,16 @@ import asyncio
 import math
 import os
 import random
+import sys
 import time
 import uuid
+
+if sys.platform == "win32":
+    import ctypes
+    try:
+        ctypes.windll.winmm.timeBeginPeriod(1)
+    except Exception:
+        pass
 from collections import deque
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -139,7 +147,7 @@ class SimulationEnvironment:
 
 sim_env = SimulationEnvironment()
 
-# --- WEBSOCKET CONNECTION & BROADCAST MANAGER (STREAMING EM ALTA FREQUÊNCIA: 10 FPS) ---
+# --- WEBSOCKET CONNECTION & BROADCAST MANAGER (STREAMING EM ALTA FREQUÊNCIA: 20 FPS) ---
 
 class StreamConnectionManager:
     def __init__(self):
@@ -175,16 +183,25 @@ async def event_loop_monitor():
         delta = (time.perf_counter() - t0) - 0.05
         sim_env.event_loop_lag_ms = max(0.0, delta * 1000.0)
 
-# Broadcaster em segundo plano para streaming contínuo sub-100ms
+# Broadcaster em segundo plano para streaming contínuo de alta frequência (20 FPS / 50ms por tick)
 async def telemetry_broadcaster_task():
+    TARGET_INTERVAL = 0.050  # 50ms = 20 FPS
+    next_tick = time.perf_counter()
     while True:
+        next_tick += TARGET_INTERVAL
         try:
             if stream_manager.active_connections:
                 payload = await build_telemetry_payload()
                 await stream_manager.broadcast(payload)
         except Exception:
             pass
-        await asyncio.sleep(0.10)  # 100ms = 10 FPS streaming contínuo
+        now = time.perf_counter()
+        sleep_time = next_tick - now
+        if sleep_time > 0:
+            await asyncio.sleep(sleep_time)
+        else:
+            next_tick = now
+            await asyncio.sleep(0.001)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -661,7 +678,7 @@ async def build_telemetry_payload() -> dict:
                 "icon": "🌐",
                 "status": gw_status,
                 "latency_ms": 8.0,
-                "load": "80 TPS",
+                "load": "120 TPS",
                 "metrics": {"lag_ms": obs["runtime"]["event_loop_lag_ms"], "concurrency": "Non-blocking"}
             },
             {
@@ -723,11 +740,11 @@ async def build_telemetry_payload() -> dict:
             }
         ],
         "edges": [
-            {"from": "gateway", "to": "hsm_limits", "tps": 80, "status": "normal"},
-            {"from": "hsm_limits", "to": "semaphore", "tps": 80, "status": "degraded" if hsm_status != "healthy" else "normal"},
-            {"from": "semaphore", "to": "antifraud", "tps": 80 if sem_status == "healthy" else 45, "status": "congested" if sem_status != "healthy" else "normal"},
-            {"from": "antifraud", "to": "acquirer", "tps": 80 if af_status != "critical" else 30, "status": "congested" if af_status == "critical" else "normal"},
-            {"from": "acquirer", "to": "ledger", "tps": int(80 * (1.0 - sim_env.acquirer_flapping_rate)), "status": "congested" if acq_status != "healthy" else "normal"}
+            {"from": "gateway", "to": "hsm_limits", "tps": 120, "status": "normal"},
+            {"from": "hsm_limits", "to": "semaphore", "tps": 120, "status": "degraded" if hsm_status != "healthy" else "normal"},
+            {"from": "semaphore", "to": "antifraud", "tps": 120 if sem_status == "healthy" else 60, "status": "congested" if sem_status != "healthy" else "normal"},
+            {"from": "antifraud", "to": "acquirer", "tps": 120 if af_status != "critical" else 40, "status": "congested" if af_status == "critical" else "normal"},
+            {"from": "acquirer", "to": "ledger", "tps": int(120 * (1.0 - sim_env.acquirer_flapping_rate)), "status": "congested" if acq_status != "healthy" else "normal"}
         ]
     }
 
@@ -858,7 +875,7 @@ async def build_telemetry_payload() -> dict:
         "stream_meta": {
             "timestamp": now,
             "protocol": "websocket_v1",
-            "frequency_hz": 10
+            "frequency_hz": 20
         }
     }
 
@@ -875,7 +892,7 @@ async def get_live_stream_http():
 
 @app.websocket("/ws/telemetry")
 async def websocket_telemetry_stream(websocket: WebSocket):
-    """Canal WebSocket bidirecional em tempo real de alta frequência (10 FPS, latência < 15ms)."""
+    """Canal WebSocket bidirecional em tempo real de alta frequência (20 FPS, latência < 15ms)."""
     await stream_manager.connect(websocket)
     try:
         # Envia payload de sincronização inicial
@@ -1019,7 +1036,7 @@ async def reset_simulation():
     sim_env.add_log("Reset geral executado com sucesso.", "info")
     return {"message": "State reset to factory nominal"}
 
-# --- TORRE DE CONTROLE MESTRE UNIFICADA (VISÃO 1 + VISÃO 2 + AGENTE ATUADOR + ESPAÇO DE FASE + WEBSOCKETS 10 FPS) ---
+# --- TORRE DE CONTROLE MESTRE UNIFICADA (VISÃO 1 + VISÃO 2 + AGENTE ATUADOR + ESPAÇO DE FASE + WEBSOCKETS 20 FPS) ---
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_cockpit():
@@ -1028,7 +1045,7 @@ async def serve_cockpit():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARKHÉ SENTINEL — Cockpit Mestre: Trajetória, SRE & Mitigação Autônoma (10 FPS WS)</title>
+    <title>ARKHÉ SENTINEL — Cockpit Mestre: Trajetória, SRE & Mitigação Autônoma (20 FPS WS)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -1507,13 +1524,13 @@ async def serve_cockpit():
             <div class="header-actions">
                 <div id="ws-badge" class="ws-badge ws-active">
                     <span class="pulse-dot-ws"></span>
-                    <span id="ws-text">WEBSOCKET 10 FPS (STREAM AO VIVO)</span>
+                    <span id="ws-text">WEBSOCKET 20 FPS (STREAM AO VIVO ULTRA-RÁPIDO)</span>
                 </div>
                 <button id="btn-toggle-mitigation" class="btn-mitigation-toggle" onclick="toggleMitigation()">
                     ⚡ Mitigação Autônoma: DESATIVADA
                 </button>
                 <div class="live-badge">
-                    <span>80 TPS CONTÍNUOS</span>
+                    <span>120 TPS CONTÍNUOS</span>
                 </div>
             </div>
         </header>
@@ -1622,7 +1639,7 @@ async def serve_cockpit():
                 <div>
                     <div style="font-weight: 800; font-size: 14px; letter-spacing: 0.5px; color: #f1f5f9; display: flex; align-items: center; gap: 8px;">
                         <span>🌐 GRAFO TOPOLÓGICO DE CONCORRÊNCIA E FLUXO (6 HOPS ARQUITETURAIS)</span>
-                        <span class="status-badge badge-healthy" style="font-size: 10px; padding: 2px 8px;">DAG AO VIVO (10 FPS)</span>
+                        <span class="status-badge badge-healthy" style="font-size: 10px; padding: 2px 8px;">DAG AO VIVO (20 FPS)</span>
                     </div>
                     <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
                         Visualização e rastreamento topológico de propagação de gargalos, latências e física de filas de Little
@@ -1648,14 +1665,14 @@ async def serve_cockpit():
                     <div class="topo-node-role">Envoy / API Ingress</div>
                     <div class="topo-node-metrics">
                         <span>Latência: <strong class="node-m-val" id="topo-lat-gateway">8.0 ms</strong></span>
-                        <span>Carga: <strong class="node-m-val" id="topo-load-gateway">80 TPS</strong></span>
+                        <span>Carga: <strong class="node-m-val" id="topo-load-gateway">120 TPS</strong></span>
                     </div>
                 </div>
 
                 <!-- Conector 1 -> 2 -->
                 <div class="topo-edge" id="edge-0">
                     <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
-                    <span class="edge-tps-badge" id="edge-tps-0">80 TPS ➔</span>
+                    <span class="edge-tps-badge" id="edge-tps-0">120 TPS ➔</span>
                 </div>
 
                 <!-- Hop 2: HSM & Limites -->
@@ -1675,7 +1692,7 @@ async def serve_cockpit():
                 <!-- Conector 2 -> 3 -->
                 <div class="topo-edge" id="edge-1">
                     <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
-                    <span class="edge-tps-badge" id="edge-tps-1">80 TPS ➔</span>
+                    <span class="edge-tps-badge" id="edge-tps-1">120 TPS ➔</span>
                 </div>
 
                 <!-- Hop 3: Fila Little (Semáforo) -->
@@ -1695,7 +1712,7 @@ async def serve_cockpit():
                 <!-- Conector 3 -> 4 -->
                 <div class="topo-edge" id="edge-2">
                     <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
-                    <span class="edge-tps-badge" id="edge-tps-2">80 TPS ➔</span>
+                    <span class="edge-tps-badge" id="edge-tps-2">120 TPS ➔</span>
                 </div>
 
                 <!-- Hop 4: Pool Antifraude -->
@@ -1715,7 +1732,7 @@ async def serve_cockpit():
                 <!-- Conector 4 -> 5 -->
                 <div class="topo-edge" id="edge-3">
                     <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
-                    <span class="edge-tps-badge" id="edge-tps-3">80 TPS ➔</span>
+                    <span class="edge-tps-badge" id="edge-tps-3">120 TPS ➔</span>
                 </div>
 
                 <!-- Hop 5: Adquirente Externa -->
@@ -1735,7 +1752,7 @@ async def serve_cockpit():
                 <!-- Conector 5 -> 6 -->
                 <div class="topo-edge" id="edge-4">
                     <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
-                    <span class="edge-tps-badge" id="edge-tps-4">80 TPS ➔</span>
+                    <span class="edge-tps-badge" id="edge-tps-4">120 TPS ➔</span>
                 </div>
 
                 <!-- Hop 6: Ledger Contábil -->
@@ -1878,7 +1895,7 @@ async def serve_cockpit():
             <div class="kpi-card">
                 <div class="kpi-title">Tráfego de Cartões Simultâneo</div>
                 <div class="kpi-metric" id="kpi-traffic">0 tx</div>
-                <span style="font-size: 12px; color: var(--text-muted);" id="kpi-traffic-sub">80 TPS nominais</span>
+                <span style="font-size: 12px; color: var(--text-muted);" id="kpi-traffic-sub">120 TPS nominais</span>
             </div>
 
             <div class="kpi-card">
@@ -1950,7 +1967,7 @@ async def serve_cockpit():
                     </tr>
                 </thead>
                 <tbody id="journey-tbody">
-                    <!-- Preenchido via streaming WebSocket a 10 FPS -->
+                    <!-- Preenchido via streaming WebSocket a 20 FPS -->
                 </tbody>
             </table>
         </div>
@@ -2137,7 +2154,7 @@ async def serve_cockpit():
             "gateway": {
                 "title": "🌐 Hop 1: Gateway de Ingestão (Envoy / API Ingress)",
                 "desc": "Ponto de entrada único HTTP/2 & gRPC. Executa buffer de requisições, terminação TLS e roteamento não-bloqueante para a malha interna.",
-                "formula": "Taxa de Chegada: λ = 80 TPS nominais | Event Loop Lag < 1ms"
+                "formula": "Taxa de Chegada: λ = 120 TPS nominais | Event Loop Lag < 1ms"
             },
             "hsm_limits": {
                 "title": "🔐 Hop 2: Validação Criptográfica HSM & Limites de Cartão",
@@ -2272,7 +2289,7 @@ async def serve_cockpit():
                 socket.onopen = () => {
                     const badge = document.getElementById('ws-badge');
                     badge.className = 'ws-badge ws-active';
-                    document.getElementById('ws-text').textContent = 'WEBSOCKET 10 FPS (STREAM AO VIVO)';
+                    document.getElementById('ws-text').textContent = 'WEBSOCKET 20 FPS (STREAM AO VIVO)';
                 };
 
                 socket.onmessage = (event) => {
@@ -2339,7 +2356,7 @@ async def serve_cockpit():
             }
         }
 
-        // Renderizador de Frame de Alta Frequência (Executado a 10 FPS)
+        // Renderizador de Frame de Alta Frequência (Executado a 20 FPS)
         function renderTelemetryFrame(d) {
             // 1. Botão Ativo & Toggle Mitigação
             const sc = d.scenario.id;
@@ -2582,8 +2599,8 @@ async def serve_cockpit():
                     }
                 }
 
-                // Amostra dados no gráfico de horizonte a cada 5 frames (~500ms para estabilidade e fluidez)
-                if (chartCounter % 5 === 0) {
+                // Amostra dados no gráfico de horizonte a cada 10 frames (~500ms a 20 FPS para estabilidade e fluidez)
+                if (chartCounter % 10 === 0) {
                     const past = proj.past_trajectory || [];
                     const curRho = proj.current_rho;
                     const pLen = past.length;
@@ -2612,9 +2629,9 @@ async def serve_cockpit():
                 }
             }
 
-            // 7. Amostragem de Gráficos (A cada 5 frames = 500ms para estabilidade visual)
+            // 7. Amostragem de Gráficos (A cada 10 frames = 500ms a 20 FPS para estabilidade visual)
             chartCounter++;
-            if (chartCounter % 5 === 0) {
+            if (chartCounter % 10 === 0) {
                 chartLatency.data.datasets[0].data.shift();
                 chartLatency.data.datasets[0].data.push(d.telemetry.latency_ms.p95);
                 chartLatency.update();
@@ -2626,7 +2643,7 @@ async def serve_cockpit():
                 chartPool.update();
             }
 
-            // 8. Espaço de Fase 2D a 10 FPS (Movimento Suave de Lyapunov)
+            // 8. Espaço de Fase 2D a 20 FPS (Movimento Suave de Lyapunov)
             const rho = d.telemetry.resources.antifraud_pool_utilization_ratio;
             const wq_ws = d.telemetry.queueing.wq_ws_ratio;
             drawPhaseSpace(rho, wq_ws, d.mitigation.active);

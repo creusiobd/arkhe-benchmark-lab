@@ -1,6 +1,6 @@
 """
 test_websocket_stream.py
-Validação do streaming WebSocket de alta frequência (10 FPS / sub-100ms) do Cockpit ARKHÉ.
+Validação do streaming WebSocket de alta frequência (20 FPS / sub-50ms) do Cockpit ARKHÉ.
 """
 import asyncio
 import json
@@ -11,11 +11,18 @@ import websockets
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+if sys.platform == "win32":
+    import ctypes
+    try:
+        ctypes.windll.winmm.timeBeginPeriod(1)
+    except Exception:
+        pass
+
 WS_URI = "ws://localhost:8080/ws/telemetry"
 
 async def test_ws_stream():
     print("=" * 70)
-    print("⚡ TESTE DE VALIDAÇÃO: WEBSOCKET STREAMING EM TEMPO REAL (10 FPS)")
+    print("⚡ TESTE DE VALIDAÇÃO: WEBSOCKET STREAMING EM TEMPO REAL (20 FPS)")
     print("=" * 70)
 
     print(f"\n1. Conectando ao canal WebSocket: {WS_URI}...")
@@ -23,11 +30,11 @@ async def test_ws_stream():
         print("   ✅ Conectado com sucesso!")
 
         # 2. Receber frames iniciais de alta frequência
-        print("\n2. Capturando 10 frames de telemetria contínua...")
+        print("\n2. Capturando 20 frames de telemetria contínua (alvo 20 FPS)...")
         t_start = time.perf_counter()
         frames = []
 
-        for i in range(10):
+        for i in range(20):
             msg = await asyncio.wait_for(ws.recv(), timeout=2.0)
             data = json.loads(msg)
             frames.append(data)
@@ -38,13 +45,15 @@ async def test_ws_stream():
 
         total_elapsed = time.perf_counter() - t_start
         effective_fps = len(frames) / max(0.001, total_elapsed)
-        print(f"\n   Taxa Efetiva de Transmissão: {effective_fps:.1f} frames/segundo (Alvo: 10 FPS)")
-        assert len(frames) == 10, "Deveria ter recebido 10 frames de telemetria"
+        print(f"\n   Taxa Efetiva de Transmissão: {effective_fps:.1f} frames/segundo (Alvo: 20 FPS)")
+        assert len(frames) == 20, "Deveria ter recebido 20 frames de telemetria"
+        assert frames[0].get("stream_meta", {}).get("frequency_hz") == 20, "Frequência no stream_meta deveria ser 20 Hz"
+        assert effective_fps >= 15.0, f"Taxa de transmissão ({effective_fps:.1f} FPS) muito baixa para alvo de 20 FPS"
         assert "topology" in frames[0], "Frame deveria conter dados de 'topology'"
         assert len(frames[0]["topology"]["nodes"]) == 6, "Grafo topológico deveria conter exatamente 6 nós arquiteturais"
         assert "projection" in frames[0], "Frame deveria conter dados de 'projection'"
         assert "horizon_points" in frames[0]["projection"], "Projeção deveria conter 'horizon_points'"
-        print("   ✅ Validação de Payload: Grafo Topológico (6 Hops) e Cone de Incerteza recebidos perfeitamente!")
+        print("   ✅ Validação de Payload: Grafo Topológico (6 Hops) e Cone de Incerteza recebidos perfeitamente a 20 FPS!")
 
         # 3. Teste de canal bidirecional (Envio de comando via WS)
         print("\n3. Testando comando interativo pelo WebSocket ('ping')...")
@@ -80,7 +89,7 @@ async def test_ws_stream():
         print("\n" + "=" * 70)
         print("📊 RELATÓRIO DO STREAM WEBSOCKET:")
         print(f"   • Protocolo: {frames[0].get('stream_meta', {}).get('protocol', 'ws')}")
-        print(f"   • Frequência de Atualização: 10 Hz (a cada 100ms)")
+        print(f"   • Frequência de Atualização: 20 Hz (a cada 50ms)")
         print(f"   • Latência de Transporte: < 15ms")
         print(f"   • Bidirecionalidade Comprovada: Ping/Pong & Ações de Cenário")
         print("=" * 70)

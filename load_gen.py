@@ -7,7 +7,7 @@ from typing import Optional
 import httpx
 
 TARGET_URL = os.getenv("TARGET_URL", "http://localhost:8080/v1/charge")
-TARGET_TPS = float(os.getenv("TARGET_TPS", "80.0"))
+TARGET_TPS = float(os.getenv("TARGET_TPS", "120.0"))
 INTERVAL = 1.0 / TARGET_TPS
 
 async def send_charge_attempt(client: httpx.AsyncClient, tx_id: str, attempt_num: int):
@@ -41,9 +41,9 @@ async def worker(queue: asyncio.Queue, client: httpx.AsyncClient):
 
 async def run_load(duration_seconds: Optional[float] = None):
     queue = asyncio.Queue()
-    limits = httpx.Limits(max_keepalive_connections=200, max_connections=500)
+    limits = httpx.Limits(max_keepalive_connections=300, max_connections=800)
     async with httpx.AsyncClient(limits=limits) as client:
-        workers = [asyncio.create_task(worker(queue, client)) for _ in range(50)]
+        workers = [asyncio.create_task(worker(queue, client)) for _ in range(80)]
         print(f"[*] Gerador de carga ativo em {TARGET_URL} @ {TARGET_TPS} TPS nominais...")
         counter = 0
         start_t = time.time()
