@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARKHÉ SENTINEL — Cockpit Mestre: Trajetória, SRE & Mitigação Autônoma (20 FPS WS)</title>
+    
+    <!-- Chart.js 4 UMD -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    
+    <!-- Estilos Modulares Customizados -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+    
+    <!-- Aplicação JavaScript ES6 Modular -->
+    <script type="module" src="/static/js/main.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Cabeçalho Principal -->
+        <header>
+            <div class="brand">
+                <div class="brand-logo">A</div>
+                <div>
+                    <h1 style="margin:0; font-size: 22px;">ARKHÉ SENTINEL — Cockpit Mestre em Tempo Real</h1>
+                    <span style="font-size: 13px; color: var(--text-muted);">
+                        Física de Filas (Lei de Little), Diagnóstico Antecipado e Agente Atuador Closed-Loop
+                    </span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div id="ws-badge" class="ws-badge ws-active">
+                    <span class="pulse-dot-ws"></span>
+                    <span id="ws-text">WEBSOCKET 20 FPS (STREAM AO VIVO ULTRA-RÁPIDO)</span>
+                </div>
+                <button id="btn-toggle-mitigation" class="btn-mitigation-toggle" onclick="toggleMitigation()">
+                    ⚡ Mitigação Autônoma: DESATIVADA
+                </button>
+                <div class="live-badge">
+                    <span>120 TPS CONTÍNUOS</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 1. Controle de Injeção de Cenários em Tempo Real -->
+        <div class="deck">
+            <div class="deck-title">Controle de Injeção de Cenários (Altere a física do sistema com 1 clique)</div>
+            <div class="scenario-buttons">
+                <button class="btn-scenario active" id="btn-nominal" onclick="setScenario('nominal')">
+                    🟢 1. Operação Nominal
+                    <span class="sub">45ms antifraude • Pool ~10% • Error Budget 100% Intacto</span>
+                </button>
+                <button class="btn-scenario" id="btn-drift" onclick="setScenario('drift')">
+                    🟡 2. Injetar Drift Silencioso
+                    <span class="sub">255ms antifraude • Pool sobe para 68% • SRE ainda em silêncio</span>
+                </button>
+                <button class="btn-scenario" id="btn-rupture" onclick="setScenario('rupture')">
+                    🔴 3. Ruptura de Concorrência
+                    <span class="sub">420ms antifraude • Pool estoura (100%) • Queima acelerada de Budget</span>
+                </button>
+                <button class="btn-scenario" id="btn-recover" onclick="setScenario('recover')">
+                    🔄 4. Restaurar / Autocura
+                    <span class="sub">Volta para 45ms nominais • Estabiliza Burn Rate</span>
+                </button>
+                <button class="btn-scenario" id="btn-hsm_saturation" onclick="setScenario('hsm_saturation')">
+                    ⚡ 5. Gargalo de HSM / Cripto
+                    <span class="sub">+120ms na validação EMV • Contenção de CPU • Fila no Gateway</span>
+                </button>
+                <button class="btn-scenario" id="btn-acquirer_flapping" onclick="setScenario('acquirer_flapping')">
+                    🌪️ 6. Flapping na Adquirente
+                    <span class="sub">35% erros 503 intermitentes • Tempestade de Retries</span>
+                </button>
+                <button class="btn-scenario" id="btn-network_jitter" onclick="setScenario('network_jitter')">
+                    🌊 7. Jitter de Rede (P99 Outlier)
+                    <span class="sub">10% com atraso de 1200ms • Saturação de conexões</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. Banner de Antecedência Operacional -->
+        <div class="lead-banner">
+            <div>
+                <div class="lead-title">Antecedência Operacional do ARKHÉ SENTINEL sobre o Alarme SRE Clássico</div>
+                <div style="font-size: 14px; color: #cbd5e1; margin-top: 4px;" id="lead-status-desc">
+                    Aguardando convergência de sinais de trajetória...
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div class="lead-time-val" id="lead-time-counter">+0.0s</div>
+                <span style="font-size: 11px; color: #93c5fd;">TEMPO DE ANTECEDÊNCIA GANHO</span>
+            </div>
+        </div>
+
+        <!-- 3. PAINEL DO AGENTE ATUADOR AUTÔNOMO (CLOSED-LOOP REMEDIATION) -->
+        <div class="mitigation-panel">
+            <div class="mitigation-header">
+                <div>
+                    <span style="font-weight: 800; font-size: 14px; letter-spacing: 0.5px; color: #93c5fd;">
+                        ⚡ AGENTE ATUADOR ARKHÉ (CLOSED-LOOP SELF-HEALING)
+                    </span>
+                    <span style="font-size: 12px; color: var(--text-muted); margin-left: 12px;">
+                        Atuação em tempo real no minuto 0 do Drift, neutralizando o colapso antes do impacto no cliente
+                    </span>
+                </div>
+                <span id="mitigation-status-badge" class="mit-badge" style="background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid #475569;">
+                    STANDBY (AGUARDANDO SINAIS)
+                </span>
+            </div>
+
+            <div class="mitigation-grid">
+                <div class="mit-stat-box">
+                    <div style="font-size: 11px; text-transform: uppercase; color: #93c5fd;">Ações Preventivas em Execução</div>
+                    <div id="mitigation-action-desc" style="font-size: 13px; font-weight: 600; margin-top: 6px; color: #e2e8f0;">
+                        Nenhuma ação necessária no momento.
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                        Capacidade do Pool: <strong id="mit-pool-cap" style="color: #60a5fa;">30 slots</strong> (HPA Adaptativo)
+                    </div>
+                </div>
+
+                <div class="mit-stat-box">
+                    <div style="font-size: 11px; text-transform: uppercase; color: #93c5fd;">Falhas 503/504 Evitadas</div>
+                    <div id="mit-prevented-count" style="font-size: 26px; font-weight: 800; color: var(--green-glow); margin: 2px 0;">
+                        0 falhas
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted);">
+                        Zero clientes impactados por saturação
+                    </div>
+                </div>
+
+                <div class="mit-stat-box">
+                    <div style="font-size: 11px; text-transform: uppercase; color: #93c5fd;">Downtime / Indisponibilidade Evitada</div>
+                    <div id="mit-downtime-saved" style="font-size: 26px; font-weight: 800; color: var(--arkhe-blue); margin: 2px 0;">
+                        0.0 min
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted);">
+                        SLA e Error Budget 100% blindados
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. PAINEL DE GOVERNANÇA SRE & ERROR BUDGET -->
+        <div class="sre-deck">
+            <div class="sre-deck-header">
+                <div>
+                    <span style="font-weight: 800; font-size: 14px; letter-spacing: 0.5px; color: #f1f5f9;">
+                        🎯 GOVERNANÇA SRE: SLI / SLA & ERROR BUDGET (PAGAMENTOS DE ALTA PERFORMANCE)
+                    </span>
+                    <span style="font-size: 12px; color: var(--text-muted); margin-left: 12px;">
+                        Target Contratual: 99.90% Disponibilidade • P95 &lt; 1.500 ms
+                    </span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <span class="burn-badge" id="burn-status-badge" style="background: rgba(35, 134, 54, 0.25); color: var(--green-glow);">
+                        NORMAL (0.0x)
+                    </span>
+                </div>
+            </div>
+
+            <div class="sre-grid">
+                <div class="sre-card">
+                    <div class="sre-label">SLI de Disponibilidade Real</div>
+                    <div class="sre-val" id="sli-availability" style="color: var(--green-glow);">100.00%</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">SLA Mínimo: 99.90% (Falhas de Negócio 422 não contam)</div>
+                </div>
+
+                <div class="sre-card">
+                    <div class="sre-label">Saldo de Error Budget</div>
+                    <div class="sre-val" id="error-budget" style="color: var(--green-glow);">100.0%</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Orçamento restante para incidentes técnicos</div>
+                </div>
+
+                <div class="sre-card">
+                    <div class="sre-label">Burn Rate do Budget (Google SRE)</div>
+                    <div class="sre-val" id="burn-rate" style="color: var(--green-glow);">0.00x</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Crítico se &gt; 14.4x (Esgotamento em poucas horas)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. GRAFO TOPOLÓGICO INTERATIVO DE CONCORRÊNCIA E FLUXO (6 HOPS ARQUITETURAIS) -->
+        <div class="topology-deck">
+            <div class="topology-header">
+                <div>
+                    <div style="font-weight: 800; font-size: 14px; letter-spacing: 0.5px; color: #f1f5f9; display: flex; align-items: center; gap: 8px;">
+                        <span>🌐 GRAFO TOPOLÓGICO DE CONCORRÊNCIA E FLUXO (6 HOPS ARQUITETURAIS)</span>
+                        <span class="status-badge badge-healthy" style="font-size: 10px; padding: 2px 8px;">DAG AO VIVO (20 FPS)</span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                        Visualização e rastreamento topológico de propagação de gargalos, latências e física de filas de Little
+                    </div>
+                </div>
+                <div class="topo-legend">
+                    <span class="topo-leg-item"><span class="topo-indicator ind-healthy"></span> Nominal</span>
+                    <span class="topo-leg-item"><span class="topo-indicator ind-warning"></span> Drift / Fila</span>
+                    <span class="topo-leg-item"><span class="topo-indicator ind-critical"></span> Saturação</span>
+                    <span class="topo-leg-item"><span class="topo-indicator ind-mitigated"></span> Auto-Cura Ativa</span>
+                </div>
+            </div>
+
+            <!-- Fluxo Sequencial com 6 Nós Interativos e 5 Conectores com Partículas de Fluxo -->
+            <div class="topo-flow-container">
+                <!-- Hop 1: Gateway Ingestão -->
+                <div class="topo-node node-healthy" id="node-gateway" onclick="selectTopoNode('gateway')">
+                    <div class="topo-node-header">
+                        <span class="node-step-tag">[1] INGESTÃO</span>
+                        <span class="node-status-pill pill-healthy" id="pill-gateway">NOMINAL</span>
+                    </div>
+                    <div class="topo-node-title"><span>🌐</span> Gateway Ingestão</div>
+                    <div class="topo-node-role">Envoy / API Ingress</div>
+                    <div class="topo-node-metrics">
+                        <span>Latência: <strong class="node-m-val" id="topo-lat-gateway">8.0 ms</strong></span>
+                        <span>Carga: <strong class="node-m-val" id="topo-load-gateway">120 TPS</strong></span>
+                    </div>
+                </div>
+
+                <!-- Conector 1 -> 2 -->
+                <div class="topo-edge" id="edge-0">
+                    <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
+                    <span class="edge-tps-badge" id="edge-tps-0">120 TPS ➔</span>
+                </div>
+
+                <!-- Hop 2: HSM & Limites -->
+                <div class="topo-node node-healthy" id="node-hsm_limits" onclick="selectTopoNode('hsm_limits')">
+                    <div class="topo-node-header">
+                        <span class="node-step-tag">[2] SEGURANÇA</span>
+                        <span class="node-status-pill pill-healthy" id="pill-hsm_limits">NOMINAL</span>
+                    </div>
+                    <div class="topo-node-title"><span>🔐</span> HSM & Limites</div>
+                    <div class="topo-node-role">Cripto EMV & Cache</div>
+                    <div class="topo-node-metrics">
+                        <span>Latência: <strong class="node-m-val" id="topo-lat-hsm_limits">8.0 ms</strong></span>
+                        <span>CPU: <strong class="node-m-val" id="topo-load-hsm_limits">Normal</strong></span>
+                    </div>
+                </div>
+
+                <!-- Conector 2 -> 3 -->
+                <div class="topo-edge" id="edge-1">
+                    <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
+                    <span class="edge-tps-badge" id="edge-tps-1">120 TPS ➔</span>
+                </div>
+
+                <!-- Hop 3: Fila Little (Semáforo) -->
+                <div class="topo-node node-healthy" id="node-semaphore" onclick="selectTopoNode('semaphore')">
+                    <div class="topo-node-header">
+                        <span class="node-step-tag">[3] CONCORRÊNCIA</span>
+                        <span class="node-status-pill pill-healthy" id="pill-semaphore">NOMINAL</span>
+                    </div>
+                    <div class="topo-node-title"><span>⏳</span> Fila Little (Semáforo)</div>
+                    <div class="topo-node-role">Portão Little: L = λW</div>
+                    <div class="topo-node-metrics">
+                        <span>Espera: <strong class="node-m-val" id="topo-lat-semaphore">0.0 ms</strong></span>
+                        <span>Fila: <strong class="node-m-val" id="topo-load-semaphore">0 waiters</strong></span>
+                    </div>
+                </div>
+
+                <!-- Conector 3 -> 4 -->
+                <div class="topo-edge" id="edge-2">
+                    <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
+                    <span class="edge-tps-badge" id="edge-tps-2">120 TPS ➔</span>
+                </div>
+
+                <!-- Hop 4: Pool Antifraude -->
+                <div class="topo-node node-healthy" id="node-antifraud" onclick="selectTopoNode('antifraud')">
+                    <div class="topo-node-header">
+                        <span class="node-step-tag">[4] INTELIGÊNCIA</span>
+                        <span class="node-status-pill pill-healthy" id="pill-antifraud">NOMINAL</span>
+                    </div>
+                    <div class="topo-node-title"><span>🧠</span> Pool Antifraude</div>
+                    <div class="topo-node-role">Cluster IA / Scoring</div>
+                    <div class="topo-node-metrics">
+                        <span>Serviço: <strong class="node-m-val" id="topo-lat-antifraud">45.0 ms</strong></span>
+                        <span>Uso: <strong class="node-m-val" id="topo-load-antifraud">3/30 slots</strong></span>
+                    </div>
+                </div>
+
+                <!-- Conector 4 -> 5 -->
+                <div class="topo-edge" id="edge-3">
+                    <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
+                    <span class="edge-tps-badge" id="edge-tps-3">120 TPS ➔</span>
+                </div>
+
+                <!-- Hop 5: Adquirente Externa -->
+                <div class="topo-node node-healthy" id="node-acquirer" onclick="selectTopoNode('acquirer')">
+                    <div class="topo-node-header">
+                        <span class="node-step-tag">[5] BANDEIRAS</span>
+                        <span class="node-status-pill pill-healthy" id="pill-acquirer">NOMINAL</span>
+                    </div>
+                    <div class="topo-node-title"><span>🏛️</span> Adquirente Externa</div>
+                    <div class="topo-node-role">Redes Cielo / Stone</div>
+                    <div class="topo-node-metrics">
+                        <span>Latência: <strong class="node-m-val" id="topo-lat-acquirer">35.0 ms</strong></span>
+                        <span>Flap: <strong class="node-m-val" id="topo-load-acquirer">0%</strong></span>
+                    </div>
+                </div>
+
+                <!-- Conector 5 -> 6 -->
+                <div class="topo-edge" id="edge-4">
+                    <div class="edge-arrow"><span class="edge-flow-dot"></span></div>
+                    <span class="edge-tps-badge" id="edge-tps-4">120 TPS ➔</span>
+                </div>
+
+                <!-- Hop 6: Ledger Contábil -->
+                <div class="topo-node node-healthy" id="node-ledger" onclick="selectTopoNode('ledger')">
+                    <div class="topo-node-header">
+                        <span class="node-step-tag">[6] ASSENTAMENTO</span>
+                        <span class="node-status-pill pill-healthy" id="pill-ledger">NOMINAL</span>
+                    </div>
+                    <div class="topo-node-title"><span>📒</span> Ledger Contábil</div>
+                    <div class="topo-node-role">Commit Distribuído ACID</div>
+                    <div class="topo-node-metrics">
+                        <span>Latência: <strong class="node-m-val" id="topo-lat-ledger">3.0 ms</strong></span>
+                        <span>Estado: <strong class="node-m-val" id="topo-load-ledger">Assentado</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inspetor Interativo do Nó Selecionado -->
+            <div class="topo-inspector-bar">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-weight: 700; color: #38bdf8;" id="inspector-title">🧠 Hop 4: Pool de Inteligência Antifraude (Cluster IA)</span>
+                    <span style="color: var(--text-muted); font-size: 11px;" id="inspector-desc">Execução de modelos preditivos de detecção de fraude e risco. O gatilho primário do colapso de Little ocorre quando sua latência de serviço sofre drift silencioso.</span>
+                </div>
+                <div style="font-family: monospace; font-size: 11px; color: #a5b4fc; background: #131d31; padding: 4px 10px; border-radius: 4px;" id="inspector-formula">
+                    Utilização: ρ = (λ * W_s) / C | Demanda Little: L(t) = λ(t) * W_s(t)
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. VISIBILIDADE DA TRAJETÓRIA ANTECIPADA (FORWARD HORIZON & CONE DE INCERTEZA) -->
+        <div class="horizon-deck">
+            <div class="horizon-header">
+                <div>
+                    <div style="font-weight: 800; font-size: 14px; letter-spacing: 0.5px; color: #f1f5f9; display: flex; align-items: center; gap: 8px;">
+                        <span>📈 VISIBILIDADE DA TRAJETÓRIA ANTECIPADA: HORIZONTE DE 5 MINUTOS COM CONE DE INCERTEZA ESTOCÁSTICA (95%)</span>
+                        <span class="status-badge badge-healthy" id="hz-status-badge" style="font-size: 10px; padding: 2px 8px;">BACIA ESTÁVEL</span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                        Modelagem matemática de equações diferenciais estocásticas projetando saturação de Little, cone de incerteza a 95% e impacto de auto-cura
+                    </div>
+                </div>
+                <div class="horizon-stats-row">
+                    <div class="horizon-kpi-chip">
+                        <span class="hz-kpi-lbl">Ocupação Atual (ρ):</span>
+                        <span class="hz-kpi-val" id="hz-rho-val" style="color: #38bdf8;">10.0%</span>
+                    </div>
+                    <div class="horizon-kpi-chip">
+                        <span class="hz-kpi-lbl">Velocidade (dρ/dt):</span>
+                        <span class="hz-kpi-val" id="hz-drho-val" style="color: var(--green-glow);">+0.00/min</span>
+                    </div>
+                    <div class="horizon-kpi-chip">
+                        <span class="hz-kpi-lbl">Tempo até Colapso (TTC):</span>
+                        <span class="hz-kpi-val" id="hz-collapse-val" style="color: var(--green-glow);">ESTÁVEL / INFINITO (∞)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Horizonte & Cone de Incerteza (Chart.js 4) -->
+            <div class="horizon-chart-box">
+                <canvas id="chartHorizon"></canvas>
+            </div>
+
+            <div class="horizon-legend">
+                <span><span class="hz-legend-dot" style="background: #38bdf8;"></span> Histórico Observado (Últimos 20s)</span>
+                <span><span class="hz-legend-dot" style="background: rgba(239, 68, 68, 0.4);"></span> Cone de Incerteza Estocástica a 95% (Limiares de Little)</span>
+                <span><span class="hz-legend-dot" style="background: #f43f5e; border-top: 2px dashed #f43f5e;"></span> Projeção Esperada (Sem Mitigação)</span>
+                <span><span class="hz-legend-dot" style="background: #22c55e; border-top: 2px dashed #22c55e;"></span> Trajetória sob Auto-Cura ARKHÉ (Mitigado)</span>
+                <span><span class="hz-legend-dot" style="background: #f59e0b;"></span> Limite da Bacia Estável (50%)</span>
+                <span><span class="hz-legend-dot" style="background: #ef4444;"></span> Limiar Crítico de Ruptura (80%)</span>
+            </div>
+        </div>
+
+        <!-- 7. Grid de Métricas Principais (Física de Filas) -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="kpi-title">Score de Risco ARKHÉ</span>
+                    <span class="status-badge badge-healthy" id="kpi-score-badge">NOMINAL</span>
+                </div>
+                <div class="kpi-metric" id="kpi-score" style="color: var(--green-glow);">0.0 / 100</div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-score" style="width: 0%; background: var(--green-glow);"></div></div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-title">Ocupação do Pool Antifraude</div>
+                <div class="kpi-metric" id="kpi-pool">0 / 30</div>
+                <span style="font-size: 12px; color: var(--text-muted);" id="kpi-pool-sub">0.0% de ocupação</span>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-pool" style="width: 0%; background: var(--arkhe-blue);"></div></div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-title">Tráfego de Cartões Simultâneo</div>
+                <div class="kpi-metric" id="kpi-traffic">0 tx</div>
+                <span style="font-size: 12px; color: var(--text-muted);" id="kpi-traffic-sub">120 TPS nominais</span>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-title">Latência P95 e Concorrência</div>
+                <div class="kpi-metric" id="kpi-p95">0.0 ms</div>
+                <span style="font-size: 12px; color: var(--text-muted);" id="kpi-waiters">0 conexões aguardando fila</span>
+            </div>
+        </div>
+
+        <!-- 8. Gráficos em Tempo Real & Espaço de Fase 2D (Atrator de Lyapunov) -->
+        <div class="charts-row">
+            <div class="chart-box">
+                <h4 style="margin: 0 0 10px 0; font-size: 13px;">Latência P95 Real vs Limiar SRE (1.500 ms)</h4>
+                <canvas id="chartLatency" height="130"></canvas>
+            </div>
+            <div class="chart-box">
+                <h4 style="margin: 0 0 10px 0; font-size: 13px;">Saturação do Pool Antifraude vs Capacidade</h4>
+                <canvas id="chartPool" height="130"></canvas>
+            </div>
+            <div class="chart-box">
+                <h4 style="margin: 0 0 10px 0; font-size: 13px;">Espaço de Fase 2D: Atrator de Colapso (ρ vs Wq/Ws)</h4>
+                <canvas id="canvasPhaseSpace" width="340" height="130" style="background:#0b1120; border-radius:6px; border:1px solid #1f293d; width:100%; height:130px;"></canvas>
+            </div>
+        </div>
+
+        <!-- 9. Painel Comparativo ARKHÉ vs SRE Clássico -->
+        <div class="audit-grid">
+            <div class="kpi-card" style="border-top: 3px solid var(--arkhe-blue);">
+                <h3>ARKHÉ SENTINEL (Diagnóstico Antecipado)</h3>
+                <p><strong>Status:</strong> <span class="status-badge badge-healthy" id="sentinel-det-badge">NOMINAL</span></p>
+                <p><strong>Diagnóstico de Trajetória:</strong> <span id="sentinel-reason">Operação estável sem anomalias estruturais.</span></p>
+            </div>
+
+            <div class="kpi-card" style="border-top: 3px solid var(--red-glow);">
+                <h3>Baseline SRE Tradicional (Prometheus / Datadog)</h3>
+                <p><strong>Status:</strong> <span class="status-badge badge-healthy" id="sre-badge">EM SILÊNCIO (0 ALARMES)</span></p>
+                <p><strong>Regra:</strong> P95 &gt; 1.500ms ou 5xx &gt; 5% sustentados.</p>
+            </div>
+        </div>
+
+        <!-- 10. Visão Transacional: Câmara de Trajetórias (Live Waterfall Stream) -->
+        <div class="waterfall-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <div>
+                    <h3 style="margin: 0; font-size: 16px;">CÂMARA DE TRAJETÓRIAS TRANSACIONAIS AO VIVO (WATERFALL STREAM)</h3>
+                    <span style="font-size: 12px; color: var(--text-muted);">
+                        Rastreio de cada salto individual: [1. Ingestão] → [2. Limites] → [3. Antifraude / Fila] → [4. Adquirente] → [5. Ledger]
+                    </span>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); display: flex; gap: 10px;">
+                    <span><span style="color:#3b82f6;">■</span> Ingestão</span>
+                    <span><span style="color:#06b6d4;">■</span> Limites</span>
+                    <span><span style="color:#eab308;">■</span> Espera em Fila</span>
+                    <span><span style="color:#10b981;">■</span> Antifraude</span>
+                    <span><span style="color:#8b5cf6;">■</span> Adquirente</span>
+                </div>
+            </div>
+
+            <table class="journey-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Hora</th>
+                        <th style="width: 160px;">ID Transação</th>
+                        <th style="width: 100px;">Valor</th>
+                        <th style="width: 130px;">Status</th>
+                        <th style="width: 180px;">Impacto no SLA</th>
+                        <th style="width: 80px;">Total</th>
+                        <th>Cascata Temporal dos 6 Estágios (Waterfall)</th>
+                    </tr>
+                </thead>
+                <tbody id="journey-tbody">
+                    <!-- Preenchido via streaming WebSocket a 20 FPS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 11. Linha do Tempo de Auditoria -->
+        <div class="logs-box">
+            <div style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;">
+                Auditoria de Eventos de Mutação & Atuação Closed-Loop
+            </div>
+            <div id="logs-container">
+                <div class="log-item"><span class="log-time">[00:00:00]</span> <span>Inicializando ambiente em modo nominal...</span></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
