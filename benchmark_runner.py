@@ -235,15 +235,22 @@ class BenchmarkOrchestrator:
             ]
         }
 
-        with open("benchmark_results.json", "w", encoding="utf-8") as f:
-            json.dump(summary_payload, f, indent=2, ensure_ascii=False)
-        print(f"\n[✓] Relatório salvo com sucesso em 'benchmark_results.json'")
+        # Write to both working dir and artifacts dir if mounted in Docker
+        target_dirs = ["."]
+        if os.path.isdir("artifacts"):
+            target_dirs.append("artifacts")
 
-        try:
-            generate_html_report("benchmark_results.json", "arkhe_benchmark_report.html")
-            print(f"[✓] Dossiê HTML interativo gerado em 'arkhe_benchmark_report.html'")
-        except Exception as e:
-            print(f"[!] Erro ao gerar dossiê HTML: {e}")
+        for tdir in target_dirs:
+            out_json = os.path.join(tdir, "benchmark_results.json")
+            out_html = os.path.join(tdir, "arkhe_benchmark_report.html")
+            try:
+                with open(out_json, "w", encoding="utf-8") as f:
+                    json.dump(summary_payload, f, indent=2, ensure_ascii=False)
+                print(f"\n[✓] Relatório salvo com sucesso em '{out_json}'")
+                generate_html_report(out_json, out_html)
+                print(f"[✓] Dossiê HTML interativo gerado em '{out_html}'")
+            except Exception as e:
+                print(f"[!] Erro ao salvar artefatos em '{tdir}': {e}")
 
 if __name__ == "__main__":
     scale = float(os.getenv("BENCHMARK_SCALE", sys.argv[1] if len(sys.argv) > 1 else 8.0))

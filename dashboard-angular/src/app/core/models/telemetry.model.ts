@@ -58,14 +58,42 @@ export interface SentinelVector {
   retry_amplification: number;
 }
 
+export interface TrajectorySignal {
+  active: boolean;
+  signal_type: string;
+  signal_label: string;
+  trend_slope_per_min: number;
+  delta_abs_pp: number;
+  delta_rel_pct: number;
+  trend_summary: string;
+  trigger_reason: string | null;
+  rules_violated_count: number;
+  heuristic_severity: number;
+}
+
+export interface SentinelTimeline {
+  t_zero_timestamp: number;
+  elapsed_seconds: number;
+  t_sentinel_offset_sec: number | null;
+  t_sre_offset_sec: number | null;
+  reference_origin: string;
+}
+
 export interface SentinelState {
   score: number;
   level: 'healthy' | 'warning' | 'critical' | 'mitigated';
+  risk_state?: 'nominal' | 'early_warning' | 'critical';
+  state_label?: string;
   triggered: boolean;
   trigger_reason: string | null;
   vector: SentinelVector;
-  lead_time_seconds: number;
-  lead_time_minutes: number;
+  lead_time_seconds: number | null;
+  lead_time_minutes: number | null;
+  lead_time_status?: 'NOT_APPLICABLE' | 'OBSERVING_PENDING_BASELINE' | 'CONSOLIDATED' | 'NO_ANTICIPATION';
+  lead_time_display?: string;
+  lead_time_description?: string;
+  trajectory_signal?: TrajectorySignal;
+  timeline?: SentinelTimeline;
 }
 
 export interface SreGovernanceState {
@@ -173,6 +201,28 @@ export interface StreamMeta {
   frequency_hz: number;
 }
 
+export interface MMcKMetrics {
+  arrival_rate_tps: number;
+  service_rate_per_sec: number;
+  servers_c: number;
+  capacity_k: number;
+  traffic_intensity_rho: number;
+  p_loss_ratio: number;
+  p_loss_pct: number;
+  l_q_expected: number;
+  w_q_ms_expected: number;
+  lambda_effective_tps: number;
+}
+
+export interface LoadConfig {
+  target_tps: number;
+  stochastic_mode: boolean;
+  mode_label: string;
+  system_capacity_k: number;
+  servers_c: number;
+  mmck_metrics?: MMcKMetrics;
+}
+
 export interface TelemetryPayload {
   scenario: ScenarioInfo;
   telemetry: ObservablesTelemetry;
@@ -183,5 +233,6 @@ export interface TelemetryPayload {
   projection: ProjectionState;
   recent_journeys: RecentJourney[];
   event_logs: EventLog[];
+  load_config?: LoadConfig;
   stream_meta: StreamMeta;
 }

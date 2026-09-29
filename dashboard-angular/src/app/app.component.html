@@ -34,12 +34,59 @@
         ⚡ Mitigação Autônoma: <strong>{{ store.isMitigationEnabled() ? 'ATIVADA' : 'DESATIVADA' }}</strong>
       </button>
 
-      <div class="meta-item">
-        <span class="meta-label">TRÁFEGO NOMINAL</span>
-        <span class="meta-value font-mono highlight-blue">120 TPS</span>
+      <!-- BOTÃO SIMULAÇÃO ESTOCÁSTICA DE ALTA FIDELIDADE (M/M/c/K) -->
+      <button 
+        type="button"
+        class="btn-mmck-toggle"
+        [ngClass]="store.isStochasticMode() ? 'active' : 'inactive'"
+        (click)="toggleStochasticMode()"
+        title="Clique para alternar entre Simulação Estocástica de Alta Fidelidade (Processo de Poisson) e Pacing Determinístico">
+        <span class="pulse-dot-mmck"></span>
+        <span>{{ store.isStochasticMode() ? '🎲 SIMULAÇÃO ESTOCÁSTICA (M/M/c/K)' : '🎲 M/M/c/K: DESATIVADO (DETERMINÍSTICO)' }}</span>
+      </button>
+
+      <!-- CONTROLE CONTÍNUO DE AUMENTO E REDUÇÃO DE TPS -->
+      <div class="tps-controller-wrapper" title="Controle Dinâmico Contínuo de Carga Transacional">
+        <span class="tps-title">CARGA:</span>
+        <div class="tps-btn-group">
+          <button class="btn-tps-step" (click)="adjustTps(-50)" title="Reduzir 50 TPS">-50</button>
+          <button class="btn-tps-step" (click)="adjustTps(-10)" title="Reduzir 10 TPS">-10</button>
+          <div class="tps-value-badge" title="Taxa Alvo Injetada em Tempo Real">
+            <span class="tps-val">{{ store.targetTps() }}</span>
+            <span class="tps-unit">TPS</span>
+          </div>
+          <button class="btn-tps-step" (click)="adjustTps(10)" title="Aumentar 10 TPS">+10</button>
+          <button class="btn-tps-step" (click)="adjustTps(50)" title="Aumentar 50 TPS">+50</button>
+        </div>
+        <div class="tps-quick-presets">
+          <button class="btn-tps-preset" (click)="setTps(30)">30</button>
+          <button class="btn-tps-preset" (click)="setTps(60)">60</button>
+          <button class="btn-tps-preset" (click)="setTps(120)">120</button>
+          <button class="btn-tps-preset" (click)="setTps(180)">180</button>
+          <button class="btn-tps-preset" (click)="setTps(250)">250</button>
+          <button class="btn-tps-preset" (click)="setTps(350)">350</button>
+        </div>
       </div>
     </div>
   </header>
+
+  <!-- HUD ANALÍTICO DA FÍSICA ESTOCÁSTICA M/M/c/K (KENDALL) -->
+  @if (store.mmckMetrics(); as m) {
+    <div class="mmck-hud-bar card-glass">
+      <div class="mmck-hud-title">
+        <span>📐 FÍSICA ANALÍTICA DE FILAS (M/M/c/K - KENDALL CLOSED-FORM):</span>
+      </div>
+      <div class="mmck-hud-content">
+        λ: <strong>{{ m.arrival_rate_tps }}</strong> TPS | 
+        μ: <strong>{{ m.service_rate_per_sec }}</strong>/s | 
+        c: <strong>{{ m.servers_c }}</strong> slots | 
+        K: <strong>{{ m.capacity_k }}</strong> cap | 
+        ρ: <strong>{{ (m.traffic_intensity_rho * 100).toFixed(1) }}%</strong> | 
+        P_loss: <strong>{{ m.p_loss_pct.toFixed(2) }}%</strong> | 
+        W_q: <strong>{{ m.w_q_ms_expected.toFixed(1) }}ms</strong>
+      </div>
+    </div>
+  }
 
   <!-- 0. FLIGHT RECORDER TIME MACHINE & SCRUBBER -->
   <arkhe-time-machine-scrubber></arkhe-time-machine-scrubber>

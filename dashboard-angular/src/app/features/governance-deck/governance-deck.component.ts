@@ -15,17 +15,26 @@ import { TelemetryStore } from '../../core/state/telemetry.store';
           ANTECEDÊNCIA OPERACIONAL DO ARKHÉ SENTINEL SOBRE O ALARME SRE CLÁSSICO
         </div>
         <div class="lead-desc">
-          @if (store.leadTimeSeconds() > 0) {
-            Sinais estocásticos de fila convergiram. O ARKHÉ detectou a quebra de invariante 
-            <strong>{{ store.leadTimeSeconds() }}s</strong> antes de qualquer alarme de Prometheus/Datadog.
+          @if (store.leadTimeStatus() === 'CONSOLIDATED') {
+            Antecedência confirmada de <strong>{{ store.leadTimeSeconds() }}s</strong> em relação ao alarme Prometheus/Datadog.
+          } @else if (store.leadTimeStatus() === 'OBSERVING_PENDING_BASELINE') {
+            <span style="color: #f59e0b;">Detecção antecipada ativa.</span> Monitor convencional SRE ainda mudo (antecipação em curso, aguardando baseline).
           } @else {
-            Aguardando divergência de trajetória (o sistema está operando dentro da bacia estável nominal).
+            {{ store.leadTimeDescription() }}
           }
         </div>
       </div>
       <div class="lead-metric">
-        <div class="lead-val">+{{ store.leadTimeSeconds() | number:'1.1-1' }}s</div>
-        <span class="lead-unit">TEMPO DE ANTECEDÊNCIA GANHO</span>
+        <div class="lead-val">{{ store.leadTimeDisplay() }}</div>
+        <span class="lead-unit">
+          @if (store.leadTimeStatus() === 'CONSOLIDATED') {
+            TEMPO DE ANTECEDÊNCIA GANHO
+          } @else if (store.leadTimeStatus() === 'OBSERVING_PENDING_BASELINE') {
+            EM OBSERVAÇÃO PREVENTIVA
+          } @else {
+            STATUS DE ANTECEDÊNCIA
+          }
+        </span>
       </div>
     </div>
 

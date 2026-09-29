@@ -56,3 +56,7 @@ arkhe_pov_executive_summary.html
 # Local Scratch Scripts & Workspaces
 scratch/
 scratch_*.py
+
+# Angular Cache
+.angular/
+dashboard-angular/.angular/

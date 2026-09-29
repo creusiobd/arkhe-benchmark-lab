@@ -107,6 +107,18 @@ export class TelemetryStreamClient {
         return this.send('toggle_mitigation');
     }
 
+    sendSetTps(tps) {
+        return this.send(`set_tps:${tps}`);
+    }
+
+    sendAdjustTps(delta) {
+        return this.send(`delta_tps:${delta}`);
+    }
+
+    sendToggleStochastic() {
+        return this.send('toggle_stochastic');
+    }
+
     sendPing() {
         return this.send('ping');
     }

@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # Final runtime image (Distroless-like minimal footprint)
 FROM python:3.12-slim
@@ -19,8 +19,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy installed wheels from builder
-COPY --from=builder /root/.local /root/.local
+# Copy installed wheels from builder to /usr/local for system-wide non-root access
+COPY --from=builder /install /usr/local
 
 # Create non-root user for security (K8s restricted pod security standard)
 RUN groupadd -g 10001 appgroup && \
@@ -28,6 +28,9 @@ RUN groupadd -g 10001 appgroup && \
 
 # Copy application code and modules
 COPY --chown=appuser:appgroup app.py arkhe_detector.py traditional_monitor.py coi_engine.py benchmark_runner.py report_generator.py run_interactive_pov.py ./
+COPY --chown=appuser:appgroup contracts/ ./contracts/
+COPY --chown=appuser:appgroup detectors/ ./detectors/
+COPY --chown=appuser:appgroup evaluator/ ./evaluator/
 COPY --chown=appuser:appgroup otel/ ./otel/
 COPY --chown=appuser:appgroup k8s/ ./k8s/
 COPY --chown=appuser:appgroup ci/ ./ci/
@@ -36,7 +39,6 @@ COPY --chown=appuser:appgroup static/ ./static/
 COPY --chown=appuser:appgroup arkhe_pitch_deck_presentation.html ./arkhe_pitch_deck_presentation.html
 COPY --chown=appuser:appgroup arkhe_pov_executive_summary.html ./arkhe_pov_executive_summary.html
 
-ENV PATH=/root/.local/bin:$PATH
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080
 

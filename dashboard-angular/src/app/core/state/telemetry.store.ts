@@ -42,6 +42,11 @@ export class TelemetryStore {
   public readonly projection = computed(() => this.raw()?.projection);
   public readonly recentJourneys = computed(() => this.raw()?.recent_journeys || []);
   public readonly eventLogs = computed(() => this.raw()?.event_logs || []);
+  public readonly loadConfig = computed(() => this.raw()?.load_config);
+  public readonly targetTps = computed(() => this.loadConfig()?.target_tps ?? 120);
+  public readonly isStochasticMode = computed(() => this.loadConfig()?.stochastic_mode ?? true);
+  public readonly modeLabel = computed(() => this.loadConfig()?.mode_label ?? 'SIMULAÇÃO ESTOCÁSTICA DE ALTA FIDELIDADE (M/M/c/K)');
+  public readonly mmckMetrics = computed(() => this.loadConfig()?.mmck_metrics);
 
   // KPIs de Alto Nível Computados
   public readonly tpsDisplay = computed(() => {
@@ -85,12 +90,40 @@ export class TelemetryStore {
     this.sentinel()?.level ?? 'healthy'
   );
 
+  public readonly riskState = computed(() => 
+    this.sentinel()?.risk_state ?? (this.sentinelScore() >= 75 ? 'critical' : (this.sentinelScore() >= 45 ? 'early_warning' : 'nominal'))
+  );
+
+  public readonly stateLabel = computed(() => 
+    this.sentinel()?.state_label ?? (this.sentinelScore() >= 75 ? 'CRÍTICO' : (this.sentinelScore() >= 45 ? 'ALERTA PRECOCE' : 'NOMINAL'))
+  );
+
   public readonly leadTimeMinutes = computed(() => 
-    this.sentinel()?.lead_time_minutes ?? 0
+    this.sentinel()?.lead_time_minutes ?? null
   );
 
   public readonly leadTimeSeconds = computed(() => 
-    this.sentinel()?.lead_time_seconds ?? 0
+    this.sentinel()?.lead_time_seconds ?? null
+  );
+
+  public readonly leadTimeStatus = computed(() => 
+    this.sentinel()?.lead_time_status ?? 'NOT_APPLICABLE'
+  );
+
+  public readonly leadTimeDisplay = computed(() => 
+    this.sentinel()?.lead_time_display ?? (this.leadTimeSeconds() !== null ? `+${this.leadTimeSeconds()!.toFixed(1)}s` : 'N/D')
+  );
+
+  public readonly leadTimeDescription = computed(() => 
+    this.sentinel()?.lead_time_description ?? 'Regime nominal. Nenhum evento de anomalia ativo.'
+  );
+
+  public readonly trajectorySignal = computed(() => 
+    this.sentinel()?.trajectory_signal
+  );
+
+  public readonly isTrajectoryAlert = computed(() => 
+    this.sentinel()?.trajectory_signal?.active ?? false
   );
 
   public readonly burnRate = computed(() => 
@@ -132,6 +165,30 @@ export class TelemetryStore {
       this.ws.toggleMitigation();
     } else {
       this.api.toggleMitigation().subscribe();
+    }
+  }
+
+  public setTps(tps: number): void {
+    if (this.isConnected()) {
+      this.ws.setTps(tps);
+    } else {
+      this.api.setTps(tps).subscribe();
+    }
+  }
+
+  public adjustTps(delta: number): void {
+    if (this.isConnected()) {
+      this.ws.adjustTps(delta);
+    } else {
+      this.api.adjustTps(delta).subscribe();
+    }
+  }
+
+  public toggleStochasticMode(): void {
+    if (this.isConnected()) {
+      this.ws.toggleStochastic();
+    } else {
+      this.api.toggleStochastic().subscribe();
     }
   }
 

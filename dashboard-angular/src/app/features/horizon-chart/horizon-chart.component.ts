@@ -63,9 +63,9 @@ import { ProjectionState } from '../../core/models/telemetry.model';
         <span class="leg-item"><span class="dot-solid dot-blue"></span> Histórico Observado (-20s)</span>
         <span class="leg-item"><span class="dot-box dot-cone"></span> Cone Incerteza 95% (Limiares de Little)</span>
         <span class="leg-item"><span class="line-dashed line-red"></span> Projeção Sem Mitigação</span>
-        <span class="leg-item"><span class="line-dashed line-green"></span> Projeção Sob Auto-Cura ARKHÉ</span>
-        <span class="leg-item"><span class="dot-solid dot-yellow"></span> Limite Bacia Estável (50%)</span>
-        <span class="leg-item"><span class="dot-solid dot-red"></span> Limiar Crítico de Ruptura (80%)</span>
+        <span class="leg-item"><span class="dot-solid" style="background:#10b981;"></span> Faixa Nominal (&lt; 45%)</span>
+        <span class="leg-item"><span class="dot-solid dot-yellow"></span> Alerta Precoce (45% - 75%)</span>
+        <span class="leg-item"><span class="dot-solid dot-red"></span> Ruptura Crítica (&ge; 75%)</span>
       </div>
     </div>
   `,

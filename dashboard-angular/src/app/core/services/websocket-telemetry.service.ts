@@ -102,6 +102,18 @@ export class WebsocketTelemetryService implements OnDestroy {
     this.sendCommand('toggle_mitigation');
   }
 
+  public setTps(tps: number): void {
+    this.sendCommand(`set_tps:${tps}`);
+  }
+
+  public adjustTps(delta: number): void {
+    this.sendCommand(`delta_tps:${delta}`);
+  }
+
+  public toggleStochastic(): void {
+    this.sendCommand('toggle_stochastic');
+  }
+
   private startFpsCounter(): void {
     this.fpsTimer = setInterval(() => {
       this.fpsCount.set(this.frameCount);

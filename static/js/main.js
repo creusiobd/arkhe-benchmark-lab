@@ -3,7 +3,7 @@
  * Conecta e coordena API, WebSocket, Gráficos Chart.js 4, Espaço de Fase e Topologia.
  */
 
-import { fetchLiveTelemetry, toggleMitigationApi, triggerScenarioApi, resetSystemStateApi } from './api.js';
+import { fetchLiveTelemetry, toggleMitigationApi, triggerScenarioApi, resetSystemStateApi, setTpsApi, adjustTpsApi, toggleStochasticApi, fetchLoadConfigApi } from './api.js';
 import { TelemetryStreamClient } from './websocket.js';
 import { ChartEngine } from './charts.js';
 import { PhaseSpaceRenderer } from './phase_space.js';
@@ -31,6 +31,9 @@ class ArkheCockpitApp {
         window.setScenario = (name) => this.handleSetScenario(name);
         window.toggleMitigation = () => this.handleToggleMitigation();
         window.selectTopoNode = (nodeId) => this.topology.selectNode(nodeId);
+        window.adjustTps = (delta) => this.handleAdjustTps(delta);
+        window.setTps = (tps) => this.handleSetTps(tps);
+        window.toggleStochasticMode = () => this.handleToggleStochastic();
 
         // Inicializa cliente WebSocket
         this.wsClient = new TelemetryStreamClient({
@@ -75,6 +78,27 @@ class ArkheCockpitApp {
         }
     }
 
+    async handleAdjustTps(delta) {
+        const sentViaWs = this.wsClient.sendAdjustTps(delta);
+        if (!sentViaWs) {
+            await adjustTpsApi(delta);
+        }
+    }
+
+    async handleSetTps(tps) {
+        const sentViaWs = this.wsClient.sendSetTps(tps);
+        if (!sentViaWs) {
+            await setTpsApi(tps);
+        }
+    }
+
+    async handleToggleStochastic() {
+        const sentViaWs = this.wsClient.sendToggleStochastic();
+        if (!sentViaWs) {
+            await toggleStochasticApi();
+        }
+    }
+
     updateMitigationButton(enabled) {
         const btn = document.getElementById('btn-toggle-mitigation');
         if (!btn) return;
@@ -90,6 +114,31 @@ class ArkheCockpitApp {
     renderTelemetryFrame(d) {
         if (!d || !d.telemetry) return;
 
+        // 0. Atualização de Carga Contínua & Modo M/M/c/K
+        if (d.load_config) {
+            const lc = d.load_config;
+            const tpsValEl = document.getElementById('current-tps-val');
+            if (tpsValEl) tpsValEl.textContent = Math.round(lc.target_tps);
+
+            const mmckBtn = document.getElementById('btn-toggle-mmck');
+            const mmckText = document.getElementById('mmck-btn-text');
+            if (mmckBtn) {
+                if (lc.stochastic_mode) {
+                    mmckBtn.className = 'btn-mmck-toggle active';
+                    if (mmckText) mmckText.textContent = '🎲 SIMULAÇÃO ESTOCÁSTICA DE ALTA FIDELIDADE (M/M/c/K)';
+                } else {
+                    mmckBtn.className = 'btn-mmck-toggle inactive';
+                    if (mmckText) mmckText.textContent = '🎲 M/M/c/K: DESATIVADO (DETERMINÍSTICO)';
+                }
+            }
+
+            const mmckHud = document.getElementById('mmck-hud-metrics');
+            if (mmckHud && lc.mmck_metrics) {
+                const m = lc.mmck_metrics;
+                mmckHud.innerHTML = `λ: <strong>${m.arrival_rate_tps}</strong> TPS | μ: <strong>${m.service_rate_per_sec}</strong>/s | c: <strong>${m.servers_c}</strong> | K: <strong>${m.capacity_k}</strong> | ρ: <strong>${(m.traffic_intensity_rho * 100).toFixed(1)}%</strong> | P_loss: <strong>${m.p_loss_pct.toFixed(2)}%</strong> | W_q: <strong>${m.w_q_ms_expected.toFixed(1)}ms</strong>`;
+            }
+        }
+
         // 1. Cenário Ativo & Mitigação
         const sc = d.scenario ? d.scenario.id : 'nominal';
         document.querySelectorAll('.btn-scenario').forEach(b => b.classList.remove('active'));
@@ -99,16 +148,22 @@ class ArkheCockpitApp {
         this.updateMitigationButton(d.mitigation ? d.mitigation.enabled : false);
 
         // 2. Banner de Antecedência Operacional
-        const ltSec = d.sentinel ? d.sentinel.lead_time_seconds : 0.0;
+        const sent = d.sentinel || {};
+        const ltSec = sent.lead_time_seconds;
+        const ltStatus = sent.lead_time_status || 'NOT_APPLICABLE';
+        const ltDisplay = sent.lead_time_display || (ltSec != null ? `+${ltSec.toFixed(1)}s` : 'N/D');
+        const ltDescText = sent.lead_time_description || 'Aguardando convergência de sinais de trajetória nos 6 saltos...';
+
         const ltEl = document.getElementById('lead-time-counter');
         const ltDesc = document.getElementById('lead-status-desc');
         if (ltEl && ltDesc) {
-            if (ltSec > 0) {
-                ltEl.textContent = `+${ltSec.toFixed(1)}s`;
-                ltDesc.innerHTML = `<strong style="color:#60a5fa;">ARKHÉ ANTECIPOU O SRE EM ${ltSec.toFixed(1)} SEGUNDOS!</strong> Mitigação autônoma ativada no minuto zero do Drift.`;
+            ltEl.textContent = ltDisplay;
+            if (ltStatus === 'CONSOLIDATED' && ltSec != null && ltSec > 0) {
+                ltDesc.innerHTML = `<strong style="color:#60a5fa;">ARKHÉ ANTECIPOU O SRE EM ${ltSec.toFixed(1)} SEGUNDOS!</strong> Antecedência operacional comprovada antes do alarme convencional.`;
+            } else if (ltStatus === 'OBSERVING_PENDING_BASELINE') {
+                ltDesc.innerHTML = `<strong style="color:#f59e0b;">DETECÇÃO PRECOCE ATIVA (EM OBSERVAÇÃO)</strong>: Monitor convencional SRE ainda mudo.`;
             } else {
-                ltEl.textContent = '+0.0s';
-                ltDesc.textContent = 'Aguardando divergência de sinais de trajetória nos 6 saltos...';
+                ltDesc.textContent = ltDescText;
             }
         }
 
@@ -165,29 +220,33 @@ class ArkheCockpitApp {
             burnBadge.style.color = (gov.burn_rate || 0) > 14.4 ? 'var(--red-glow)' : ((gov.burn_rate || 0) > 1.0 ? 'var(--yellow)' : 'var(--green-glow)');
         }
 
-        // 5. KPIs Principais
-        const score = d.sentinel ? d.sentinel.score : 0.0;
+        // 5. KPIs Principais: Score Instantâneo e Limiares Estáticos (<45% / 45-75% / >=75%)
+        const score = sent.score != null ? sent.score : 0.0;
         const scoreEl = document.getElementById('kpi-score');
         const badgeEl = document.getElementById('kpi-score-badge');
         const barScore = document.getElementById('bar-score');
 
-        if (scoreEl) scoreEl.textContent = `${score.toFixed(1)} / 100`;
-        if (badgeEl) badgeEl.textContent = (d.sentinel ? d.sentinel.level : 'healthy').toUpperCase();
+        if (scoreEl) scoreEl.textContent = `${score.toFixed(1)}%`;
+        if (badgeEl) {
+            if (score >= 75.0) {
+                badgeEl.textContent = 'CRÍTICO (≥ 75%)';
+                badgeEl.className = 'status-badge badge-danger';
+                if (scoreEl) scoreEl.style.color = 'var(--red-glow)';
+                if (barScore) barScore.style.background = 'var(--red-glow)';
+            } else if (score >= 45.0) {
+                badgeEl.textContent = 'ALERTA PRECOCE (45-75%)';
+                badgeEl.className = 'status-badge badge-warning';
+                if (scoreEl) scoreEl.style.color = 'var(--yellow)';
+                if (barScore) barScore.style.background = 'var(--yellow)';
+            } else {
+                badgeEl.textContent = 'NOMINAL (< 45%)';
+                badgeEl.className = 'status-badge badge-healthy';
+                if (scoreEl) scoreEl.style.color = 'var(--green-glow)';
+                if (barScore) barScore.style.background = 'var(--green-glow)';
+            }
+        }
         if (barScore) {
             barScore.style.width = Math.min(100, score) + '%';
-            if (score < 50) {
-                if (scoreEl) scoreEl.style.color = 'var(--green-glow)';
-                if (badgeEl) badgeEl.className = 'status-badge badge-healthy';
-                barScore.style.background = 'var(--green-glow)';
-            } else if (score < 75) {
-                if (scoreEl) scoreEl.style.color = 'var(--yellow)';
-                if (badgeEl) badgeEl.className = 'status-badge badge-warning';
-                barScore.style.background = 'var(--yellow)';
-            } else {
-                if (scoreEl) scoreEl.style.color = 'var(--red-glow)';
-                if (badgeEl) badgeEl.className = 'status-badge badge-danger';
-                barScore.style.background = 'var(--red-glow)';
-            }
         }
 
         const resources = d.telemetry.resources || {};
@@ -220,15 +279,17 @@ class ArkheCockpitApp {
         // 6. Comparação ARKHÉ vs SRE Clássico
         const detBadge = document.getElementById('sentinel-det-badge');
         const sentinelReason = document.getElementById('sentinel-reason');
+        const traj = sent.trajectory_signal || {};
         if (detBadge && sentinelReason) {
-            if (d.sentinel && d.sentinel.triggered) {
+            if (traj.active || sent.triggered) {
                 detBadge.className = 'status-badge badge-warning';
-                detBadge.textContent = 'ANOMALIA DETECTADA (ANTECIPADO)';
-                sentinelReason.textContent = d.sentinel.trigger_reason;
+                detBadge.textContent = 'ALERTA PRECOCE DE TRAJETÓRIA (PREDITIVO)';
+                const deltaPpStr = traj.delta_abs_pp != null ? ` [Δ ${traj.delta_abs_pp >= 0 ? '+' : ''}${traj.delta_abs_pp.toFixed(1)} p.p. / ${traj.delta_rel_pct >= 0 ? '+' : ''}${traj.delta_rel_pct.toFixed(1)}% rel]` : '';
+                sentinelReason.innerHTML = `<strong>${traj.trigger_reason || sent.trigger_reason}</strong>${deltaPpStr}<br><span style="font-size:11px;color:#94a3b8;">Sinal dinâmico de derivada: detecção antecipada antes da violação do limiar estático.</span>`;
             } else {
                 detBadge.className = 'status-badge badge-healthy';
-                detBadge.textContent = 'NOMINAL';
-                sentinelReason.textContent = 'Operação estável sem anomalias estruturais.';
+                detBadge.textContent = 'BACIA ESTÁVEL (NOMINAL)';
+                sentinelReason.textContent = 'Trajetória laminar dentro da bacia de atração nominal (< 45%).';
             }
         }
 

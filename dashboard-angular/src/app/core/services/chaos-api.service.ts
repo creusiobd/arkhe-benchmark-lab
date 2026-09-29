@@ -24,4 +24,20 @@ export class ChaosApiService {
   public getLiveTelemetry(): Observable<any> {
     return this.http.get(`${this.baseUrl}/telemetry/live`);
   }
+
+  public getLoadConfig(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/load/config`);
+  }
+
+  public setTps(tps: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/load/tps?tps=${encodeURIComponent(tps)}`, {});
+  }
+
+  public adjustTps(delta: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/load/adjust?delta=${encodeURIComponent(delta)}`, {});
+  }
+
+  public toggleStochastic(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/load/toggle_stochastic`, {});
+  }
 }

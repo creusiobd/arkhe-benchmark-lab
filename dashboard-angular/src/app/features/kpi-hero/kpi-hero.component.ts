@@ -8,16 +8,16 @@ import { TelemetryStore } from '../../core/state/telemetry.store';
   imports: [CommonModule],
   template: `
     <div class="kpi-grid">
-      <!-- 1. Score de Risco ARKHÉ -->
+      <!-- 1. Score de Risco Instantâneo ARKHÉ -->
       <div class="kpi-card" [ngClass]="'border-' + store.sentinelLevel()">
         <div class="kpi-header">
-          <span class="kpi-title">SCORE DE RISCO ARKHÉ</span>
+          <span class="kpi-title">SCORE DE RISCO INSTANTÂNEO</span>
           <span class="status-badge" [ngClass]="'badge-' + store.sentinelLevel()">
-            {{ store.sentinelLevel() | uppercase }}
+            {{ store.stateLabel() }}
           </span>
         </div>
         <div class="kpi-metric" [ngClass]="'text-' + store.sentinelLevel()">
-          {{ store.sentinelScore() | number:'1.1-1' }} <span class="kpi-unit">/ 100</span>
+          {{ store.sentinelScore() | number:'1.1-1' }} <span class="kpi-unit">%</span>
         </div>
         <div class="progress-bar-bg">
           <div 
@@ -27,8 +27,12 @@ import { TelemetryStore } from '../../core/state/telemetry.store';
           </div>
         </div>
         <div class="kpi-sub">
-          <span>Lead Time: <strong>{{ store.leadTimeSeconds() }}s</strong></span>
-          <span>Razão Wq/Ws: <strong>{{ store.wqWsRatio() | number:'1.2-2' }}</strong></span>
+          <span>Antecedência: <strong>{{ store.leadTimeDisplay() }}</strong></span>
+          @if (store.isTrajectoryAlert()) {
+            <span style="color: #f59e0b;">Sinal Trajetória: <strong>Δ +{{ store.trajectorySignal()?.delta_abs_pp }} p.p.</strong></span>
+          } @else {
+            <span>Razão Wq/Ws: <strong>{{ store.wqWsRatio() | number:'1.2-2' }}</strong></span>
+          }
         </div>
       </div>
 

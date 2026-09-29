@@ -37,4 +37,16 @@ export class AppComponent {
   public toggleMitigation(): void {
     this.store.toggleMitigation();
   }
+
+  public adjustTps(delta: number): void {
+    this.store.adjustTps(delta);
+  }
+
+  public setTps(tps: number): void {
+    this.store.setTps(tps);
+  }
+
+  public toggleStochasticMode(): void {
+    this.store.toggleStochasticMode();
+  }
 }

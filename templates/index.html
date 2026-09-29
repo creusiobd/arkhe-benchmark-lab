@@ -35,11 +35,48 @@
                 <button id="btn-toggle-mitigation" class="btn-mitigation-toggle" onclick="toggleMitigation()">
                     ⚡ Mitigação Autônoma: DESATIVADA
                 </button>
-                <div class="live-badge">
-                    <span>120 TPS CONTÍNUOS</span>
+                
+                <!-- BOTÃO SIMULAÇÃO ESTOCÁSTICA DE ALTA FIDELIDADE (M/M/c/K) -->
+                <button id="btn-toggle-mmck" class="btn-mmck-toggle active" onclick="toggleStochasticMode()" title="Clique para alternar entre Simulação Estocástica de Alta Fidelidade (Processo de Poisson) e Pacing Determinístico">
+                    <span class="pulse-dot-mmck"></span>
+                    <span id="mmck-btn-text">🎲 SIMULAÇÃO ESTOCÁSTICA DE ALTA FIDELIDADE (M/M/c/K)</span>
+                </button>
+
+                <!-- CONTROLE CONTÍNUO DE AUMENTO E REDUÇÃO DE TPS -->
+                <div class="tps-controller-wrapper" title="Controle Dinâmico Contínuo de Carga Transacional">
+                    <span class="tps-title">CARGA CONTÍNUA:</span>
+                    <div class="tps-btn-group">
+                        <button class="btn-tps-step" onclick="adjustTps(-50)" title="Reduzir 50 TPS">-50</button>
+                        <button class="btn-tps-step" onclick="adjustTps(-10)" title="Reduzir 10 TPS">-10</button>
+                        <div class="tps-value-badge" title="Taxa Alvo Injetada em Tempo Real">
+                            <span id="current-tps-val">120</span>
+                            <span class="tps-unit">TPS</span>
+                        </div>
+                        <button class="btn-tps-step" onclick="adjustTps(10)" title="Aumentar 10 TPS">+10</button>
+                        <button class="btn-tps-step" onclick="adjustTps(50)" title="Aumentar 50 TPS">+50</button>
+                    </div>
+                    <div class="tps-quick-presets">
+                        <span class="preset-label">Presets:</span>
+                        <button class="btn-tps-preset" onclick="setTps(30)">30</button>
+                        <button class="btn-tps-preset" onclick="setTps(60)">60</button>
+                        <button class="btn-tps-preset" onclick="setTps(120)">120</button>
+                        <button class="btn-tps-preset" onclick="setTps(180)">180</button>
+                        <button class="btn-tps-preset" onclick="setTps(250)">250</button>
+                        <button class="btn-tps-preset" onclick="setTps(350)">350</button>
+                    </div>
                 </div>
             </div>
         </header>
+
+        <!-- HUD DA FÍSICA ESTOCÁSTICA M/M/c/K (TEORIA DAS FILAS ERLANG) -->
+        <div class="mmck-hud-bar">
+            <div class="mmck-hud-title">
+                <span>📐 FÍSICA ANALÍTICA DE FILAS (M/M/c/K - KENDALL CLOSED-FORM):</span>
+            </div>
+            <div id="mmck-hud-metrics" class="mmck-hud-content">
+                λ: <strong>120.0</strong> TPS | μ: <strong>22.2</strong>/s | c: <strong>30</strong> slots | K: <strong>60</strong> cap | ρ: <strong>18.0%</strong> | P_loss: <strong>0.00%</strong> | W_q: <strong>0.8ms</strong>
+            </div>
+        </div>
 
         <!-- 1. Controle de Injeção de Cenários em Tempo Real -->
         <div class="deck">
@@ -365,8 +402,9 @@
                 <span><span class="hz-legend-dot" style="background: rgba(239, 68, 68, 0.4);"></span> Cone de Incerteza Estocástica a 95% (Limiares de Little)</span>
                 <span><span class="hz-legend-dot" style="background: #f43f5e; border-top: 2px dashed #f43f5e;"></span> Projeção Esperada (Sem Mitigação)</span>
                 <span><span class="hz-legend-dot" style="background: #22c55e; border-top: 2px dashed #22c55e;"></span> Trajetória sob Auto-Cura ARKHÉ (Mitigado)</span>
-                <span><span class="hz-legend-dot" style="background: #f59e0b;"></span> Limite da Bacia Estável (50%)</span>
-                <span><span class="hz-legend-dot" style="background: #ef4444;"></span> Limiar Crítico de Ruptura (80%)</span>
+                <span><span class="hz-legend-dot" style="background: #10b981;"></span> Faixa Nominal (&lt; 45%)</span>
+                <span><span class="hz-legend-dot" style="background: #f59e0b;"></span> Alerta Precoce (45% - 75%)</span>
+                <span><span class="hz-legend-dot" style="background: #ef4444;"></span> Ruptura Crítica (&ge; 75%)</span>
             </div>
         </div>
 
@@ -374,10 +412,10 @@
         <div class="kpi-grid">
             <div class="kpi-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span class="kpi-title">Score de Risco ARKHÉ</span>
-                    <span class="status-badge badge-healthy" id="kpi-score-badge">NOMINAL</span>
+                    <span class="kpi-title">Score de Risco Instantâneo</span>
+                    <span class="status-badge badge-healthy" id="kpi-score-badge">NOMINAL (&lt; 45%)</span>
                 </div>
-                <div class="kpi-metric" id="kpi-score" style="color: var(--green-glow);">0.0 / 100</div>
+                <div class="kpi-metric" id="kpi-score" style="color: var(--green-glow);">0.0%</div>
                 <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-score" style="width: 0%; background: var(--green-glow);"></div></div>
             </div>
 

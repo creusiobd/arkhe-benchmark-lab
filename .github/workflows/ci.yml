@@ -57,7 +57,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Execute Full Test Suite (20 Automated Tests)
+      - name: Execute Full Automated Test Suite
         run: |
           python -m unittest discover tests -v
 
@@ -74,9 +74,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Install Client Test Dependencies
         run: |
           python -m pip install --upgrade pip
@@ -88,7 +85,7 @@ jobs:
 
       - name: Start ARKHÉ Cluster (Daemon Mode)
         run: |
-          docker compose up -d
+          docker compose up -d || (docker compose logs && exit 1)
 
       - name: Wait for Card-Auth-Lab Healthcheck
         run: |
@@ -102,6 +99,11 @@ jobs:
             echo "Tentativa $i: status=$status..."
             sleep 1
           done
+          if [ "$status" != '"healthy"' ]; then
+            echo "❌ Timeout aguardando arkhe-card-auth-lab ficar saudável!"
+            docker compose logs
+            exit 1
+          fi
 
       - name: Test WebSocket Streaming (10 FPS @ <15ms)
         run: |
