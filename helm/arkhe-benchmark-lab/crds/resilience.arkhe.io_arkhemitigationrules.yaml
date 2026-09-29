@@ -1,0 +1,136 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: arkhemitigationrules.resilience.arkhe.io
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+    description: "ARKHÉ Mitigation Rule: Regras atômicas de atuação reativa e proativa para eventos cibernéticos."
+spec:
+  group: resilience.arkhe.io
+  names:
+    kind: ArkheMitigationRule
+    listKind: ArkheMitigationRuleList
+    plural: arkhemitigationrules
+    singular: arkhemitigationrule
+    shortNames:
+      - amr
+      - arkherule
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Basin
+          type: string
+          description: "Target Stability Basin"
+          jsonPath: .spec.targetBasinRef.name
+        - name: Metric
+          type: string
+          description: "Trigger Metric"
+          jsonPath: .spec.trigger.metric
+        - name: Threshold
+          type: string
+          description: "Trigger Threshold"
+          jsonPath: .spec.trigger.threshold
+        - name: Action
+          type: string
+          description: "Actuation Type"
+          jsonPath: .spec.action.type
+        - name: State
+          type: string
+          description: "Rule Execution State"
+          jsonPath: .status.state
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: "ArkheMitigationRule define gatilhos cibernéticos para ações estocásticas no Kubernetes."
+          required:
+            - spec
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              required:
+                - targetBasinRef
+                - trigger
+                - action
+              properties:
+                targetBasinRef:
+                  type: object
+                  description: "Vinculação com a Bacia de Estabilidade correspondente."
+                  required:
+                    - name
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                trigger:
+                  type: object
+                  description: "Condição estocástica de disparo."
+                  required:
+                    - metric
+                    - operator
+                    - threshold
+                  properties:
+                    metric:
+                      type: string
+                      enum: [d_rho_dt, sentinel_score, wq_ws_ratio, p99_latency_ms, retry_amplification]
+                    operator:
+                      type: string
+                      enum: [Gt, Gte, Lt, Lte, Eq]
+                      default: Gt
+                    threshold:
+                      type: number
+                      description: "Valor numérico limite para o disparo."
+                    evaluationWindowSeconds:
+                      type: integer
+                      default: 2
+                      description: "Janela contínua de confirmação temporal."
+                action:
+                  type: object
+                  description: "Ação a ser executada pelo controlador."
+                  required:
+                    - type
+                  properties:
+                    type:
+                      type: string
+                      enum: [PredictiveScaleOut, FastPathBypass, Shedding, VirtualServiceReroute, WebhookCall]
+                    parameters:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                rollbackPolicy:
+                  type: object
+                  properties:
+                    autoRecoverAfterSeconds:
+                      type: integer
+                      default: 120
+                    stabilizationThreshold:
+                      type: number
+                      default: 0.35
+                      description: "Valor de rho abaixo do qual o rollback é autorizado."
+            status:
+              type: object
+              properties:
+                state:
+                  type: string
+                  enum: [Armed, Triggered, InCooldown, Disabled]
+                  default: Armed
+                triggerCount:
+                  type: integer
+                  default: 0
+                lastTriggeredAt:
+                  type: string
+                observedGeneration:
+                  type: integer

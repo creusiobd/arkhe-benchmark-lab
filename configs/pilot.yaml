@@ -1,0 +1,40 @@
+# ARKHÉ Agent Boundary Defense Benchmark — Pilot Configuration
+experiment_name: "pilot_benchmark_30_trajectories"
+version: "1.0.0"
+random_seed: 42
+
+dataset:
+  observations:
+    development: "datasets/observations/development.jsonl"
+    validation: "datasets/observations/validation.jsonl"
+    test: "datasets/observations/test.jsonl"
+
+output:
+  directory: "results/pilot"
+  allow_overwrite: true
+
+execution:
+  repetitions: 1
+  record_tokens: true
+  record_latency: true
+
+detectors:
+  - id: "deterministic_event"
+    name: "Deterministic-Event-Rule-Baseline"
+    class_path: "detectors.deterministic_event.DeterministicEventDetector"
+    enabled: true
+    params: {}
+
+  - id: "semantic_event"
+    name: "Semantic-Event-Classifier-Baseline"
+    class_path: "detectors.semantic_event.SemanticEventDetector"
+    enabled: true
+    params:
+      model: "gpt-4o-mini"
+
+  - id: "arkhe_trajectory"
+    name: "ARKHÉ-Trajectory-Sentinel"
+    class_path: "detectors.arkhe_trajectory.ArkheTrajectoryDetector"
+    enabled: true
+    params:
+      risk_threshold: 50.0

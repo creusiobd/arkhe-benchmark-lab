@@ -1,0 +1,77 @@
+<div class="mission-control-container">
+  <!-- TOP HEADER -->
+  <header class="cockpit-header card-glass">
+    <div class="header-brand">
+      <div class="logo-orb">
+        <span class="dot-pulse" [ngClass]="{
+          'bg-emerald': store.sentinelLevel() === 'healthy',
+          'bg-amber': store.sentinelLevel() === 'warning',
+          'bg-crimson': store.sentinelLevel() === 'critical',
+          'bg-violet': store.sentinelLevel() === 'mitigated'
+        }"></span>
+      </div>
+      <div>
+        <h1 class="brand-title">ARKHÉ <span>SENTINEL</span></h1>
+        <p class="brand-subtitle">Cockpit Mestre de Física de Filas, Diagnóstico Antecipado & Mitigação Autônoma (Angular 17)</p>
+      </div>
+    </div>
+
+    <!-- STREAM META & ACTIONS -->
+    <div class="header-meta">
+      <div class="meta-item">
+        <span class="meta-label">STREAM WEBSOCKET</span>
+        <div class="ws-badge" [ngClass]="store.isConnected() ? 'ws-active' : 'ws-inactive'">
+          <span class="pulse-dot-ws"></span>
+          <span>{{ store.isConnected() ? '20 FPS AO VIVO' : 'CONECTANDO...' }}</span>
+        </div>
+      </div>
+
+      <button 
+        type="button" 
+        class="btn-mitigation-toggle" 
+        [class.enabled]="store.isMitigationEnabled()"
+        (click)="toggleMitigation()">
+        ⚡ Mitigação Autônoma: <strong>{{ store.isMitigationEnabled() ? 'ATIVADA' : 'DESATIVADA' }}</strong>
+      </button>
+
+      <div class="meta-item">
+        <span class="meta-label">TRÁFEGO NOMINAL</span>
+        <span class="meta-value font-mono highlight-blue">120 TPS</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 0. FLIGHT RECORDER TIME MACHINE & SCRUBBER -->
+  <arkhe-time-machine-scrubber></arkhe-time-machine-scrubber>
+
+  <!-- 1. CONTROLE DE CENÁRIOS E CAOS -->
+  <arkhe-scenario-bar></arkhe-scenario-bar>
+
+  <!-- 2. ANTECEDÊNCIA, ATUADOR CLOSED-LOOP E GOVERNANÇA SRE -->
+  <arkhe-governance-deck></arkhe-governance-deck>
+
+  <!-- 3. GRAFO TOPOLÓGICO DOS 6 HOPS ARQUITETURAIS -->
+  <arkhe-topology-graph></arkhe-topology-graph>
+
+  <!-- 4. VISIBILIDADE DA TRAJETÓRIA ANTECIPADA (HORIZONTE 5 MIN & CONE DE INCERTEZA 95%) -->
+  <arkhe-horizon-chart></arkhe-horizon-chart>
+
+  <!-- 5. GRID DE MÉTRICAS PRINCIPAIS (KPI HERO) -->
+  <arkhe-kpi-hero></arkhe-kpi-hero>
+
+  <!-- 6. GRÁFICOS EM TEMPO REAL & ESPAÇO DE FASE 2D (ATRATOR DE LYAPUNOV) -->
+  <div class="charts-realtime-row">
+    <div class="chart-col-double">
+      <arkhe-realtime-metrics></arkhe-realtime-metrics>
+    </div>
+    <div class="chart-col-single">
+      <arkhe-lyapunov-canvas></arkhe-lyapunov-canvas>
+    </div>
+  </div>
+
+  <!-- 7. CÂMARA DE TRAJETÓRIAS TRANSACIONAIS AO VIVO (WATERFALL STREAM) -->
+  <arkhe-journey-waterfall></arkhe-journey-waterfall>
+
+  <!-- 8. AUDITORIA DE EVENTOS & MUTATION LOGS -->
+  <arkhe-audit-logs></arkhe-audit-logs>
+</div>

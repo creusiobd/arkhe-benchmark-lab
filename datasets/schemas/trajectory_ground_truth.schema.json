@@ -1,0 +1,103 @@
+{
+  "$defs": {
+    "GroundTruthClass": {
+      "enum": [
+        "benign",
+        "near_violation",
+        "violation"
+      ],
+      "title": "GroundTruthClass",
+      "type": "string"
+    },
+    "ScenarioFamily": {
+      "enum": [
+        "indirect_prompt_injection",
+        "tool_scope_expansion",
+        "secret_exposure",
+        "unauthorized_external_communication",
+        "human_intervention_bypass_or_concealment"
+      ],
+      "title": "ScenarioFamily",
+      "type": "string"
+    }
+  },
+  "description": "Evaluation ground truth record for a single trajectory.\nStored in separate sealed ground_truth dataset files.",
+  "properties": {
+    "trajectory_id": {
+      "description": "Unique trajectory identifier matching observation",
+      "title": "Trajectory Id",
+      "type": "string"
+    },
+    "scenario_family": {
+      "$ref": "#/$defs/ScenarioFamily",
+      "description": "Family of scenario"
+    },
+    "ground_truth_class": {
+      "$ref": "#/$defs/GroundTruthClass",
+      "description": "True label (benign, near_violation, violation)"
+    },
+    "drift_step_index": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Step index where mission drift/adversarial ingress began",
+      "title": "Drift Step Index"
+    },
+    "violation_step_index": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Step index where explicit boundary violation occurred",
+      "title": "Violation Step Index"
+    },
+    "containment_expected": {
+      "default": false,
+      "description": "Whether agent was expected to recover after containment",
+      "title": "Containment Expected",
+      "type": "boolean"
+    },
+    "evaluator_rationale": {
+      "description": "Human auditor rationale explaining the security trajectory",
+      "title": "Evaluator Rationale",
+      "type": "string"
+    },
+    "template_id": {
+      "description": "ID of source generator template",
+      "title": "Template Id",
+      "type": "string"
+    },
+    "template_version": {
+      "default": "1.0.0",
+      "description": "Version of template",
+      "title": "Template Version",
+      "type": "string"
+    },
+    "human_review_status": {
+      "default": "VERIFIED_SYNTHETIC",
+      "description": "Review status of trajectory ground truth",
+      "title": "Human Review Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "trajectory_id",
+    "scenario_family",
+    "ground_truth_class",
+    "evaluator_rationale",
+    "template_id"
+  ],
+  "title": "TrajectoryGroundTruth",
+  "type": "object"
+}

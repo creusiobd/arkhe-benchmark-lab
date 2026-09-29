@@ -1,0 +1,88 @@
+# ==============================================================================
+# ARKHÉ PILOT VALUES: SHADOW MODE (Zero-Risk Observability & Lead Time Benchmark)
+# ==============================================================================
+# In Shadow Mode, ARKHÉ ingests live OpenTelemetry traces & metrics from production
+# workloads, calculates the Lyapunov Stability Basin in real-time, and records
+# early-warning lead times without executing mutation actions (Dry-Run mode).
+# ==============================================================================
+
+lab:
+  image:
+    repository: arkhe/cybernetic-engine
+    tag: v1.1.0-enterprise
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  port: 8080
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 2048Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+# Desativa o gerador sintético: o tráfego é proveniente dos spans reais da aplicação
+loadGenerator:
+  enabled: false
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/websocket-services: arkhe-card-auth-lab-service
+  hosts:
+    - host: arkhe-shadow.internal.bank.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+# --- ARKHÉ OPERATOR: MODO SHADOW / AUDITORIA PASSIVA ---
+operator:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: arkhe/operator
+    tag: v1.1.0-enterprise
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+
+  # Configurações de Bacia de Estabilidade do Piloto
+  stabilityBasin:
+    enabled: true
+    name: "shadow-payment-pipeline"
+    targetThroughputTps: 500.0
+    maxRhoBasin: 0.65
+    maxQueueWaitRatio: 0.30
+    criticalTimeToCollapseSeconds: 45
+    
+    # Em modo Shadow, ações autônomas são executadas apenas em Dry-Run (registro em log/audit)
+    predictiveHpa:
+      enabled: true
+      dryRun: true
+      minReplicas: 5
+      maxReplicas: 120
+      scaleMultiplier: 2.0
+      cooldownSeconds: 180
+
+    fastPathBypass:
+      enabled: true
+      dryRun: true
+      trafficBypassRatio: 0.70
+      targetCacheService: "redis-l2-cluster"

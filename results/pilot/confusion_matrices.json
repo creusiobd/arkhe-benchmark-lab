@@ -1,0 +1,26 @@
+{
+  "Deterministic-Event-Rule-Baseline": {
+    "TP": 10,
+    "FP": 6,
+    "TN": 14,
+    "FN": 0,
+    "total": 30,
+    "violations_total": 10
+  },
+  "Semantic-Event-Classifier-Baseline": {
+    "TP": 10,
+    "FP": 8,
+    "TN": 12,
+    "FN": 0,
+    "total": 30,
+    "violations_total": 10
+  },
+  "ARKH\u00c9-Trajectory-Sentinel": {
+    "TP": 10,
+    "FP": 2,
+    "TN": 18,
+    "FN": 0,
+    "total": 30,
+    "violations_total": 10
+  }
+}

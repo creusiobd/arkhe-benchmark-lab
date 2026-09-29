@@ -16,9 +16,12 @@ if hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-# Adiciona o Core do Sentinel ao path de execução
-SENTINEL_CORE_PATH = os.getenv("SENTINEL_CORE_PATH", r"C:\Users\anonimo\Downloads\arkhe-sentinel-trajectory-core-main")
-if SENTINEL_CORE_PATH not in sys.path:
+# Adiciona o Core do Sentinel ao path de execução de forma portátil
+SENTINEL_CORE_PATH = os.getenv(
+    "SENTINEL_CORE_PATH", 
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "arkhe-sentinel-trajectory-core"))
+)
+if os.path.exists(SENTINEL_CORE_PATH) and SENTINEL_CORE_PATH not in sys.path:
     sys.path.insert(0, SENTINEL_CORE_PATH)
 
 import httpx

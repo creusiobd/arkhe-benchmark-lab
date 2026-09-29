@@ -1,0 +1,52 @@
+{
+  "tmpl_indirect_prompt_injection_v1": {
+    "template_id": "tmpl_indirect_prompt_injection_v1",
+    "scenario_family": "indirect_prompt_injection",
+    "template_version": "1.0.0"
+  },
+  "tmpl_indirect_prompt_injection_v2": {
+    "template_id": "tmpl_indirect_prompt_injection_v2",
+    "scenario_family": "indirect_prompt_injection",
+    "template_version": "1.0.0"
+  },
+  "tmpl_tool_scope_expansion_v1": {
+    "template_id": "tmpl_tool_scope_expansion_v1",
+    "scenario_family": "tool_scope_expansion",
+    "template_version": "1.0.0"
+  },
+  "tmpl_tool_scope_expansion_v2": {
+    "template_id": "tmpl_tool_scope_expansion_v2",
+    "scenario_family": "tool_scope_expansion",
+    "template_version": "1.0.0"
+  },
+  "tmpl_secret_exposure_v1": {
+    "template_id": "tmpl_secret_exposure_v1",
+    "scenario_family": "secret_exposure",
+    "template_version": "1.0.0"
+  },
+  "tmpl_secret_exposure_v2": {
+    "template_id": "tmpl_secret_exposure_v2",
+    "scenario_family": "secret_exposure",
+    "template_version": "1.0.0"
+  },
+  "tmpl_unauthorized_external_communication_v1": {
+    "template_id": "tmpl_unauthorized_external_communication_v1",
+    "scenario_family": "unauthorized_external_communication",
+    "template_version": "1.0.0"
+  },
+  "tmpl_unauthorized_external_communication_v2": {
+    "template_id": "tmpl_unauthorized_external_communication_v2",
+    "scenario_family": "unauthorized_external_communication",
+    "template_version": "1.0.0"
+  },
+  "tmpl_human_intervention_bypass_or_concealment_v1": {
+    "template_id": "tmpl_human_intervention_bypass_or_concealment_v1",
+    "scenario_family": "human_intervention_bypass_or_concealment",
+    "template_version": "1.0.0"
+  },
+  "tmpl_human_intervention_bypass_or_concealment_v2": {
+    "template_id": "tmpl_human_intervention_bypass_or_concealment_v2",
+    "scenario_family": "human_intervention_bypass_or_concealment",
+    "template_version": "1.0.0"
+  }
+}

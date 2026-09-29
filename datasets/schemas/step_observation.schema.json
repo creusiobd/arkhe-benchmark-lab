@@ -1,0 +1,275 @@
+{
+  "$defs": {
+    "ActionType": {
+      "enum": [
+        "READ",
+        "WRITE",
+        "EXECUTE",
+        "NETWORK",
+        "IPC",
+        "TOOL_DISCOVERY",
+        "USER_INTERACTION"
+      ],
+      "title": "ActionType",
+      "type": "string"
+    },
+    "AgentIdentity": {
+      "properties": {
+        "agent_id": {
+          "description": "Unique agent runtime identifier",
+          "title": "Agent Id",
+          "type": "string"
+        },
+        "role": {
+          "description": "Declared role of agent",
+          "title": "Role",
+          "type": "string"
+        },
+        "parent_agent_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Parent agent ID in multi-agent graph",
+          "title": "Parent Agent Id"
+        },
+        "trust_tier": {
+          "default": "INTERNAL_RESTRICTED",
+          "description": "Trust level: UNTRUSTED, INTERNAL_RESTRICTED, ELEVATED",
+          "title": "Trust Tier",
+          "type": "string"
+        }
+      },
+      "required": [
+        "agent_id",
+        "role"
+      ],
+      "title": "AgentIdentity",
+      "type": "object"
+    },
+    "AgentMission": {
+      "properties": {
+        "original_mission": {
+          "description": "Original goal declared by user or supervisor",
+          "title": "Original Mission",
+          "type": "string"
+        },
+        "current_instruction": {
+          "description": "Current observed active instruction at step",
+          "title": "Current Instruction",
+          "type": "string"
+        },
+        "allowed_scope": {
+          "description": "Declared allowed topics, directories or resources",
+          "items": {
+            "type": "string"
+          },
+          "title": "Allowed Scope",
+          "type": "array"
+        }
+      },
+      "required": [
+        "original_mission",
+        "current_instruction"
+      ],
+      "title": "AgentMission",
+      "type": "object"
+    },
+    "BoundaryPolicy": {
+      "properties": {
+        "boundary_id": {
+          "description": "Identifier of security boundary policy",
+          "title": "Boundary Id",
+          "type": "string"
+        },
+        "boundary_type": {
+          "description": "Defensive boundary family",
+          "title": "Boundary Type",
+          "type": "string"
+        },
+        "description": {
+          "description": "Policy description",
+          "title": "Description",
+          "type": "string"
+        },
+        "forbidden_targets": {
+          "description": "Explicitly forbidden target patterns",
+          "items": {
+            "type": "string"
+          },
+          "title": "Forbidden Targets",
+          "type": "array"
+        }
+      },
+      "required": [
+        "boundary_id",
+        "boundary_type",
+        "description"
+      ],
+      "title": "BoundaryPolicy",
+      "type": "object"
+    },
+    "CapabilityScope": {
+      "properties": {
+        "allowed_tools": {
+          "description": "Whitelist of tools available to agent",
+          "items": {
+            "type": "string"
+          },
+          "title": "Allowed Tools",
+          "type": "array"
+        },
+        "allowed_paths": {
+          "description": "Allowed filesystem paths",
+          "items": {
+            "type": "string"
+          },
+          "title": "Allowed Paths",
+          "type": "array"
+        },
+        "allowed_hosts": {
+          "description": "Allowed network domains/IPs",
+          "items": {
+            "type": "string"
+          },
+          "title": "Allowed Hosts",
+          "type": "array"
+        },
+        "can_execute_code": {
+          "default": false,
+          "description": "Whether execution of arbitrary code is permitted",
+          "title": "Can Execute Code",
+          "type": "boolean"
+        }
+      },
+      "title": "CapabilityScope",
+      "type": "object"
+    },
+    "ToolExecutionResult": {
+      "properties": {
+        "status": {
+          "description": "Execution status returned by tool environment: SUCCESS, BLOCKED, FAILED, WARNED",
+          "title": "Status",
+          "type": "string"
+        },
+        "raw_observation": {
+          "description": "Raw text observation returned by tool",
+          "title": "Raw Observation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "raw_observation"
+      ],
+      "title": "ToolExecutionResult",
+      "type": "object"
+    },
+    "ToolInvocation": {
+      "properties": {
+        "tool_name": {
+          "description": "Name of tool called",
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "action_type": {
+          "$ref": "#/$defs/ActionType",
+          "description": "Type of operation"
+        },
+        "target_resource": {
+          "description": "Target URI, path, domain, or memory slot",
+          "title": "Target Resource",
+          "type": "string"
+        },
+        "parameters_summary": {
+          "additionalProperties": true,
+          "description": "Sanitized parameters dictionary",
+          "title": "Parameters Summary",
+          "type": "object"
+        }
+      },
+      "required": [
+        "tool_name",
+        "action_type",
+        "target_resource"
+      ],
+      "title": "ToolInvocation",
+      "type": "object"
+    }
+  },
+  "description": "Single execution step containing strictly observable runtime signals.\nDetectors receive this and MUST infer divergence, risk, and contamination dynamically.",
+  "properties": {
+    "trajectory_id": {
+      "description": "Trajectory identifier",
+      "title": "Trajectory Id",
+      "type": "string"
+    },
+    "step_id": {
+      "description": "Unique step identifier",
+      "title": "Step Id",
+      "type": "string"
+    },
+    "step_index": {
+      "description": "Sequential index of step",
+      "minimum": 0,
+      "title": "Step Index",
+      "type": "integer"
+    },
+    "logical_order": {
+      "description": "Logical ordering clock",
+      "minimum": 0,
+      "title": "Logical Order",
+      "type": "integer"
+    },
+    "timestamp_iso": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "ISO timestamp of observation",
+      "title": "Timestamp Iso"
+    },
+    "identity": {
+      "$ref": "#/$defs/AgentIdentity"
+    },
+    "mission": {
+      "$ref": "#/$defs/AgentMission"
+    },
+    "action": {
+      "$ref": "#/$defs/ToolInvocation"
+    },
+    "capability": {
+      "$ref": "#/$defs/CapabilityScope"
+    },
+    "boundary": {
+      "$ref": "#/$defs/BoundaryPolicy"
+    },
+    "result": {
+      "$ref": "#/$defs/ToolExecutionResult"
+    }
+  },
+  "required": [
+    "trajectory_id",
+    "step_id",
+    "step_index",
+    "logical_order",
+    "identity",
+    "mission",
+    "action",
+    "capability",
+    "boundary",
+    "result"
+  ],
+  "title": "StepObservation",
+  "type": "object"
+}

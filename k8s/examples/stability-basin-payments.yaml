@@ -1,0 +1,36 @@
+apiVersion: resilience.arkhe.io/v1alpha1
+kind: ArkheStabilityBasin
+metadata:
+  name: core-payments-basin
+  namespace: payments-prod
+  labels:
+    app.kubernetes.io/part-of: arkhe-resilience
+    app.kubernetes.io/tier: mission-critical
+spec:
+  workloadRef:
+    kind: Deployment
+    name: payment-authorization-service
+    apiVersion: apps/v1
+  stabilityConstraints:
+    targetThroughputTps: 120.0
+    maxRhoBasin: 0.50               # Limite seguro da Bacia de Lyapunov (50% de ocupação)
+    maxQueueWaitRatio: 0.25          # W_q / W_s limite máximo admissível
+    criticalTimeToCollapseSeconds: 30 # Dispara remediação preventiva se TTC < 30s
+    samplingFrequencyHz: 20
+  mitigation:
+    predictiveHpa:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 60                # Permite escala até 60 réplicas sob colapso
+      scaleMultiplier: 2.0           # Dobra capacidade em 12ms ao detectar rompimento
+      cooldownSeconds: 120
+    fastPathBypass:
+      enabled: true
+      trafficBypassRatio: 0.70       # Roteia 70% do tráfego saudável para Cache L2 (12ms)
+      targetCacheService: "redis-l2-cache.payments-prod.svc.cluster.local"
+    circuitBreaker:
+      enabled: false
+      shedNonEssentialTraffic: true
+  telemetrySource:
+    endpointUri: "ws://127.0.0.1:8080/ws/telemetry"
+    protocol: websocket

@@ -232,6 +232,15 @@ mimetypes.add_type("text/css", ".css")
 # Monta diretório de recursos estáticos modulares (CSS, JS Vanilla ES6+, Assets)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Monta distribuição de produção do Angular 17 Dashboard
+angular_dist_dir = os.path.join(os.path.dirname(__file__), "dashboard-angular", "dist", "arkhe-dashboard-angular", "browser")
+if os.path.exists(angular_dist_dir):
+    from fastapi.responses import RedirectResponse
+    @app.get("/ng", include_in_schema=False)
+    async def redirect_angular():
+        return RedirectResponse(url="/ng/")
+    app.mount("/ng", StaticFiles(directory=angular_dist_dir, html=True), name="angular")
+
 # --- MODELOS DE DADOS ---
 @dataclass
 class PaymentIntent:
@@ -888,6 +897,10 @@ async def build_telemetry_payload() -> dict:
             "frequency_hz": 20
         }
     }
+# --- OPENTELEMETRY PROTOCOL (OTLP) ENDPOINTS & PROMETHEUS SCRAPER ---
+from otel.receiver import otel_router, set_payload_builder
+set_payload_builder(build_telemetry_payload)
+app.include_router(otel_router)
 
 # --- ENDPOINTS HTTP E WEBSOCKET ---
 
@@ -1015,6 +1028,23 @@ async def trigger_scenario(scenario_name: str):
         "description": sim_env.scenario_description
     }
 
+@app.post("/admin/chaos/set_drift")
+async def set_drift_custom(antifraud_latency_ms: float = Query(default=255.0), jitter_ms: float = Query(default=15.0)):
+    sim_env.antifraud_latency_base_ms = antifraud_latency_ms
+    sim_env.antifraud_jitter_ms = jitter_ms
+    if antifraud_latency_ms >= 400:
+        sim_env.current_scenario = "rupture"
+        sim_env.scenario_description = f"3. Ruptura de Concorrência ({antifraud_latency_ms}ms)"
+    elif antifraud_latency_ms > 100:
+        sim_env.current_scenario = "drift"
+        sim_env.scenario_description = f"2. Drift no Antifraude ({antifraud_latency_ms}ms)"
+    else:
+        sim_env.current_scenario = "nominal"
+        sim_env.scenario_description = "1. Operação Nominal (45ms)"
+    sim_env.scenario_started_at = time.time()
+    sim_env.add_log(f"Caos customizado aplicado: Latência base {antifraud_latency_ms}ms.", "warning")
+    return {"status": "applied", "antifraud_latency_ms": antifraud_latency_ms, "jitter_ms": jitter_ms}
+
 @app.post("/admin/chaos/reset")
 async def reset_simulation():
     sim_env.antifraud_latency_base_ms = 45.0
@@ -1043,6 +1073,8 @@ async def reset_simulation():
     sim_env.recent_latencies.clear()
     sim_env.recent_journeys.clear()
     sim_env.mitigation_actions.clear()
+    sim_env.arkhe_engine = ArkheTrajectoryEngine()
+    sim_env.traditional_monitor = TraditionalSREMonitor(sustained_checks_required=2)
     sim_env.add_log("Reset geral executado com sucesso.", "info")
     return {"message": "State reset to factory nominal"}
 
@@ -1058,3 +1090,23 @@ async def serve_cockpit():
         return HTMLResponse(content=html)
     except Exception as e:
         return HTMLResponse(content=f"<h1>Erro ao carregar cockpit: {e}</h1>", status_code=500)
+
+@app.get("/presentation", response_class=HTMLResponse)
+@app.get("/pitch", response_class=HTMLResponse)
+async def serve_pitch_deck():
+    """Serve a apresentação interativa executiva em HTML."""
+    pres_path = os.path.join(os.path.dirname(__file__), "arkhe_pitch_deck_presentation.html")
+    if os.path.exists(pres_path):
+        with open(pres_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse(content="<h1>Apresentação não encontrada</h1>", status_code=404)
+
+@app.get("/pov", response_class=HTMLResponse)
+async def serve_pov_report():
+    """Serve o Laudo Executivo de Prova de Valor (PoV)."""
+    pov_path = os.path.join(os.path.dirname(__file__), "arkhe_pov_executive_summary.html")
+    if os.path.exists(pov_path):
+        with open(pov_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse(content="<h1>Relatório PoV não gerado. Execute 'python run_interactive_pov.py' primeiro.</h1>", status_code=404)
+

@@ -60,3 +60,38 @@ openshift:
     tls:
       termination: edge
       insecureEdgeTerminationPolicy: Redirect
+
+# --- ARKHÉ KUBERNETES OPERATOR (v1alpha1) ---
+operator:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: arkhe-operator
+    tag: v1alpha1
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  telemetryWsUrl: "" # Quando vazio, conecta automaticamente ao service interno: ws://<fullname>-service:8080/ws/telemetry
+  stabilityBasin:
+    enabled: true
+    name: "core-payments-basin"
+    targetThroughputTps: 120.0
+    maxRhoBasin: 0.50
+    maxQueueWaitRatio: 0.25
+    criticalTimeToCollapseSeconds: 30
+    predictiveHpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 60
+      scaleMultiplier: 2.0
+      cooldownSeconds: 120
+    fastPathBypass:
+      enabled: true
+      trafficBypassRatio: 0.70
+      targetCacheService: "redis-l2-cache"
+

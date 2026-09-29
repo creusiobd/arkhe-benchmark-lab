@@ -1,18 +1,58 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+
+# Environments & Virtual Envs
 env/
 venv/
 .venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Testing & Coverage
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
 *.log
+
+# Secrets, Credentials & Local Config
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.cert
+*.crt
+
+# IDE & Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Ephemeral Benchmarks & Live Telemetry States
 live_sentinel_state.json
 benchmark_results.json
 arkhe_benchmark_report.html
 sentinel_rca_report.md
-.DS_Store
-Thumbs.db
+full_infra_test_report.json
+validation_test_report.json
+test1_nominal_baseline_report.json
+test2_silent_drift_report.json
+test3_closed_loop_mitigation_report.json
+test4_time_machine_audit_report.json
+arkhe_pov_executive_summary.html
+
+# Local Scratch Scripts & Workspaces
+scratch/
+scratch_*.py
