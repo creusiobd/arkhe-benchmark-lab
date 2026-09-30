@@ -58,7 +58,7 @@ jobs:
 
       - name: Verify Anti-Leakage Contracts
         run: |
-          python -m unittest tests/test_anti_leakage_contracts.py tests/test_dataset_isolation.py -v
+          python -m unittest tests.test_anti_leakage_contracts tests.test_dataset_isolation -v
 
   reproducible-grant-benchmark:
     name: Reproducible Benchmark & Statistical Evaluation
