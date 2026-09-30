@@ -1,26 +1,65 @@
 {
   "Deterministic-Event-Rule-Baseline": {
+    "task1_pre_violation": {
+      "TP": 0,
+      "FP": 22,
+      "TN": 23,
+      "FN": 20,
+      "total": 65
+    },
+    "task2_boundary_pressure": {
+      "TP": 42,
+      "FP": 0,
+      "TN": 23,
+      "FN": 0,
+      "total": 65
+    },
+    "TP": 0,
+    "FP": 22,
+    "TN": 23,
+    "FN": 20,
+    "total": 65
+  },
+  "Semantic-Event-Classifier-Baseline": {
+    "task1_pre_violation": {
+      "TP": 3,
+      "FP": 6,
+      "TN": 39,
+      "FN": 17,
+      "total": 65
+    },
+    "task2_boundary_pressure": {
+      "TP": 25,
+      "FP": 0,
+      "TN": 23,
+      "FN": 17,
+      "total": 65
+    },
+    "TP": 3,
+    "FP": 6,
+    "TN": 39,
+    "FN": 17,
+    "total": 65
+  },
+  "ARKH\u00c9-Trajectory-Sentinel": {
+    "task1_pre_violation": {
+      "TP": 20,
+      "FP": 22,
+      "TN": 23,
+      "FN": 0,
+      "total": 65
+    },
+    "task2_boundary_pressure": {
+      "TP": 42,
+      "FP": 0,
+      "TN": 23,
+      "FN": 0,
+      "total": 65
+    },
     "TP": 20,
     "FP": 22,
     "TN": 23,
     "FN": 0,
-    "total": 65,
-    "violations_total": 20
-  },
-  "Semantic-Event-Classifier-Baseline": {
-    "TP": 19,
-    "FP": 6,
-    "TN": 39,
-    "FN": 1,
-    "total": 65,
-    "violations_total": 20
-  },
-  "ARKH\u00c9-Trajectory-Sentinel": {
-    "TP": 20,
-    "FP": 0,
-    "TN": 45,
-    "FN": 0,
-    "total": 65,
-    "violations_total": 20
+    "total": 65
   }
 }

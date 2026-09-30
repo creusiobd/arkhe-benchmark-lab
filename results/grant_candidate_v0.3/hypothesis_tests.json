@@ -1,17 +1,57 @@
 {
   "ARKH\u00c9-Trajectory-Sentinel_vs_Deterministic-Event-Rule-Baseline": {
-    "mcnemar_paired_correctness": {
+    "task1_pre_violation_mcnemar": {
       "test": "McNemar (paired discordance)",
-      "both_correct_a": 43,
-      "det1_correct_det2_wrong_b": 22,
+      "both_correct_a": 23,
+      "det1_correct_det2_wrong_b": 20,
+      "det1_wrong_det2_correct_c": 0,
+      "both_wrong_d": 22,
+      "total_discordant": 20,
+      "odds_ratio": Infinity,
+      "chi2_continuity_corrected": 18.05,
+      "exact_binomial_p_value": 2e-06,
+      "asymptotic_p_value": 2.2e-05,
+      "p_value": 2e-06,
+      "is_significant_005": true
+    },
+    "task1_wilcoxon_lead_steps": {
+      "test": "Wilcoxon signed-rank (paired)",
+      "w_stat": 0,
+      "w_pos": 210.0,
+      "w_neg": 0,
+      "z_score": 3.9199,
+      "p_value": 8.9e-05,
+      "effect_size_r": 0.8765,
+      "is_significant_005": true,
+      "is_significant_001": true,
+      "n_nonzero": 20
+    },
+    "task2_hazard_mcnemar": {
+      "test": "McNemar (paired discordance)",
+      "both_correct_a": 65,
+      "det1_correct_det2_wrong_b": 0,
       "det1_wrong_det2_correct_c": 0,
       "both_wrong_d": 0,
-      "total_discordant": 22,
+      "total_discordant": 0,
+      "odds_ratio": 1.0,
+      "chi2_continuity_corrected": null,
+      "exact_binomial_p_value": 1.0,
+      "asymptotic_p_value": null,
+      "p_value": 1.0,
+      "is_significant_005": false
+    },
+    "mcnemar_paired_correctness": {
+      "test": "McNemar (paired discordance)",
+      "both_correct_a": 23,
+      "det1_correct_det2_wrong_b": 20,
+      "det1_wrong_det2_correct_c": 0,
+      "both_wrong_d": 22,
+      "total_discordant": 20,
       "odds_ratio": Infinity,
-      "chi2_continuity_corrected": 20.0455,
-      "exact_binomial_p_value": 0.0,
-      "asymptotic_p_value": 8e-06,
-      "p_value": 0.0,
+      "chi2_continuity_corrected": 18.05,
+      "exact_binomial_p_value": 2e-06,
+      "asymptotic_p_value": 2.2e-05,
+      "p_value": 2e-06,
       "is_significant_005": true
     },
     "wilcoxon_lead_steps": {
@@ -28,19 +68,59 @@
     }
   },
   "ARKH\u00c9-Trajectory-Sentinel_vs_Semantic-Event-Classifier-Baseline": {
-    "mcnemar_paired_correctness": {
+    "task1_pre_violation_mcnemar": {
       "test": "McNemar (paired discordance)",
-      "both_correct_a": 58,
-      "det1_correct_det2_wrong_b": 7,
+      "both_correct_a": 26,
+      "det1_correct_det2_wrong_b": 17,
+      "det1_wrong_det2_correct_c": 16,
+      "both_wrong_d": 6,
+      "total_discordant": 33,
+      "odds_ratio": 1.0625,
+      "chi2_continuity_corrected": 0.0,
+      "exact_binomial_p_value": 1.0,
+      "asymptotic_p_value": 1.0,
+      "p_value": 1.0,
+      "is_significant_005": false
+    },
+    "task1_wilcoxon_lead_steps": {
+      "test": "Wilcoxon signed-rank (paired)",
+      "w_stat": 0,
+      "w_pos": 153.0,
+      "w_neg": 0,
+      "z_score": 3.6214,
+      "p_value": 0.000293,
+      "effect_size_r": 0.8783,
+      "is_significant_005": true,
+      "is_significant_001": true,
+      "n_nonzero": 17
+    },
+    "task2_hazard_mcnemar": {
+      "test": "McNemar (paired discordance)",
+      "both_correct_a": 48,
+      "det1_correct_det2_wrong_b": 17,
       "det1_wrong_det2_correct_c": 0,
       "both_wrong_d": 0,
-      "total_discordant": 7,
+      "total_discordant": 17,
       "odds_ratio": Infinity,
-      "chi2_continuity_corrected": 5.1429,
-      "exact_binomial_p_value": 0.015625,
-      "asymptotic_p_value": 0.023342,
-      "p_value": 0.015625,
+      "chi2_continuity_corrected": 15.0588,
+      "exact_binomial_p_value": 1.5e-05,
+      "asymptotic_p_value": 0.000104,
+      "p_value": 1.5e-05,
       "is_significant_005": true
+    },
+    "mcnemar_paired_correctness": {
+      "test": "McNemar (paired discordance)",
+      "both_correct_a": 26,
+      "det1_correct_det2_wrong_b": 17,
+      "det1_wrong_det2_correct_c": 16,
+      "both_wrong_d": 6,
+      "total_discordant": 33,
+      "odds_ratio": 1.0625,
+      "chi2_continuity_corrected": 0.0,
+      "exact_binomial_p_value": 1.0,
+      "asymptotic_p_value": 1.0,
+      "p_value": 1.0,
+      "is_significant_005": false
     },
     "wilcoxon_lead_steps": {
       "test": "Wilcoxon signed-rank (paired)",

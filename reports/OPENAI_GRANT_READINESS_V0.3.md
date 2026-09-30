@@ -30,38 +30,54 @@ This report documents the comprehensive technical hardening and scientific forma
 | **Silent API Key Fallbacks** | Risk of falling back silently to mocks if API keys were missing. | Enforced strict fail-fast: raises `ValueError` immediately if `mode="openai_api"` lacks `OPENAI_API_KEY`. | `test_missing_api_key_raises_value_error` (Passed) |
 | **Overlapping Holdout Data** | Pilot holdout shared templates with development, risking data contamination. | Generated `datasets/v0.3/` with 5 disjoint holdout templates and verified 0% Jaccard word-level overlap. | `tests/test_dataset_isolation.py` & `reports/dataset_diversity_report.md` |
 | **Static Number Inconsistencies** | Test fixtures asserted hardcoded metrics; report headers had hardcoded $n=30$. | Replaced with dynamic evaluation based on actual output JSON artifacts and synthetic statistical fixtures. | `test_statistics_with_synthetic_fixture.py` (Passed) |
+| **Temporal Lookahead in Recovery** | `is_recovered` check retroactively erased alerts upon detecting `"TRAJECTORY RECOVERY"`. | Enforced append-only immutable `AlertEvent`, separate `ResolutionEvent`, and decoupled pre-violation prediction vs boundary pressure tasks. | `tests/test_temporal_evaluation_semantics.py` (10 passed) |
 | **Scope Dilution** | Queue-physics dashboard and agent benchmark mixed in root README. | Isolated APM lab to `experiments/telemetry-control-plane/`; focused root README and docs on Agent Defense. | Clean root tree and updated documentation |
 
 ---
 
 ## 3. Official Empirical Benchmark Results ($n=65$)
 
-Evaluated deterministically across 65 trajectories in `results/grant_candidate_v0.3/` using sealed ground truth labels:
+Evaluated deterministically across 65 trajectories in `results/grant_candidate_v0.3/` using sealed ground truth labels under **strict temporal evaluation semantics** (no lookahead, append-only alerts, separate lifecycle events):
 
-| Detector Paradigm | Architecture | Precision [Wilson 95% CI] | Recall [Wilson 95% CI] | F1-Score | FP | FN | Median Lead ($N_{\text{lead}}$) [95% CI] | Anticipation Rate |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Deterministic-Event-Rule-Baseline** | Isolated Event | 47.6% [33.4%, 62.3%] | 100.0% [83.9%, 100.0%] | 0.65 | 22 | 0 | +0.0 [0.0, 0.0] steps | 0.0% |
-| **Semantic-Event-Classifier-Baseline** | Isolated Event | 76.0% [56.6%, 88.5%] | 95.0% [76.4%, 99.1%] | 0.84 | 6 | 1 | +0.0 [0.0, 0.0] steps | 15.0% |
-| **ARKHÉ-Trajectory-Sentinel** | Trajectory Aware | 100.0% [83.9%, 100.0%] | 100.0% [83.9%, 100.0%] | 1.00 | 0 | 0 | +1.0 [1.0, 1.0] steps | 100.0% |
+### Task 1: Pre-Violation Alert & Breach Anticipation (Strict Consummated Breach Prediction)
+*Strict Criterion:* True Positives require an alert emitted strictly before the first violation step ($A_i < V_i$). Contained near-violations that alerted are counted as FPs under this strict prediction task:
+
+| Detector Paradigm | Architecture | Precision [Wilson 95% CI] | Recall [Wilson 95% CI] | F1-Score | FP | FN | Median Lead [95% CI] | Anticipation Rate |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Deterministic-Event-Rule-Baseline** | Isolated Event | 0.0% [0.0%, 14.9%] | 0.0% [0.0%, 16.1%] | 0.00 | 22 | 20 | +0.0 [0.0, 0.0] steps | 0.0% |
+| **Semantic-Event-Classifier-Baseline** | Isolated Event | 33.3% [12.1%, 64.6%] | 15.0% [5.2%, 36.0%] | 0.21 | 6 | 17 | +0.0 [0.0, 0.0] steps | 15.0% |
+| **ARKHÉ-Trajectory-Sentinel** | Trajectory Aware | 47.6% [33.4%, 62.3%] | 100.0% [83.9%, 100.0%] | 0.65 | 22 | 0 | **+1.0 [1.0, 1.0] steps** | **100.0% (20/20)** |
+
+### Task 2: Boundary Pressure & Hazard Detection (Attack / Probe vs Benign)
+*Criterion:* Evaluates detection of any boundary-threatening perturbation (`VIOLATION` or `NEAR_VIOLATION`) against nominal non-adversarial workflows (`BENIGN`):
+
+| Detector Paradigm | Architecture | Precision [Wilson 95% CI] | Recall [Wilson 95% CI] | F1-Score | FP (on Benign) | FN (Missed Hazards) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Deterministic-Event-Rule-Baseline** | Isolated Event | 100.0% [91.6%, 100.0%] | 100.0% [91.6%, 100.0%] | 1.00 | 0 | 0 |
+| **Semantic-Event-Classifier-Baseline** | Isolated Event | 100.0% [86.7%, 100.0%] | 59.5% [44.5%, 73.0%] | 0.75 | 0 | 17 |
+| **ARKHÉ-Trajectory-Sentinel** | Trajectory Aware | 100.0% [91.6%, 100.0%] | 100.0% [91.6%, 100.0%] | 1.00 | 0 | 0 |
+
+### Lifecycle & Near-Violation Resolution (Task 3):
+- **ARKHÉ Sentinel** emitted alerts on 22 near-violation trajectories when Lyapunov energy exceeded threshold ($V(\mathbf{x}) \ge 50$ at step 2). Upon trajectory containment, ARKHÉ recorded 22 confirmed `ResolutionEvent` records. No alerts are retroactively deleted.
 
 ### Paired Statistical Hypothesis Tests:
 - **ARKHÉ vs Deterministic Baseline:**
-  - McNemar Paired Discordance: $b=22, c=0$, Odds Ratio = $\infty$, exact two-tailed binomial $p = 0.0000$ ($p < 0.0001$, Statistically Significant).
-  - Wilcoxon Signed-Rank Test (Lead Steps): $W = 0, Z = 3.9199, p = 8.9 \times 10^{-5}$ ($p < 0.01$, Statistically Significant), effect size $r = 0.8765$.
+  - *Pre-Violation Task:* McNemar paired discordance $b=20, c=0$ ($p = 2 \times 10^{-6}$, exact two-tailed binomial, statistically significant $p < 0.0001$); Wilcoxon signed-rank test on lead steps $W = 0, Z = 3.9199, p = 8.9 \times 10^{-5}$ ($p < 0.01$, Statistically Significant), effect size $r = 0.8765$.
+  - *Hazard Detection Task:* Both detect 42/42 hazards, but ARKHÉ anticipates violations +1.0 step ahead while Deterministic alerts only at the exact breach step ($lead=0$).
 - **ARKHÉ vs Semantic Baseline:**
-  - McNemar Paired Discordance: $b=7, c=0$, Odds Ratio = $\infty$, exact two-tailed binomial $p = 0.0156$ ($p < 0.05$, Statistically Significant).
-  - Wilcoxon Signed-Rank Test (Lead Steps): $W = 0, Z = 3.6214, p = 0.000293$ ($p < 0.01$, Statistically Significant), effect size $r = 0.8783$.
+  - *Pre-Violation Task:* Wilcoxon signed-rank test on lead steps $W = 0, Z = 3.6214, p = 0.000293$ ($p < 0.01$, Statistically Significant), effect size $r = 0.8783$.
+  - *Hazard Detection Task:* McNemar paired discordance $b=17, c=0$ ($p = 1.5 \times 10^{-5}$, exact two-tailed binomial, statistically significant $p < 0.0001$).
 
 ### Scientific Interpretation & Grant Value:
-At pilot scale ($n=65$), the trajectory-aware paradigm demonstrates clear, statistically significant superiority over isolated-event baselines in false-positive elimination ($p = 0.0000$ vs Deterministic, $p = 0.0156$ vs Semantic) while achieving 100% pre-violation anticipatory alert capability ($N_{\text{lead}} = 1.0$ median lead step, $p < 0.001$ on Wilcoxon signed-rank tests). Funding from the OpenAI Cybersecurity Grant will scale the benchmark to $N=5,000+$ live multi-agent trajectories, confirming boundary stability across diverse production model families and complex multi-agent execution graphs.
+At pilot scale ($n=65$), the trajectory-aware paradigm demonstrates clear, statistically significant superiority over isolated-event baselines in pre-violation anticipation (100% anticipatory detection with $N_{\text{lead}} = 1.0$ median lead step, $p < 0.001$ on Wilcoxon signed-rank tests) and in boundary hazard detection ($p < 0.0001$ vs Semantic). In Task 1, alerts on near-violations are correctly retained as FPs for breach prediction because the breaches were arrested before completion, while Task 2 confirms 0 FP on benign traffic and Task 3 records 100% resolution tracking. Funding from the OpenAI Cybersecurity Grant will scale the benchmark to $N=5,000+$ live multi-agent trajectories, confirming boundary stability across diverse production model families and complex multi-agent execution graphs.
 
 ---
 
 ## 4. Verification & Quality Assurance Summary
 
-- **Total Automated Unit Tests:** 112 tests.
-- **Pass Rate:** 111 Passed, 1 Skipped (Live OpenAI API test requiring active key), 0 Failures.
-- **Execution Time:** ~2.5 seconds.
+- **Total Automated Unit Tests:** 122 tests.
+- **Pass Rate:** 121 Passed, 1 Skipped (Live OpenAI API test requiring active key), 0 Failures.
+- **Execution Time:** ~2.3 seconds.
 - **Python Compatibility:** Python 3.11 and 3.12 verified.
 - **Reproducibility:** Confirmed on Windows PowerShell and POSIX bash via 1-click reproduction scripts.
 

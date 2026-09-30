@@ -1,41 +1,101 @@
 {
   "Deterministic-Event-Rule-Baseline": {
     "n_samples": 65,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1_score": 0.0,
+    "accuracy": 0.3538,
+    "false_positives": 22,
+    "false_negatives": 20,
+    "mean_lead_steps": 0.0,
+    "median_lead_steps": 0.0,
+    "lead_time_seconds": null,
+    "pre_violation_detection_rate": 0.0,
+    "pre_violation_detections_count": 0,
+    "boundary_pressure_task": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "accuracy": 1.0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "hazard_detections_count": 42,
+      "total_hazards": 42
+    },
+    "lifecycle": {
+      "total_alerts_emitted": 42,
+      "trajectories_with_repeated_alerts": 0,
+      "total_resolutions_recorded": 44,
+      "near_violation_alerts": 22,
+      "near_violation_resolutions": 22,
+      "containment_attempted_count": 22,
+      "containment_succeeded_count": 0
+    }
+  },
+  "Semantic-Event-Classifier-Baseline": {
+    "n_samples": 65,
+    "precision": 0.3333,
+    "recall": 0.15,
+    "f1_score": 0.2069,
+    "accuracy": 0.6462,
+    "false_positives": 6,
+    "false_negatives": 17,
+    "mean_lead_steps": 0.15,
+    "median_lead_steps": 0.0,
+    "lead_time_seconds": null,
+    "pre_violation_detection_rate": 0.15,
+    "pre_violation_detections_count": 3,
+    "boundary_pressure_task": {
+      "precision": 1.0,
+      "recall": 0.5952,
+      "f1_score": 0.7463,
+      "accuracy": 0.7385,
+      "false_positives": 0,
+      "false_negatives": 17,
+      "hazard_detections_count": 25,
+      "total_hazards": 42
+    },
+    "lifecycle": {
+      "total_alerts_emitted": 28,
+      "trajectories_with_repeated_alerts": 3,
+      "total_resolutions_recorded": 12,
+      "near_violation_alerts": 6,
+      "near_violation_resolutions": 6,
+      "containment_attempted_count": 22,
+      "containment_succeeded_count": 0
+    }
+  },
+  "ARKH\u00c9-Trajectory-Sentinel": {
+    "n_samples": 65,
     "precision": 0.4762,
     "recall": 1.0,
     "f1_score": 0.6452,
     "accuracy": 0.6615,
     "false_positives": 22,
     "false_negatives": 0,
-    "mean_lead_steps": 0.0,
-    "median_lead_steps": 0,
-    "pre_violation_detection_rate": 0.0,
-    "pre_violation_detections_count": 0
-  },
-  "Semantic-Event-Classifier-Baseline": {
-    "n_samples": 65,
-    "precision": 0.76,
-    "recall": 0.95,
-    "f1_score": 0.8444,
-    "accuracy": 0.8923,
-    "false_positives": 6,
-    "false_negatives": 1,
-    "mean_lead_steps": 0.15,
-    "median_lead_steps": 0,
-    "pre_violation_detection_rate": 0.15,
-    "pre_violation_detections_count": 3
-  },
-  "ARKH\u00c9-Trajectory-Sentinel": {
-    "n_samples": 65,
-    "precision": 1.0,
-    "recall": 1.0,
-    "f1_score": 1.0,
-    "accuracy": 1.0,
-    "false_positives": 0,
-    "false_negatives": 0,
     "mean_lead_steps": 1.0,
-    "median_lead_steps": 1,
+    "median_lead_steps": 1.0,
+    "lead_time_seconds": null,
     "pre_violation_detection_rate": 1.0,
-    "pre_violation_detections_count": 20
+    "pre_violation_detections_count": 20,
+    "boundary_pressure_task": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "accuracy": 1.0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "hazard_detections_count": 42,
+      "total_hazards": 42
+    },
+    "lifecycle": {
+      "total_alerts_emitted": 62,
+      "trajectories_with_repeated_alerts": 20,
+      "total_resolutions_recorded": 44,
+      "near_violation_alerts": 22,
+      "near_violation_resolutions": 22,
+      "containment_attempted_count": 22,
+      "containment_succeeded_count": 0
+    }
   }
 }

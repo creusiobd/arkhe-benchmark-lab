@@ -1,0 +1,29 @@
+{
+  "Deterministic-Event-Rule-Baseline": {
+    "total_alerts_emitted": 42,
+    "trajectories_with_repeated_alerts": 0,
+    "total_resolutions_recorded": 44,
+    "near_violation_alerts": 22,
+    "near_violation_resolutions": 22,
+    "containment_attempted_count": 22,
+    "containment_succeeded_count": 0
+  },
+  "Semantic-Event-Classifier-Baseline": {
+    "total_alerts_emitted": 28,
+    "trajectories_with_repeated_alerts": 3,
+    "total_resolutions_recorded": 12,
+    "near_violation_alerts": 6,
+    "near_violation_resolutions": 6,
+    "containment_attempted_count": 22,
+    "containment_succeeded_count": 0
+  },
+  "ARKH\u00c9-Trajectory-Sentinel": {
+    "total_alerts_emitted": 62,
+    "trajectories_with_repeated_alerts": 20,
+    "total_resolutions_recorded": 44,
+    "near_violation_alerts": 22,
+    "near_violation_resolutions": 22,
+    "containment_attempted_count": 22,
+    "containment_succeeded_count": 0
+  }
+}

@@ -1,5 +1,187 @@
 {
   "Deterministic-Event-Rule-Baseline": {
+    "task1_pre_violation": {
+      "precision_95_ci": [
+        0.0,
+        0.1487
+      ],
+      "recall_95_ci": [
+        0.0,
+        0.1611
+      ],
+      "accuracy_95_ci": [
+        0.2488,
+        0.4752
+      ],
+      "median_lead_steps_bootstrap_95_ci": {
+        "point_estimate": 0.0,
+        "ci_lower": 0.0,
+        "ci_upper": 0.0,
+        "n": 20,
+        "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
+      },
+      "mean_lead_steps_bootstrap_95_ci": {
+        "point_estimate": 0.0,
+        "ci_lower": 0.0,
+        "ci_upper": 0.0,
+        "n": 20,
+        "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
+      }
+    },
+    "task2_boundary_pressure": {
+      "precision_95_ci": [
+        0.9162,
+        1.0
+      ],
+      "recall_95_ci": [
+        0.9162,
+        1.0
+      ],
+      "accuracy_95_ci": [
+        0.9442,
+        1.0
+      ]
+    },
+    "precision_95_ci": [
+      0.0,
+      0.1487
+    ],
+    "recall_95_ci": [
+      0.0,
+      0.1611
+    ],
+    "accuracy_95_ci": [
+      0.2488,
+      0.4752
+    ],
+    "median_lead_steps_bootstrap_95_ci": {
+      "point_estimate": 0.0,
+      "ci_lower": 0.0,
+      "ci_upper": 0.0,
+      "n": 20,
+      "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
+    },
+    "mean_lead_steps_bootstrap_95_ci": {
+      "point_estimate": 0.0,
+      "ci_lower": 0.0,
+      "ci_upper": 0.0,
+      "n": 20,
+      "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
+    }
+  },
+  "Semantic-Event-Classifier-Baseline": {
+    "task1_pre_violation": {
+      "precision_95_ci": [
+        0.1206,
+        0.6458
+      ],
+      "recall_95_ci": [
+        0.0524,
+        0.3604
+      ],
+      "accuracy_95_ci": [
+        0.5248,
+        0.7512
+      ],
+      "median_lead_steps_bootstrap_95_ci": {
+        "point_estimate": 0.0,
+        "ci_lower": 0.0,
+        "ci_upper": 0.0,
+        "n": 20,
+        "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
+      },
+      "mean_lead_steps_bootstrap_95_ci": {
+        "point_estimate": 0.15,
+        "ci_lower": 0.0,
+        "ci_upper": 0.3,
+        "n": 20,
+        "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
+      }
+    },
+    "task2_boundary_pressure": {
+      "precision_95_ci": [
+        0.8668,
+        1.0
+      ],
+      "recall_95_ci": [
+        0.4449,
+        0.7296
+      ],
+      "accuracy_95_ci": [
+        0.6205,
+        0.8298
+      ]
+    },
+    "precision_95_ci": [
+      0.1206,
+      0.6458
+    ],
+    "recall_95_ci": [
+      0.0524,
+      0.3604
+    ],
+    "accuracy_95_ci": [
+      0.5248,
+      0.7512
+    ],
+    "median_lead_steps_bootstrap_95_ci": {
+      "point_estimate": 0.0,
+      "ci_lower": 0.0,
+      "ci_upper": 0.0,
+      "n": 20,
+      "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
+    },
+    "mean_lead_steps_bootstrap_95_ci": {
+      "point_estimate": 0.15,
+      "ci_lower": 0.0,
+      "ci_upper": 0.3,
+      "n": 20,
+      "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
+    }
+  },
+  "ARKH\u00c9-Trajectory-Sentinel": {
+    "task1_pre_violation": {
+      "precision_95_ci": [
+        0.3336,
+        0.6228
+      ],
+      "recall_95_ci": [
+        0.8389,
+        1.0
+      ],
+      "accuracy_95_ci": [
+        0.5404,
+        0.7647
+      ],
+      "median_lead_steps_bootstrap_95_ci": {
+        "point_estimate": 1.0,
+        "ci_lower": 1.0,
+        "ci_upper": 1.0,
+        "n": 20,
+        "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
+      },
+      "mean_lead_steps_bootstrap_95_ci": {
+        "point_estimate": 1.0,
+        "ci_lower": 1.0,
+        "ci_upper": 1.0,
+        "n": 20,
+        "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
+      }
+    },
+    "task2_boundary_pressure": {
+      "precision_95_ci": [
+        0.9162,
+        1.0
+      ],
+      "recall_95_ci": [
+        0.9162,
+        1.0
+      ],
+      "accuracy_95_ci": [
+        0.9442,
+        1.0
+      ]
+    },
     "precision_95_ci": [
       0.3336,
       0.6228
@@ -13,68 +195,18 @@
       0.7647
     ],
     "median_lead_steps_bootstrap_95_ci": {
-      "point": 0,
-      "ci_lower": 0,
-      "ci_upper": 0,
-      "n": 20,
-      "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
-    },
-    "mean_lead_steps_bootstrap_95_ci": {
-      "point": 0.0,
-      "ci_lower": 0.0,
-      "ci_upper": 0.0
-    }
-  },
-  "Semantic-Event-Classifier-Baseline": {
-    "precision_95_ci": [
-      0.5657,
-      0.885
-    ],
-    "recall_95_ci": [
-      0.7639,
-      0.9911
-    ],
-    "accuracy_95_ci": [
-      0.794,
-      0.9468
-    ],
-    "median_lead_steps_bootstrap_95_ci": {
-      "point": 0,
-      "ci_lower": 0,
-      "ci_upper": 0,
-      "n": 20,
-      "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
-    },
-    "mean_lead_steps_bootstrap_95_ci": {
-      "point": 0.15,
-      "ci_lower": 0.0,
-      "ci_upper": 0.3
-    }
-  },
-  "ARKH\u00c9-Trajectory-Sentinel": {
-    "precision_95_ci": [
-      0.8389,
-      1.0
-    ],
-    "recall_95_ci": [
-      0.8389,
-      1.0
-    ],
-    "accuracy_95_ci": [
-      0.9442,
-      1.0
-    ],
-    "median_lead_steps_bootstrap_95_ci": {
-      "point": 1,
-      "ci_lower": 1,
-      "ci_upper": 1,
-      "n": 20,
-      "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
-    },
-    "mean_lead_steps_bootstrap_95_ci": {
-      "point": 1.0,
+      "point_estimate": 1.0,
       "ci_lower": 1.0,
-      "ci_upper": 1.0
+      "ci_upper": 1.0,
+      "n": 20,
+      "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
+    },
+    "mean_lead_steps_bootstrap_95_ci": {
+      "point_estimate": 1.0,
+      "ci_lower": 1.0,
+      "ci_upper": 1.0,
+      "n": 20,
+      "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
     }
   }
 }

@@ -105,50 +105,6 @@ class SemanticEventDetector(BaseDetector):
             detector_version=self.version
         )
 
-    def evaluate_trajectory(self, trajectory: TrajectoryObservation) -> TrajectoryPrediction:
-        """Evaluates an entire trajectory observation and aggregates predictions."""
-        import time
-        t0 = time.perf_counter()
-        step_predictions: List[StepPrediction] = []
-        first_alert_step: Optional[int] = None
-        is_flagged = False
-        max_risk = 0.0
-
-        for step in trajectory.steps:
-            pred = self.evaluate_step(step, trajectory_history=None)
-            step_predictions.append(pred)
-
-            if pred.is_alert and first_alert_step is None:
-                first_alert_step = pred.step_index
-                is_flagged = True
-
-            if pred.accumulated_trajectory_risk > max_risk:
-                max_risk = pred.accumulated_trajectory_risk
-
-        exec_ms = (time.perf_counter() - t0) * 1000.0
-
-        if is_flagged:
-            overall_class = PredictedClass.VIOLATION
-        else:
-            overall_class = PredictedClass.BENIGN
-
-        tokens = 0
-        if isinstance(self.client, OpenAISemanticClient):
-            tokens = self.client.total_prompt_tokens + self.client.total_completion_tokens
-
-        return TrajectoryPrediction(
-            trajectory_id=trajectory.trajectory_id,
-            detector_name=self.name,
-            detector_version=self.version,
-            predicted_class=overall_class,
-            first_alert_step=first_alert_step,
-            is_flagged=is_flagged,
-            max_risk_score=max_risk,
-            step_predictions=step_predictions,
-            execution_time_ms=round(exec_ms, 2),
-            tokens_used=tokens
-        )
-
 
 # Backward compatibility alias
 IsolatedEventSemanticDetector = SemanticEventDetector
