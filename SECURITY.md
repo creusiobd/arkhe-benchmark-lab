@@ -1,23 +1,39 @@
 # Security Policy
 
-## Defensive Research Objective
-ARKHÉ is an applied defensive research benchmark created to measure early detection of security boundary violations, mission drift, and prompt injection propagation in autonomous AI agents.
+## Supported Versions
 
-## Synthetic Data & Zero Real Credential Guarantee
-All datasets, scenario templates, tokens, and endpoints included in this repository are strictly synthetic:
-- Tokens follow synthetic patterns such as `ARKHE_FAKE_TOKEN_DO_NOT_USE_*`.
-- Network endpoints target local mock sinks (e.g., `http://localhost:8080/mock-sink` or `https://internal.secops.test`).
-- No proprietary corporate data or live credentials are used or retained.
+The following table lists which versions of the ARKHÉ Agent Boundary Defense Benchmark receive active security support and bug fixes:
 
-## Dual-Use & Harm Mitigation Policy
-The ARKHÉ benchmark is exclusively defensive:
-1. **No Weaponized Payloads:** Scenario templates provide behavioral descriptions and abstract structural traces rather than functional zero-day exploit payloads.
-2. **Defensive Metrics:** The evaluation suite measures detector precision, recall, false positive rates, and early warning lead time ($N_{\text{lead}}$), providing defensive teams with quantitative criteria for guardrail selection.
-3. **Auditability:** Ground truth labels and detector predictions are strictly separated to prevent circularity and enable independent audit.
+| Version | Supported          | Status                               |
+| ------- | ------------------ | ------------------------------------ |
+| 0.3.x   | :white_check_mark: | Active Candidate (Grant Evaluation)  |
+| 0.2.x   | :x:                | Superseded (Legacy pilot)            |
+| < 0.2.0 | :x:                | Deprecated                           |
+
+---
 
 ## Reporting a Vulnerability
-If you discover a security vulnerability or sensitive information leakage in this repository:
-1. Do **not** open a public GitHub issue.
-2. Email the maintainer at `security@arkhe-benchmark.org` or report via GitHub Private Vulnerability Reporting.
-3. Include detailed steps to reproduce, the commit hash, and the potential impact.
-4. You will receive an initial response within 48 hours.
+
+The ARKHÉ research team takes the security of agent evaluation environments seriously. If you discover a vulnerability in the benchmark harness, evaluation framework, detector contracts, or data isolation mechanisms, please report it privately.
+
+### Preferred Method
+- **GitHub Security Advisory:** Navigate to the repository's **Security** tab and click **Report a vulnerability**. This allows secure, private disclosure directly to project maintainers.
+- **Direct Contact:** If GitHub Security Advisories are unavailable, email the lead researcher at `kizua@creusio.org` with the subject line `[SECURITY] ARKHÉ Vulnerability Report`.
+
+### What to Include in Your Report
+1. A clear description of the vulnerability (e.g., code injection in runner, environment variable exfiltration, contract bypass, or label leakage vector).
+2. Step-by-step instructions or a minimal reproducible proof-of-concept (PoC).
+3. The affected component, file, and commit hash.
+4. Any potential mitigations or patches you have identified.
+
+### Response Timeline
+- **Initial Acknowledgement:** Within **48 hours**.
+- **Triage & Assessment:** Within **5 business days**.
+- **Remediation & Patch Release:** Target within **30 calendar days**, coordinated under responsible disclosure.
+
+---
+
+## Out of Scope
+The following items are intentional research features and **not** considered reportable vulnerabilities:
+- **Synthetic Attack Datasets:** Files within `datasets/` intentionally simulate prompt injection, privilege escalation, and tool misuse using harmless synthetic payloads and fake tokens (`ARKHE_FAKE_TOKEN_DO_NOT_USE_*`).
+- **Simulated Tool Sandboxes:** Mock network endpoints (such as `http://localhost:8080/mock-sink`) that record requests without executing real-world commands.

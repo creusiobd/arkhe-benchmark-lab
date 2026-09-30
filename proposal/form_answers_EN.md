@@ -1,120 +1,86 @@
-# Official Submission Form Answers — OpenAI Cybersecurity Grant Program
+# OpenAI Cybersecurity Grant Program — Application Form Answers (English)
 
-This document provides consolidated, audited answers for all submission fields of the **OpenAI Cybersecurity Grant Program**, in English.
-
----
-
-### Field 1: Project Title
-**ARKHÉ Agent Boundary Defense Benchmark: Empirical Evaluation of Trajectory-Aware Observability Against Multi-Agent Boundary Violations**
+## 1. Project Title
+**ARKHÉ: Trajectory-Oriented Boundary Defense and Pre-Violation Anticipation Benchmark for Autonomous AI Agents**
 
 ---
 
-### Field 2: One-Line Description
-An open-source defensive benchmark to evaluate whether trajectory-aware observability detects mission drift, indirect prompt injection propagation, and boundary violations in multi-agent systems before isolated-event security guardrails.
+## 2. Executive Summary (Abstract)
+Autonomous AI agents interacting with APIs, enterprise databases, and external environments present an emerging security challenge: **mission drift, indirect prompt injection propagation, and privilege escalation occur across multi-step sequences rather than in isolated prompt interactions**. Conventional perimeter controls—such as regex-based deterministic filtering or single-step LLM-as-a-judge classifiers—evaluate operations in isolation, remaining blind to cumulative behavioral changes until after a boundary breach occurs.
+
+ARKHÉ introduces an open-source, empirical benchmark evaluating **trajectory-oriented observability** against autonomous agent boundary violations. By mapping agent execution sequences into a dynamic state space and tracking velocity, acceleration, and semantic phase drift, ARKHÉ detects unauthorized capability expansion and mission deviation **steps before execution**. 
+
+In our hermetic pilot benchmark ($N = 65$ trajectories across development, validation, test, and a strictly disjoint blind holdout split), trajectory monitoring achieves statistically significant anticipation ($p < 0.001$, paired Wilcoxon signed-rank test) with higher overall F1 accuracy than both isolated deterministic rules and isolated single-step LLM semantic classifiers, while operating at $O(1)$ telemetry inference latency.
 
 ---
 
-### Field 3: Problem Description (Problem Statement)
-*(Strict constraint: $\le 200$ words)*
-
-Autonomous AI agents execute complex corporate tasks by chaining dozens of tool invocations, external context retrievals, and inter-agent delegations. In these workflows, each single action may appear benign, legitimate, and fully compliant with access control policies when inspected in isolation. However, in sequence and over time, these individually safe operations can construct an unsafe execution trajectory.
-
-Contemporary defensive mechanisms — such as per-call LLM guardrails, atomic semantic filters, and static API blocklists — suffer from temporal blindness. They evaluate each tool invocation at a single point in time, oblivious to the underlying causal chain: silent mission drift initiated by untrusted data, the progressive accumulation of contaminated context, and subtle boundary probing.
-
-This atomic approach creates a critical vulnerability: agents suffer intention hijacking and privilege escalation unnoticed, triggering alarms only after sensitive data exfiltration or policy violation has already occurred. The central problem is the lack of standardized, open-source benchmarks that quantitatively measure whether trajectory-aware observability can anticipate boundary violations with statistically significant lead time and reduced false positives compared to isolated-event defenses.
-
-*(Word count: 172 words — Strictly compliant with $\le 200$ words limit)*
+## 3. Problem Statement & Motivation
+State-of-the-art LLM defense research has primarily targeted input sanitization, prompt injection guardrails, and post-execution audit logging. However, when autonomous agents execute complex multi-step workflows (e.g., tool calling, web scraping, SQL generation, and code execution), adversaries exploit compound vulnerabilities:
+1. **Low-and-Slow Deviation:** The agent executes individually benign tool calls that gradually construct an unauthorized capability (e.g., directory listing $\rightarrow$ temporary file staging $\rightarrow$ external payload fetch).
+2. **Context Window Contamination:** Indirect prompt injection embedded in external data alters the agent’s internal objective without triggering lexical alarms.
+3. **Reactive Detection Latency:** Traditional perimeter security and single-step classifiers flag the incident only when the final unauthorized payload executes (e.g., exfiltration to an untrusted IP), providing **zero lead time for preemptive intervention**.
 
 ---
 
-### Field 4: Research Hypothesis & Methodology
-**Central Hypothesis:** Distributed weak signals across an agent's execution sequence — unvetted context contamination, dynamic objective divergence ($\Delta M$), capability expansion, and post-containment behavioral persistence — enable the detection of agentic security violations at least 1 to 2 steps before explicit breach consummation, while maintaining lower false positive rates on benign/exploratory tasks than isolated-event semantic guardrails.
+## 4. Technical Innovation & Methodology
+The ARKHÉ benchmark formalizes agent behavior as an observable trajectory:
+$$\mathcal{T} = \{(t_i, a_i, o_i, \mathbf{s}_i)\}_{i=1}^T$$
+where each step $i$ contains action $a_i$, tool observation $o_i$, and an observable state vector $\mathbf{s}_i$.
 
-**Experimental Design & Anti-Leakage Isolation:**
-To prevent circularity, the benchmark enforces two strictly isolated architectural layers:
-1. *Observable Runtime Contract (`StepObservation`):* Provided to detectors step by step, containing only runtime signals (identity, declared mission, sanitized action, capabilities, boundary policy, and raw tool output). No precalculated risk or drift scores exist in this contract.
-2. *Reserved Ground Truth (`TrajectoryGroundTruth`):* Stored separately for blind evaluation only, recording true class, exact violation step, and human causal rationale.
+ARKHÉ evaluates three distinct defense paradigms under identical, blind conditions:
+1. **Deterministic-Event-Rule-Baseline:** Static policy matching (regex, blocklists) on individual action payloads.
+2. **Semantic-Event-Classifier-Baseline:** An isolated LLM-as-a-judge (utilizing OpenAI API `gpt-4o-mini` with structured Pydantic schema `SemanticClassificationResponse` or deterministic offline proxy) that classifies each step independently without state history.
+3. **ARKHÉ-Trajectory-Sentinel:** A state-space trajectory sentinel tracking temporal momentum, state transition entropy, cumulative capability drift, and phase portrait divergence.
 
-**Scope & Statistical Protocol:**
-The benchmark evaluates 300 canonical trajectories across 5 threat families over 3 stochastic repetitions (2,700 total evaluations). Primary metrics include median anticipatory lead time ($N_{\text{lead}}$), F1-Score, Wilson score 95% confidence intervals, and two-tailed paired Wilcoxon signed-rank tests ($p < 0.01$) to reject the null hypothesis.
-
----
-
-### Field 5: Deliverables & Expected Outcomes
-1. **Canonical Open Dataset (300 Trajectories):** Standardized JSONL format across 5 threat families, CC-BY-4.0 licensed, deposited on Zenodo (with DOI) and HuggingFace.
-2. **Open-Source Evaluation Harness (Apache-2.0):** Modular Python framework with AST-based anti-leakage audits and multi-backend support.
-3. **Three Auditable Baseline Detectors:** Deterministic regex baseline, per-event semantic classifier (`gpt-4o-mini` proxy), and the *ARKHÉ Trajectory Sentinel*.
-4. **Peer-Reviewed Technical Paper & Report:** Comprehensive methodology, dynamical systems mathematical formulation, and statistical significance analysis.
-5. **Interactive Trajectory Visualizer:** Web-based tool enabling step-by-step forensic replay of context contamination and mission divergence.
+### Strict Anti-Leakage & Blind Evaluation
+- **Zero Label Leakage:** Observation inputs are stripped of ground truth metadata, and trajectory IDs are cryptographically hashed to opaque 16-character hex strings (`traj_<sha256[:16]>`), preventing heuristic split recognition.
+- **Disjoint Blind Holdout:** The holdout split uses completely disjoint injection payloads and target tools unobserved in development or validation.
+- **Statistical Rigor:** All proportions include Wilson score 95% confidence intervals, lead-time shifts are tested with paired Wilcoxon signed-rank tests, and paired detector discordance is evaluated with exact two-tailed McNemar tests.
 
 ---
 
-### Field 6: Defensive Orientation & Safety (Why Strictly Defensive)
-This project is exclusively defensive:
-* **Strictly Synthetic Data:** All scenarios utilize mock credentials (`ARKHE_FAKE_TOKEN_DO_NOT_USE_*`) and local network sinks (`http://localhost:8080/mock-sink`), completely decoupled from live infrastructure.
-* **No Functional Exploits:** Scenarios evaluate high-level behavioral divergence and multi-step intention drift; no functional zero-day exploit payloads are developed or disseminated.
-* **Defensive Objective:** Provides security teams with empirical criteria to calibrate guardrails and implement early-warning trajectory defenses against indirect prompt injection and privilege escalation.
+## 5. OpenAI API Integration & Alignment
+ARKHÉ provides first-class native integration with the OpenAI API via `OpenAISemanticClient`:
+- Utilizes `openai>=1.30.0` structured outputs (`client.beta.chat.completions.parse`) targeting Pydantic models.
+- Implements exponential backoff retry for rate limit (`RateLimitError`) and connection resiliency.
+- Supports model families: `gpt-4o-mini`, `gpt-4o`, and reasoning models (`o1`, `o3-mini`).
+- **Hermetic Offline Mode:** For zero-cost, privacy-preserving, and CI execution, the benchmark provides an explicit `offline_proxy` mode. No silent fallback occurs; if `mode="openai_api"` is requested without an API key, the runner fails fast.
 
 ---
 
-### Field 7: Work Plan & Timeline (6 Months)
-* **Month 1 (M1 — Dataset Synthesis & Anti-Leakage Audit):** Expand dataset to 300 trajectories with automated AST import isolation tests.
-* **Month 2 (M2 — Baseline Hardening & API Integration):** Connect OpenAI API endpoints and establish competitive per-event baselines.
-* **Month 3 (M3 — ARKHÉ Sentinel Calibration):** Calibrate dynamical trajectory weights ($w_m, w_c, w_b, w_s, w_h$) on development/validation splits.
-* **Month 4 (M4 — Full Benchmark Execution):** Execute 2,700 evaluation runs, computing Wilson 95% CIs and Wilcoxon paired tests.
-* **Month 5 (M5 — Independent Red-Teaming):** Third-party security review of synthetic dataset quality and anti-leakage contracts.
-* **Month 6 (M6 — Open-Source Release & Paper Publication):** Publish codebase on GitHub under Apache-2.0, deposit dataset on Zenodo/HuggingFace with DOI, and release technical paper.
+## 6. Tiered Budget & Resource Request
+
+To ensure full transparency and provide OpenAI reviewers with flexible commitment options, we structure our resource request into three tiers:
+
+### Tier A: Core API Credits ($15,000 – $25,000 in OpenAI API Credits)
+- **Scope:** Scale benchmark dataset from 65 to 5,000+ diverse agent trajectories across 15 enterprise tool environments.
+- **API Utilization:** Run structured semantic evaluations across `gpt-4o-mini`, `gpt-4o`, and `o1` to benchmark trajectory-aware LLM agents against isolated step evaluators.
+- **Output:** Public open-source dataset, multi-model benchmark leaderboard, and comprehensive empirical paper.
+
+### Tier B: Comprehensive Research Grant ($25,000 API Credits + $25,000 Research Stipend = $50,000 Total)
+- **Scope:** Complete Tier A, plus:
+  1. **Adversarial Red-Teaming Campaign:** Commission human security researchers and red teams to generate novel adaptive prompt injection and agent jailbreak trajectories.
+  2. **Multi-Agent Boundary Defense:** Extend benchmark to collaborative multi-agent swarms (e.g., supervisor-worker topologies) where compromise propagates across agent communications.
+  3. **Real-Time Intervention SDK:** Develop open-source middleware providing real-time pre-execution halting for LangChain, AutoGen, and OpenAI Assistants API.
+- **Budget Allocation:**
+  - $25,000: OpenAI API Credits for synthetic generation, semantic classification baselines, and multi-turn red-teaming.
+  - $18,000: Security researcher and red-team stipends for novel attack trajectory authoring.
+  - $7,000: Reproducible cloud compute, benchmarking infrastructure, and publication dissemination.
+
+### Tier C: Focused API Grant ($10,000 in OpenAI API Credits)
+- **Scope:** Calibrate baseline performance across 1,000 trajectories on `gpt-4o` and `gpt-4o-mini`, validating statistical equivalence and latency trade-offs between trajectory sentinels and frontier LLM evaluators.
 
 ---
 
-### Field 8: Detailed Budget & Justification (Level 2: \$20,000 USD)
-**Grant Level: Level 2 — \$20,000 USD (Self-Contained Research Scope)**
-
-1. **OpenAI API Credits — \$5,000 (25.0%):**
-   * Direct execution cost for 2,700 benchmark runs and dataset synthesis: ~10.8M tokens (~$15.85 raw API cost at modern rates).
-   * Remainder provides necessary contingency buffer for iterative prompt engineering, adversarial perturbation scans, hyperparameter tuning, and GPT-4o qualitative audits.
-2. **Research Execution & Engineering Stipend — \$10,000 (50.0%):**
-   * Dedicated compensation for Principal Investigator Creúsio Adolfo Gaspar Kizua over 6 months (~20 hrs/week) covering Milestones M1 to M4.
-3. **External Security Audit & Red-Teaming — \$3,000 (15.0%):**
-   * Engagement of an independent third-party AI security expert to review dataset isolation, verify zero label leakage, and stress-test trajectory scenarios.
-4. **Cloud Infrastructure & Open-Access Publication — \$2,000 (10.0%):**
-   * CI/CD benchmarking infrastructure, OpenTelemetry test environments, and open-access publication fees.
+## 7. Open Source & Community Deliverables
+1. **Permissive Open Source:** Codebase under MIT / Apache-2.0, datasets under CC-BY-4.0.
+2. **Reproducibility Guarantee:** 1-click reproduction scripts (`reproduce_grant_pilot.sh` and `.ps1`) and continuous CI verification on GitHub Actions.
+3. **Dataset Governance:** Machine-readable dataset cards following Hugging Face and Gebru et al. standards.
+4. **Responsible Disclosure:** Formal vulnerability reporting guidelines (`SECURITY.md`) and dual-use mitigation policies (`docs/responsible_disclosure.md`).
 
 ---
 
-### Field 9: Applicant Background & Track Record
-**Principal Investigator: Creúsio Adolfo Gaspar Kizua (São Paulo, Brazil)**
-* **6+ years of hands-on engineering experience** in high-throughput financial payment systems, distributed observability, and critical banking infrastructure.
-* **Led technical team of 13 engineers** operating 24×7 mission-critical transaction processing environments.
-* **Governed technical architecture and observability for 33 regulated banking and payment acquiring APIs**, ensuring strict compliance with Central Bank of Brazil regulations (BACEN Resolução 85/2021) and PCI-DSS v4.0.
-* Advanced expertise in enterprise telemetry and distributed control: **OpenTelemetry, Kubernetes, Prometheus, Splunk, Dynatrace, and Grafana**.
-* Creator of the ARKHÉ trajectory intelligence methodology, applying dynamical systems and queueing theory to defensive multi-agent AI cybersecurity.
-
----
-
-### Field 10: Open Source & Reproducibility Commitment
-* Fully licensed under **Apache-2.0**.
-* Reviewers can clone and reproduce the functional 30-trajectory pilot locally today with 60 passing tests (`python -m unittest discover tests`, `python -m harness.agent_benchmark_runner --config configs/pilot.yaml`, `python -m evaluator.evaluate --run results/pilot`).
-* All outputs feature SHA-256 deterministic hashes and machine-readable execution manifests.
-
----
-
-### Field 11: Methodological Risks & Mitigations
-* *Statistical Non-Significance:* Mitigated by expanding to 300 canonical trajectories across 3 repetitions (2,700 runs) with paired Wilcoxon signed-rank tests. If the hypothesis is refuted in specific scenarios, findings will be published with full scientific transparency.
-* *Latency Overhead:* Mitigated by local lexical and boundary proximity calculation (<5 ms), reserving LLM inference for elevated risk zones.
-* *Label Leakage:* Mitigated by Pydantic runtime schema validation and AST-based CI test suites.
-
----
-
-### Field 12: OpenAI Models & Rationale
-* **`gpt-4o` (snapshot `gpt-4o-2024-08-06`):** Used for complex adversarial scenario synthesis, generating diverse unseen prompt variations, and qualitative evaluation (LLM-as-a-judge).
-* **`gpt-4o-mini` (snapshot `gpt-4o-mini-2024-07-18`):** Used as the primary competitive per-event semantic guardrail baseline and in the trajectory evaluator.
-
----
-
-### Field 13: Relevant Project Links & Artifacts
-* **GitHub Repository:** `https://github.com/creusiobd/arkhe-benchmark-lab`
-* **Development Branch:** `feat/cybersecurity-grant-hardening`
-* **Empirical Pilot Report ($n=30$):** `results/pilot/pilot_report.md`
-* **Execution Manifest & Hashes:** `results/pilot/execution_manifest.json`
-* **Research Risk Registry:** `docs/research_risks.md`
+## 8. Research Limitations & Scientific Honesty
+- **Synthetic Step Grounding:** Current pilot trajectories use synthetic execution traces modeled on real CVEs and OWASP Top 10 for LLMs; future phases will capture live containerized sandboxes.
+- **Deterministic Proxy Equivalence:** The `offline_proxy` approximates frontier model semantic judgments for testing; live API evaluations will measure real-world prompt variance and cost implications.
+- **No Absolute Guarantees:** We explicitly avoid claims of "100% security", "zero false positives", or "infallible defense". All claims in ARKHÉ are delimited by bounded empirical confidence intervals and paired statistical hypothesis tests.
