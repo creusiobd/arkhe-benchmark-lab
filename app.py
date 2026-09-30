@@ -269,9 +269,10 @@ async def telemetry_broadcaster_task():
     while True:
         next_tick += TARGET_INTERVAL
         try:
-            if stream_manager.active_connections:
+            if stream_manager.active_connections or sim_env.mitigation_enabled:
                 payload = await build_telemetry_payload()
-                await stream_manager.broadcast(payload)
+                if stream_manager.active_connections:
+                    await stream_manager.broadcast(payload)
         except Exception:
             pass
         now = time.perf_counter()

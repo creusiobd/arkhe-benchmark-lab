@@ -35,8 +35,13 @@ def test_closed_loop():
         print(f"   Status da Mitigação: Enabled={state['mitigation_enabled']}")
         assert state['mitigation_enabled'] is True
 
+        # 2.5 Estabilizar regime nominal por 2 segundos para calibrar baseline de trajetória
+        print("2.5. Calibrando baseline nominal de operação sob tráfego contínuo...", flush=True)
+        client.post("/admin/chaos/scenario/nominal")
+        time.sleep(2.0)
+
         # 3. Injetar Drift Silencioso no Antifraude
-        print("\n3. Injetando Caos: 2. Drift Silencioso (255ms, Demanda > Pool 30)...")
+        print("\n3. Injetando Caos: 2. Drift Silencioso (255ms, Demanda > Pool 30)...", flush=True)
         r = client.post("/admin/chaos/scenario/drift")
         assert r.status_code == 200
 
@@ -45,15 +50,15 @@ def test_closed_loop():
         deadline = time.time() + 12.0
         step = 0
         while time.time() < deadline:
-            time.sleep(1.0)
+            time.sleep(0.5)
             step += 1
             res = client.get("/telemetry/live").json()
             mit = res["mitigation"]
             sre = res["sre_governance"]
             sent = res["sentinel"]
-            print(f"   [T+{step:02d}s] Sentinel Score: {sent['score']} | Mitigação Ativa: {mit['active']} | "
+            print(f"   [T+{step*0.5:04.1f}s] Sentinel Score: {sent['score']} | Mitigação Ativa: {mit['active']} | "
                   f"Pool: {mit['pool_capacity']} slots | Erros: {sre['technical_errors_count']} | "
-                  f"Error Budget: {sre['error_budget_remaining_pct']}%", flush=True)
+                  f"SLI: {sre['current_sli_availability_pct']}% | Budget: {sre['error_budget_remaining_pct']}%", flush=True)
             if mit["active"]:
                 print("   ⚡ Mitigação engatada com sucesso!", flush=True)
                 break
@@ -79,7 +84,8 @@ def test_closed_loop():
         assert final_mit["active"] is True, "O agente de mitigação deveria estar ativo!"
         assert final_mit["pool_capacity"] == 60, "O pool deveria ter sofrido autoscaling para 60 slots!"
         assert final_sre["technical_errors_count"] <= 2, f"Erros ({final_sre['technical_errors_count']}) excederam limite aceitável de 2!"
-        assert final_sre["error_budget_remaining_pct"] >= 95.0, f"Error budget ({final_sre['error_budget_remaining_pct']}%) caiu abaixo de 95%!"
+        assert final_sre["current_sli_availability_pct"] >= 99.0, f"SLI ({final_sre['current_sli_availability_pct']}%) caiu abaixo de 99.0%!"
+        assert final_sre["traditional_alert_triggered"] is False, "O alarme tradicional SRE não deveria ter disparado!"
         print("\n✅ SUCESSO: Fechamento de ciclo comprovado matematicamente e operacionalmente!", flush=True)
 
 if __name__ == "__main__":
