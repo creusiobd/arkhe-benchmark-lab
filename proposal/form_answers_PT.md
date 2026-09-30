@@ -36,6 +36,11 @@ Para impedir circularidade experimental, o benchmark estabelece duas camadas est
 2. *Ground Truth Reservado (`TrajectoryGroundTruth`):* Armazenado separadamente para uso exclusivo do avaliador independente, contendo classe real, passo da violação e justificativa causal humana.
 3. *Split Blind Holdout Estritamente Disjunto:* O dataset v0.3 incorpora 15 trajetórias em split cego com templates de ataque 100% disjuntos dos conjuntos de desenvolvimento e validação.
 
+**Formalização Matemática e Espaço de Estados:**
+O ARKHÉ modela a dinâmica de execução utilizando um kernel contínuo de embeddings subword ($\mathbb{R}^{64}$) e uma função candidata de energia de Lyapunov estritamente definida positiva:
+$$V(\mathbf{x}_t) = \mathbf{x}_t^T \mathbf{P} \mathbf{x}_t > 0 \quad (\mathbf{P} \succ 0)$$
+rastreando o vetor de estados $\mathbf{x}_t = [d_m(t), c_p(t), b_p(t), \dot{b}_p(t), \mathcal{H}_s(t), \mu_c(t)]^T$, onde o acoplamento cruzado entre divergência de missão ($d_m$) e contaminação de contexto ($c_p$) detecta instabilidade pré-violação etapas antes da execução de chamadas proibidas.
+
 **Escala e Tratamento Estatístico:**
 O estudo no release piloto v0.3 avalia 65 trajetórias canônicas equilibradas através de 5 famílias de ameaças (desenvolvimento: 20, validação: 10, teste: 20, blind holdout: 15). O pipeline calcula intervalos de confiança de Wilson (95%) para precisão, recall e acurácia; Bootstrap para mediana e média de $N_{\text{lead}}$; teste pareado de postos sinalizados de Wilcoxon para significância de antecipação; e teste exato bicaudal de McNemar para discordância pareada entre detectores.
 
@@ -98,11 +103,11 @@ Para proporcionar máxima flexibilidade ao comitê de avaliação da OpenAI, est
 * **Liderança técnica de equipe de 13 engenheiros** operando ambientes bancários e transacionais em regime contínuo 24×7.
 * **Governança técnica e observabilidade de 33 APIs reguladas**, com conformidade rigorosa a padrões de segurança cibernética (Resolução BACEN 85/2021 e PCI-DSS v4.0).
 * Domínio aprofundado em telemetria e controle distribuído: OpenTelemetry, Kubernetes, Prometheus, Splunk, Dynatrace e Grafana.
-* Criador da metodologia de inteligência de trajetória agêntica, integrando conceitos de física de filas e estabilidade dinâmica à defesa cibernética de agentes de IA.
+* Criador da metodologia de defesa de fronteira agêntica orientada à trajetória, integrando conceitos de estabilidade dinâmica no espaço de estados (métodos de Lyapunov) à segurança cibernética de agentes de IA.
 
 ---
 
 ### Campo 10: Reprodutibilidade e Abertura (Open Source Commitment)
 * O projeto é integralmente open source sob licença permissiva **Apache-2.0** (código) e **CC-BY-4.0** (datasets).
-* A suíte já conta com **100 testes automatizados** passando, pipeline de reprodução 1-clique (`scripts/reproduce_grant_pilot.sh` e `reproduce_grant_pilot.ps1`) e automação de CI no GitHub Actions (`.github/workflows/grant-benchmark.yml`).
+* A suíte conta com **112 testes automatizados** passando (111 aprovados, 1 teste de integração ao vivo skipped), pipeline de reprodução 1-clique (`scripts/reproduce_grant_pilot.sh` e `reproduce_grant_pilot.ps1`) e automação de CI no GitHub Actions (`.github/workflows/grant-benchmark.yml`).
 * Todos os artefatos de saída contam com hashes determinísticos SHA-256 e manifestos de execução auditáveis.
