@@ -90,6 +90,39 @@ class TestNoLabelLeakage(unittest.TestCase):
         with self.assertRaises(ValidationError):
             StepObservation.model_validate(leaked_dict)
 
+    def test_rejection_of_deeply_nested_leak(self):
+        leaked_nested = dict(self.valid_step_dict)
+        leaked_nested["action"] = dict(self.valid_step_dict["action"])
+        leaked_nested["action"]["parameters_summary"] = {"embedded_leak": {"label": "VIOLATION"}}
+        with self.assertRaises(ValidationError):
+            StepObservation.model_validate(leaked_nested)
+
+    def test_trajectory_observation_metadata_leakage_rejection(self):
+        from contracts.observation import TrajectoryObservation
+        obs = StepObservation.model_validate(self.valid_step_dict)
+        with self.assertRaises(ValidationError):
+            TrajectoryObservation(
+                trajectory_id="traj_001",
+                steps=[obs],
+                metadata={"ground_truth_label": "VIOLATION"}
+            )
+
+    def test_to_sanitized_opaque_masks_identifiers(self):
+        from contracts.observation import TrajectoryObservation
+        obs = StepObservation.model_validate(self.valid_step_dict)
+        leaky_id_traj = TrajectoryObservation(
+            trajectory_id="TRAJ-TOOL-VIO-V2-001",
+            steps=[obs],
+            metadata={"synthetic": True, "forbidden_extra_field_test": 123}
+        )
+        sanitized = leaky_id_traj.to_sanitized_opaque()
+        self.assertTrue(sanitized.trajectory_id.startswith("traj_"))
+        self.assertNotIn("VIO", sanitized.trajectory_id)
+        self.assertNotIn("BEN", sanitized.trajectory_id)
+        self.assertNotIn("NEA", sanitized.trajectory_id)
+        self.assertEqual(sanitized.steps[0].trajectory_id, sanitized.trajectory_id)
+        self.assertNotIn("forbidden_extra_field_test", sanitized.metadata)
+
 
 if __name__ == "__main__":
     unittest.main()
