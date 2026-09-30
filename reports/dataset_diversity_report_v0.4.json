@@ -31,6 +31,17 @@
     "contains_partial_containment": true,
     "contains_failed_containment": true
   },
+  "dataset_file_hashes": {
+    "observations/development.jsonl": "be94f2dc2cacaa4c46043aa867ec142b6b49bcb2bf43c69da45fdd82015f5c4e",
+    "observations/validation.jsonl": "0d67c3eb3c5b9e43edf6a1f9fed2742bf2329d8ed692c1e4f7e26f91fab51b2b",
+    "observations/test.jsonl": "e28ac42367feb41bf47cf25d34780f6fee6a3e99fc36e0698cca2e203febd680",
+    "ground_truth/development_labels.jsonl": "8982d44d19f6fad4cf529f87158701550c8c1af39e6dc237ef87e25ff6eec5c4",
+    "ground_truth/validation_labels.jsonl": "13d6090b1e8e1e20747fd2ef4ca68fc01cb657260653a7d41b2a971961173b24",
+    "ground_truth/test_labels.jsonl": "357047acd534ee1ac0b6c22c68a15ccf690ffcbcd6e748849be366ea770a1435",
+    "templates/templates_catalog.json": "d16eba79d0cd7a61ff8bbdc2092bc4b9f16e29b819a75cbad8d4287d9b559681",
+    "dataset_card.md": "d7c41b958c56300f0553e338e3973885a92f50eebea43fc5e5cd2268834d1b66",
+    "LICENSE": "f3ed4e434b54bdf87e56b32916a59ee45b559cd0402471f8b33c006dbdc17155"
+  },
   "splits": {
     "development": {
       "total_trajectories": 20,
@@ -43,9 +54,9 @@
         3,
         4,
         3,
+        3,
+        3,
         2,
-        3,
-        3,
         3,
         3,
         3,
@@ -74,8 +85,8 @@
         "NONE": 10,
         "SUCCEEDED": 4,
         "PARTIAL": 2,
-        "LATE": 2,
-        "FAILED": 2
+        "FAILED": 2,
+        "LATE": 2
       },
       "final_outcome_distribution": {
         "CLEAN": 8,
@@ -83,8 +94,8 @@
         "PARTIALLY_CONTAINED_HAZARD": 2,
         "UNCONTAINED_VIOLATION": 6
       },
-      "sha256_observations": "acd0d2917ddd847a89337d1e7aa10bf9d88dd088d4214b5afd710a9f29f0a85a",
-      "sha256_ground_truth": "4e96da999145a499dcd9f803496570d6d7501371628d0eaca4428cf6a2adb939"
+      "sha256_observations": "be94f2dc2cacaa4c46043aa867ec142b6b49bcb2bf43c69da45fdd82015f5c4e",
+      "sha256_ground_truth": "8982d44d19f6fad4cf529f87158701550c8c1af39e6dc237ef87e25ff6eec5c4"
     },
     "validation": {
       "total_trajectories": 10,
@@ -116,8 +127,8 @@
         "NONE": 5,
         "SUCCEEDED": 2,
         "PARTIAL": 1,
-        "LATE": 1,
-        "FAILED": 1
+        "FAILED": 1,
+        "LATE": 1
       },
       "final_outcome_distribution": {
         "CLEAN": 4,
@@ -125,31 +136,31 @@
         "PARTIALLY_CONTAINED_HAZARD": 1,
         "UNCONTAINED_VIOLATION": 3
       },
-      "sha256_observations": "3c9e50310a8a028e4c8c1f78a2671bfff5a56129886f052a864299c7e7aa4876",
-      "sha256_ground_truth": "4f34c4a8f6f6f05e963fc9264640bfbf7474edde8c5857d3a46484bd677d8e36"
+      "sha256_observations": "0d67c3eb3c5b9e43edf6a1f9fed2742bf2329d8ed692c1e4f7e26f91fab51b2b",
+      "sha256_ground_truth": "13d6090b1e8e1e20747fd2ef4ca68fc01cb657260653a7d41b2a971961173b24"
     },
     "test": {
       "total_trajectories": 20,
       "total_steps": 49,
       "step_lengths": [
-        2,
-        2,
-        3,
-        2,
-        3,
-        3,
         3,
         2,
         2,
-        3,
-        2,
-        2,
-        3,
         2,
         3,
         3,
         3,
         2,
+        2,
+        2,
+        3,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+        3,
         2,
         2
       ],
@@ -170,8 +181,8 @@
         "NONE": 10,
         "SUCCEEDED": 4,
         "PARTIAL": 2,
-        "LATE": 2,
-        "FAILED": 2
+        "FAILED": 2,
+        "LATE": 2
       },
       "final_outcome_distribution": {
         "CLEAN": 8,
@@ -179,8 +190,8 @@
         "PARTIALLY_CONTAINED_HAZARD": 2,
         "UNCONTAINED_VIOLATION": 6
       },
-      "sha256_observations": "9ee500f89c2fb89ebb4db2d63bacb31006e6693b124bbb34d6a955beb331c7cc",
-      "sha256_ground_truth": "f766abbc704a21205fce6cf80f0b4287d8fa755fce86fc2055243152322b42ce"
+      "sha256_observations": "e28ac42367feb41bf47cf25d34780f6fee6a3e99fc36e0698cca2e203febd680",
+      "sha256_ground_truth": "357047acd534ee1ac0b6c22c68a15ccf690ffcbcd6e748849be366ea770a1435"
     }
   }
 }

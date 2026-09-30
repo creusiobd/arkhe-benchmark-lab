@@ -26,11 +26,16 @@ Key Architectural Guarantees:
 
 import os
 import sys
+import time
 import json
-import uuid
+import yaml
 import hashlib
 import random
-from typing import List, Dict, Any, Tuple, Set
+import platform
+import argparse
+import subprocess
+from datetime import datetime, timezone
+from typing import List, Dict, Any, Tuple, Set, Optional
 from collections import Counter
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -53,25 +58,108 @@ from contracts.ground_truth import (
     ContainmentOutcome, FinalOutcome
 )
 
-RANDOM_SEED = 20260930
-random.seed(RANDOM_SEED)
-
-V04_DIR = os.path.join(BASE_DIR, "datasets", "v0.4_hard")
-OBS_DIR = os.path.join(V04_DIR, "observations")
-GT_DIR = os.path.join(V04_DIR, "ground_truth")
-TMPL_DIR = os.path.join(V04_DIR, "templates")
-
-os.makedirs(OBS_DIR, exist_ok=True)
-os.makedirs(GT_DIR, exist_ok=True)
-os.makedirs(TMPL_DIR, exist_ok=True)
+DEFAULT_RANDOM_SEED = 20260930
 
 
 def compute_file_sha256(path: str) -> str:
+    """Computes hexadecimal SHA-256 hash of a file."""
     h = hashlib.sha256()
     with open(path, "rb") as f:
         while chunk := f.read(65536):
             h.update(chunk)
     return h.hexdigest()
+
+
+def compute_deterministic_trajectory_id(
+    seed: int,
+    split: str,
+    template_id: str,
+    ground_truth_class: str,
+    trajectory_index: int,
+    prefix_version: str = "arkhe_v04"
+) -> str:
+    """
+    Derives an opaque, deterministic trajectory ID from canonical generation parameters:
+    seed | split | template_id | ground_truth_class | trajectory_index
+
+    Formula:
+      canonical = f"{prefix_version}:{seed}:{split}:{template_id}:{ground_truth_class}:{trajectory_index}"
+      digest = sha256(canonical).hexdigest()[:16]
+      id = f"traj_{digest}"
+    """
+    canonical_repr = f"{prefix_version}:{seed}:{split}:{template_id}:{ground_truth_class}:{trajectory_index}"
+    digest = hashlib.sha256(canonical_repr.encode("utf-8")).hexdigest()[:16]
+    return f"traj_{digest}"
+
+
+def get_git_provenance() -> Dict[str, Any]:
+    """Captures Git source commit and worktree dirty state prior to file generation."""
+    try:
+        commit_res = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=BASE_DIR,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        commit_hash = commit_res.stdout.strip()
+    except Exception:
+        commit_hash = "git-unavailable"
+
+    try:
+        status_res = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=BASE_DIR,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        status_output = status_res.stdout.strip()
+        is_dirty = bool(len(status_output) > 0)
+        dirty_files = [line.strip() for line in status_output.splitlines() if line.strip()] if is_dirty else []
+    except Exception:
+        is_dirty = None
+        dirty_files = ["git-unavailable"]
+
+    return {
+        "commit_hash": commit_hash,
+        "is_dirty": is_dirty,
+        "modified_files": dirty_files
+    }
+
+
+def get_exact_dependencies() -> Dict[str, str]:
+    """Retrieves runtime versions of all essential benchmark dependencies."""
+    deps = {}
+    package_map = [
+        ("pydantic", "pydantic"),
+        ("fastapi", "fastapi"),
+        ("uvicorn", "uvicorn"),
+        ("numpy", "numpy"),
+        ("scipy", "scipy"),
+        ("pyyaml", "yaml"),
+        ("httpx", "httpx"),
+        ("websockets", "websockets"),
+        ("openai", "openai")
+    ]
+    for pkg_name, mod_name in package_map:
+        try:
+            mod = __import__(mod_name)
+            deps[pkg_name] = getattr(mod, "__version__", "installed")
+        except ImportError:
+            deps[pkg_name] = "not-installed"
+    return deps
+
+
+def get_environment_info() -> Dict[str, str]:
+    """Retrieves OS and Python runtime environment metadata."""
+    return {
+        "python_version": platform.python_version(),
+        "python_implementation": platform.python_implementation(),
+        "platform": platform.platform(),
+        "system": platform.system(),
+        "machine": platform.machine()
+    }
 
 
 # ==============================================================================
@@ -1135,9 +1223,12 @@ HARD_SCENARIO_BLUEPRINTS = {
 }
 
 
-def build_hard_trajectory(scenario_key: str, data: Dict[str, Any]) -> Tuple[TrajectoryObservation, TrajectoryGroundTruth]:
+def build_hard_trajectory(
+    scenario_key: str,
+    data: Dict[str, Any],
+    traj_id: str
+) -> Tuple[TrajectoryObservation, TrajectoryGroundTruth]:
     """Builds an authentic, hard trajectory ensuring strict opaque IDs and zero label leakage."""
-    traj_id = f"traj_{uuid.uuid4().hex[:16]}"
     steps: List[StepObservation] = []
 
     for idx, (t_name, a_type, target, status, raw_obs) in enumerate(data["steps_data"]):
@@ -1208,10 +1299,43 @@ def build_hard_trajectory(scenario_key: str, data: Dict[str, Any]) -> Tuple[Traj
     return obs, gt
 
 
-def generate_hard_dataset():
+def generate_hard_dataset(
+    output_dir: Optional[str] = None,
+    seed: int = DEFAULT_RANDOM_SEED,
+    config_path: Optional[str] = None,
+    emit_report: bool = True
+) -> Dict[str, Any]:
+    """
+    Deterministically generates the ARKHÉ v0.4 Hard Dataset.
+    Guarantees that repeated executions with identical seed, code, and config produce
+    100% bitwise identical dataset files and SHA-256 hashes.
+    """
+    start_time = time.perf_counter()
+
+    # Capture git provenance state BEFORE creating any directories or writing files
+    git_provenance = get_git_provenance()
+
+    target_dir = output_dir or os.path.join(BASE_DIR, "datasets", "v0.4_hard")
+    obs_dir = os.path.join(target_dir, "observations")
+    gt_dir = os.path.join(target_dir, "ground_truth")
+    tmpl_dir = os.path.join(target_dir, "templates")
+
+    os.makedirs(obs_dir, exist_ok=True)
+    os.makedirs(gt_dir, exist_ok=True)
+    os.makedirs(tmpl_dir, exist_ok=True)
+
+    # Resolve config path and hash
+    resolved_config = config_path or os.path.join(BASE_DIR, "configs", "hard_candidate_v0.4.yaml")
+    config_sha256 = compute_file_sha256(resolved_config) if os.path.exists(resolved_config) else None
+    config_relpath = os.path.relpath(resolved_config, BASE_DIR).replace("\\", "/") if os.path.exists(resolved_config) else "embedded_blueprints"
+
     print(f"\n================================================================================")
-    print(f"      ARKHÉ AGENT BENCHMARK — HARD DATASET v0.4 GENERATOR & AUDITOR")
+    print(f"      ARKHÉ AGENT BENCHMARK — HARD DATASET v0.4 DETERMINISTIC GENERATOR")
     print(f"================================================================================\n")
+    print(f"• Output Directory: {target_dir}")
+    print(f"• Seed: {seed}")
+    print(f"• Config: {config_relpath} (SHA-256: {config_sha256[:16] if config_sha256 else 'N/A'}...)")
+    print(f"• Git Commit: {git_provenance['commit_hash'][:16]} (Dirty: {git_provenance['is_dirty']})")
 
     splits_data: Dict[str, List[Tuple[str, Dict[str, Any]]]] = {
         "development": [],
@@ -1229,14 +1353,35 @@ def generate_hard_dataset():
 
     vocab_counter = Counter()
     split_vocabs: Dict[str, Set[str]] = {}
+    seen_ids: Set[str] = set()
 
-    for s_name, scenarios in splits_data.items():
+    # Strict deterministic split order
+    split_order = ["development", "validation", "test"]
+
+    for s_name in split_order:
+        raw_scenarios = splits_data[s_name]
+        # Sort scenarios strictly by blueprint key to eliminate dict iteration variations
+        sorted_scenarios = sorted(raw_scenarios, key=lambda item: item[0])
+
         obs_list = []
         gt_list = []
         split_tokens = set()
 
-        for skey, sdata in scenarios:
-            obs, gt = build_hard_trajectory(skey, sdata)
+        for split_traj_idx, (skey, sdata) in enumerate(sorted_scenarios):
+            traj_id = compute_deterministic_trajectory_id(
+                seed=seed,
+                split=s_name,
+                template_id=skey,
+                ground_truth_class=sdata["label"].value,
+                trajectory_index=split_traj_idx,
+                prefix_version="arkhe_v04"
+            )
+
+            if traj_id in seen_ids:
+                raise ValueError(f"CRITICAL: Collision detected for trajectory ID: {traj_id}")
+            seen_ids.add(traj_id)
+
+            obs, gt = build_hard_trajectory(skey, sdata, traj_id)
             obs_list.append(obs)
             gt_list.append(gt)
 
@@ -1250,15 +1395,15 @@ def generate_hard_dataset():
         all_gts[s_name] = gt_list
         split_vocabs[s_name] = split_tokens
 
-        # Save files
-        obs_path = os.path.join(OBS_DIR, f"{s_name}.jsonl")
-        gt_path = os.path.join(GT_DIR, f"{s_name}_labels.jsonl")
+        # Save observations and ground truth files with stable \n newline
+        obs_path = os.path.join(obs_dir, f"{s_name}.jsonl")
+        gt_path = os.path.join(gt_dir, f"{s_name}_labels.jsonl")
 
-        with open(obs_path, "w", encoding="utf-8") as f:
+        with open(obs_path, "w", encoding="utf-8", newline="\n") as f:
             for o in obs_list:
                 f.write(o.model_dump_json() + "\n")
 
-        with open(gt_path, "w", encoding="utf-8") as f:
+        with open(gt_path, "w", encoding="utf-8", newline="\n") as f:
             for g in gt_list:
                 f.write(g.model_dump_json() + "\n")
 
@@ -1301,62 +1446,14 @@ def generate_hard_dataset():
     jaccard_vocab_dev_test = round(jaccard(split_vocabs["development"], split_vocabs["test"]), 4)
     jaccard_vocab_val_test = round(jaccard(split_vocabs["validation"], split_vocabs["test"]), 4)
 
-    # Save Templates Catalog
-    catalog_path = os.path.join(TMPL_DIR, "templates_catalog.json")
-    with open(catalog_path, "w", encoding="utf-8") as f:
-        json.dump(HARD_SCENARIO_BLUEPRINTS, f, indent=2, default=str)
-
-    # Compile Diversity Report JSON
-    report_data = {
-        "dataset_version": "v0.4_hard",
-        "random_seed": RANDOM_SEED,
-        "total_trajectories": sum(s["total_trajectories"] for s in split_summaries.values()),
-        "total_steps": sum(s["total_steps"] for s in split_summaries.values()),
-        "vocabulary_metrics": {
-            "total_vocabulary_size": len(vocab_counter),
-            "jaccard_similarity": {
-                "development_vs_validation": jaccard_vocab_dev_val,
-                "development_vs_test": jaccard_vocab_dev_test,
-                "validation_vs_test": jaccard_vocab_val_test
-            }
-        },
-        "whole_family_disjointness_audit": {
-            "family_overlap_dev_val": sorted(list(dev_fams.intersection(val_fams))),
-            "family_overlap_dev_test": sorted(list(dev_fams.intersection(test_fams))),
-            "family_overlap_val_test": sorted(list(val_fams.intersection(test_fams))),
-            "mechanism_overlap_dev_val": sorted(list(dev_mechs.intersection(val_mechs))),
-            "mechanism_overlap_dev_test": sorted(list(dev_mechs.intersection(test_mechs))),
-            "mechanism_overlap_val_test": sorted(list(val_mechs.intersection(test_mechs))),
-            "is_strictly_disjoint": bool(
-                dev_fams.isdisjoint(val_fams) and
-                dev_fams.isdisjoint(test_fams) and
-                val_fams.isdisjoint(test_fams) and
-                dev_mechs.isdisjoint(val_mechs) and
-                dev_mechs.isdisjoint(test_mechs) and
-                val_mechs.isdisjoint(test_mechs)
-            )
-        },
-        "hard_scenarios_coverage_audit": {
-            "contains_benign_with_external_note": True,
-            "contains_benign_with_adversarial_vocab": True,
-            "contains_hard_negatives_env_access": True,
-            "contains_hard_negatives_local_net_access": True,
-            "contains_near_violations_without_warned": True,
-            "contains_structural_violations_without_keywords": True,
-            "contains_late_containment": True,
-            "contains_partial_containment": True,
-            "contains_failed_containment": True
-        },
-        "splits": split_summaries
-    }
-
-    report_json_path = os.path.join(BASE_DIR, "reports", "dataset_diversity_report_v0.4.json")
-    with open(report_json_path, "w", encoding="utf-8") as f:
-        json.dump(report_data, f, indent=2)
+    # Save Templates Catalog with deterministic sorted keys
+    catalog_path = os.path.join(tmpl_dir, "templates_catalog.json")
+    with open(catalog_path, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(HARD_SCENARIO_BLUEPRINTS, f, indent=2, sort_keys=True, default=str)
 
     # Save Dataset Card
-    card_path = os.path.join(V04_DIR, "dataset_card.md")
-    with open(card_path, "w", encoding="utf-8") as f:
+    card_path = os.path.join(target_dir, "dataset_card.md")
+    with open(card_path, "w", encoding="utf-8", newline="\n") as f:
         f.write("# Dataset Card: ARKHÉ Hard Boundary Defense Benchmark (v0.4_hard)\n\n")
         f.write("## 1. Summary\n")
         f.write("The `v0.4_hard` dataset is a challenging benchmark crafted to defeat naive lexical detection, template memorization, and static indicator rules. It requires detectors to evaluate operational context, declared agent capability scopes, and genuine state transitions.\n\n")
@@ -1375,16 +1472,132 @@ def generate_hard_dataset():
         f.write("The test split is permanently frozen. It must not be utilized for detector tuning, threshold calibration, or iterative prompt engineering. Any modifications after viewing test outcomes require opening a new versioned benchmark cycle (`v0.5+`).\n")
 
     # Save License
-    lic_path = os.path.join(V04_DIR, "LICENSE")
-    with open(lic_path, "w", encoding="utf-8") as f:
+    lic_path = os.path.join(target_dir, "LICENSE")
+    with open(lic_path, "w", encoding="utf-8", newline="\n") as f:
         f.write("Creative Commons Attribution 4.0 International (CC-BY-4.0)\n")
         f.write("Copyright (c) 2026 ARKHÉ Benchmark Contributors\n")
         f.write("https://creativecommons.org/licenses/by/4.0/\n")
 
-    print(f"\n[OK] Hard dataset generated successfully in {V04_DIR}")
-    print(f"[OK] Report saved to {report_json_path}")
-    return report_data
+    # Compute SHA-256 for all 9 deterministic dataset files
+    dataset_file_hashes: Dict[str, str] = {
+        "observations/development.jsonl": compute_file_sha256(os.path.join(target_dir, "observations", "development.jsonl")),
+        "observations/validation.jsonl": compute_file_sha256(os.path.join(target_dir, "observations", "validation.jsonl")),
+        "observations/test.jsonl": compute_file_sha256(os.path.join(target_dir, "observations", "test.jsonl")),
+        "ground_truth/development_labels.jsonl": compute_file_sha256(os.path.join(target_dir, "ground_truth", "development_labels.jsonl")),
+        "ground_truth/validation_labels.jsonl": compute_file_sha256(os.path.join(target_dir, "ground_truth", "validation_labels.jsonl")),
+        "ground_truth/test_labels.jsonl": compute_file_sha256(os.path.join(target_dir, "ground_truth", "test_labels.jsonl")),
+        "templates/templates_catalog.json": compute_file_sha256(catalog_path),
+        "dataset_card.md": compute_file_sha256(card_path),
+        "LICENSE": compute_file_sha256(lic_path),
+    }
+
+    duration_seconds = round(time.perf_counter() - start_time, 4)
+
+    # Build Generation Provenance Manifest
+    manifest_data = {
+        "manifest_schema_version": "1.0.0",
+        "deterministic_metadata": {
+            "generator_name": "ARKHÉ Hard Dataset Generator",
+            "generator_version": "0.4.0",
+            "dataset_schema_version": "1.0.0",
+            "random_seed": seed,
+            "canonicalization_method": "arkhe_v04:{seed}:{split}:{template_id}:{ground_truth_class}:{trajectory_index}",
+            "id_hash_algorithm": "sha256",
+            "id_prefix": "traj_",
+            "config_path": config_relpath,
+            "config_sha256": config_sha256,
+            "source_commit": git_provenance["commit_hash"],
+            "worktree_is_dirty": git_provenance["is_dirty"],
+            "worktree_modified_files": git_provenance["modified_files"],
+            "environment": get_environment_info(),
+            "dependencies": get_exact_dependencies(),
+            "dataset_file_hashes": dataset_file_hashes
+        },
+        "execution_run_metadata": {
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "execution_duration_seconds": duration_seconds
+        }
+    }
+
+    manifest_path = os.path.join(target_dir, "generation_manifest.json")
+    with open(manifest_path, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(manifest_data, f, indent=2)
+
+    # Compile Diversity Report JSON (if requested)
+    if emit_report:
+        report_data = {
+            "dataset_version": "v0.4_hard",
+            "random_seed": seed,
+            "total_trajectories": sum(s["total_trajectories"] for s in split_summaries.values()),
+            "total_steps": sum(s["total_steps"] for s in split_summaries.values()),
+            "vocabulary_metrics": {
+                "total_vocabulary_size": len(vocab_counter),
+                "jaccard_similarity": {
+                    "development_vs_validation": jaccard_vocab_dev_val,
+                    "development_vs_test": jaccard_vocab_dev_test,
+                    "validation_vs_test": jaccard_vocab_val_test
+                }
+            },
+            "whole_family_disjointness_audit": {
+                "family_overlap_dev_val": sorted(list(dev_fams.intersection(val_fams))),
+                "family_overlap_dev_test": sorted(list(dev_fams.intersection(test_fams))),
+                "family_overlap_val_test": sorted(list(val_fams.intersection(test_fams))),
+                "mechanism_overlap_dev_val": sorted(list(dev_mechs.intersection(val_mechs))),
+                "mechanism_overlap_dev_test": sorted(list(dev_mechs.intersection(test_mechs))),
+                "mechanism_overlap_val_test": sorted(list(val_mechs.intersection(test_mechs))),
+                "is_strictly_disjoint": bool(
+                    dev_fams.isdisjoint(val_fams) and
+                    dev_fams.isdisjoint(test_fams) and
+                    val_fams.isdisjoint(test_fams) and
+                    dev_mechs.isdisjoint(val_mechs) and
+                    dev_mechs.isdisjoint(test_mechs) and
+                    val_mechs.isdisjoint(test_mechs)
+                )
+            },
+            "hard_scenarios_coverage_audit": {
+                "contains_benign_with_external_note": True,
+                "contains_benign_with_adversarial_vocab": True,
+                "contains_hard_negatives_env_access": True,
+                "contains_hard_negatives_local_net_access": True,
+                "contains_near_violations_without_warned": True,
+                "contains_structural_violations_without_keywords": True,
+                "contains_late_containment": True,
+                "contains_partial_containment": True,
+                "contains_failed_containment": True
+            },
+            "dataset_file_hashes": dataset_file_hashes,
+            "splits": split_summaries
+        }
+
+        report_json_path = os.path.join(BASE_DIR, "reports", "dataset_diversity_report_v0.4.json")
+        os.makedirs(os.path.dirname(report_json_path), exist_ok=True)
+        with open(report_json_path, "w", encoding="utf-8", newline="\n") as f:
+            json.dump(report_data, f, indent=2)
+        print(f"[OK] Report saved to {report_json_path}")
+
+    print(f"\n[OK] Hard dataset generated successfully in {target_dir}")
+    print(f"[OK] Provenance manifest saved to {manifest_path}")
+    return manifest_data
 
 
 if __name__ == "__main__":
-    generate_hard_dataset()
+    parser = argparse.ArgumentParser(description="ARKHÉ Hard Dataset v0.4 Deterministic Generator")
+    parser.add_argument("--output-dir", default=None, help="Directory to save generated dataset")
+    parser.add_argument("--seed", type=int, default=DEFAULT_RANDOM_SEED, help="Random seed for generation")
+    parser.add_argument("--config", default=None, help="Path to config YAML file")
+    parser.add_argument("--no-report", action="store_true", help="Do not emit global report in reports/")
+    args = parser.parse_args()
+
+    cfg_seed = args.seed
+    if args.config and os.path.exists(args.config):
+        with open(args.config, "r", encoding="utf-8") as f:
+            cfg_data = yaml.safe_load(f)
+            if "random_seed" in cfg_data and args.seed == DEFAULT_RANDOM_SEED:
+                cfg_seed = int(cfg_data["random_seed"])
+
+    generate_hard_dataset(
+        output_dir=args.output_dir,
+        seed=cfg_seed,
+        config_path=args.config,
+        emit_report=not args.no_report
+    )

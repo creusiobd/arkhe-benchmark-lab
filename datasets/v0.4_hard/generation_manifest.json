@@ -1,0 +1,63 @@
+{
+  "manifest_schema_version": "1.0.0",
+  "deterministic_metadata": {
+    "generator_name": "ARKH\u00c9 Hard Dataset Generator",
+    "generator_version": "0.4.0",
+    "dataset_schema_version": "1.0.0",
+    "random_seed": 20260930,
+    "canonicalization_method": "arkhe_v04:{seed}:{split}:{template_id}:{ground_truth_class}:{trajectory_index}",
+    "id_hash_algorithm": "sha256",
+    "id_prefix": "traj_",
+    "config_path": "configs/hard_candidate_v0.4.yaml",
+    "config_sha256": "3c222ce52c2f730bdfb30c6f8f23d7a9823ac54550a76e16ae967b5a2eef70fd",
+    "source_commit": "9e116263133a061730324a4c54f740c64acc3fae",
+    "worktree_is_dirty": true,
+    "worktree_modified_files": [
+      "M datasets/v0.4_hard/LICENSE",
+      "M datasets/v0.4_hard/dataset_card.md",
+      "M datasets/v0.4_hard/ground_truth/development_labels.jsonl",
+      "M datasets/v0.4_hard/ground_truth/test_labels.jsonl",
+      "M datasets/v0.4_hard/ground_truth/validation_labels.jsonl",
+      "M datasets/v0.4_hard/observations/development.jsonl",
+      "M datasets/v0.4_hard/observations/test.jsonl",
+      "M datasets/v0.4_hard/observations/validation.jsonl",
+      "M datasets/v0.4_hard/templates/templates_catalog.json",
+      "M reports/dataset_diversity_report_v0.4.json",
+      "M scripts/generate_hard_dataset.py",
+      "?? datasets/v0.4_hard/generation_manifest.json"
+    ],
+    "environment": {
+      "python_version": "3.14.7",
+      "python_implementation": "CPython",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "system": "Windows",
+      "machine": "AMD64"
+    },
+    "dependencies": {
+      "pydantic": "2.13.5",
+      "fastapi": "0.141.1",
+      "uvicorn": "0.53.0",
+      "numpy": "2.5.3",
+      "scipy": "1.18.1",
+      "pyyaml": "6.0.3",
+      "httpx": "0.28.1",
+      "websockets": "17.1",
+      "openai": "3.22.1"
+    },
+    "dataset_file_hashes": {
+      "observations/development.jsonl": "be94f2dc2cacaa4c46043aa867ec142b6b49bcb2bf43c69da45fdd82015f5c4e",
+      "observations/validation.jsonl": "0d67c3eb3c5b9e43edf6a1f9fed2742bf2329d8ed692c1e4f7e26f91fab51b2b",
+      "observations/test.jsonl": "e28ac42367feb41bf47cf25d34780f6fee6a3e99fc36e0698cca2e203febd680",
+      "ground_truth/development_labels.jsonl": "8982d44d19f6fad4cf529f87158701550c8c1af39e6dc237ef87e25ff6eec5c4",
+      "ground_truth/validation_labels.jsonl": "13d6090b1e8e1e20747fd2ef4ca68fc01cb657260653a7d41b2a971961173b24",
+      "ground_truth/test_labels.jsonl": "357047acd534ee1ac0b6c22c68a15ccf690ffcbcd6e748849be366ea770a1435",
+      "templates/templates_catalog.json": "d16eba79d0cd7a61ff8bbdc2092bc4b9f16e29b819a75cbad8d4287d9b559681",
+      "dataset_card.md": "d7c41b958c56300f0553e338e3973885a92f50eebea43fc5e5cd2268834d1b66",
+      "LICENSE": "f3ed4e434b54bdf87e56b32916a59ee45b559cd0402471f8b33c006dbdc17155"
+    }
+  },
+  "execution_run_metadata": {
+    "generated_at_utc": "2026-09-30T20:05:57.606848+00:00",
+    "execution_duration_seconds": 0.2345
+  }
+}
