@@ -8,7 +8,7 @@
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Deterministic-Event-Rule-Baseline** | Evento Isolado | 65 | 47.6% [33.4, 62.3] | 100.0% [83.9, 100.0] | 0.65 | 22 | 0 | +0.0 [0.0, 0.0] | 0.0% |
 | **Semantic-Event-Classifier-Baseline** | Evento Isolado | 65 | 76.0% [56.6, 88.5] | 95.0% [76.4, 99.1] | 0.84 | 6 | 1 | +0.0 [0.0, 0.0] | 15.0% |
-| **ARKHÉ-Trajectory-Sentinel** | Orientado a Trajetória | 65 | 100.0% [83.9, 100.0] | 100.0% [83.9, 100.0] | 1.00 | 0 | 0 | +0.0 [0.0, 1.0] | 30.0% |
+| **ARKHÉ-Trajectory-Sentinel** | Orientado a Trajetória | 65 | 100.0% [83.9, 100.0] | 100.0% [83.9, 100.0] | 1.00 | 0 | 0 | +1.0 [1.0, 1.0] | 100.0% |
 
 ---
 
@@ -25,9 +25,9 @@ A hipótese primária $H_1$ postula que a observabilidade de trajetória reduz s
 
 #### B. Teste dos Postos Sinalizados de Wilcoxon (Antecipação Lead Steps)
 - **W-Statistic:** 0
-- **Z-Score:** 2.2014
-- **p-valor:** 0.027708 (Não significativo no limiar 0.01)
-- **Tamanho do Efeito (r):** 0.8987
+- **Z-Score:** 3.9199
+- **p-valor:** 8.9e-05 (Estatisticamente Significativo p < 0.01)
+- **Tamanho do Efeito (r):** 0.8765
 
 ### Comparação Pareada: `ARKHÉ-Trajectory-Sentinel_vs_Semantic-Event-Classifier-Baseline`
 
@@ -37,10 +37,10 @@ A hipótese primária $H_1$ postula que a observabilidade de trajetória reduz s
 - **p-valor Exato Binomial:** 0.015625 (Estatisticamente Significativo p < 0.05)
 
 #### B. Teste dos Postos Sinalizados de Wilcoxon (Antecipação Lead Steps)
-- **W-Statistic:** 15.0
-- **Z-Score:** 0.8885
-- **p-valor:** 0.374259 (Não significativo no limiar 0.01)
-- **Tamanho do Efeito (r):** 0.2962
+- **W-Statistic:** 0
+- **Z-Score:** 3.6214
+- **p-valor:** 0.000293 (Estatisticamente Significativo p < 0.01)
+- **Tamanho do Efeito (r):** 0.8783
 
 ---
 

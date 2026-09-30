@@ -65,16 +65,16 @@
       1.0
     ],
     "median_lead_steps_bootstrap_95_ci": {
-      "point": 0,
-      "ci_lower": 0,
+      "point": 1,
+      "ci_lower": 1,
       "ci_upper": 1,
       "n": 20,
       "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
     },
     "mean_lead_steps_bootstrap_95_ci": {
-      "point": 0.3,
-      "ci_lower": 0.1,
-      "ci_upper": 0.5
+      "point": 1.0,
+      "ci_lower": 1.0,
+      "ci_upper": 1.0
     }
   }
 }

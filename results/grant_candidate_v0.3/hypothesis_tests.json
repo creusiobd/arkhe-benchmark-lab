@@ -17,14 +17,14 @@
     "wilcoxon_lead_steps": {
       "test": "Wilcoxon signed-rank (paired)",
       "w_stat": 0,
-      "w_pos": 21.0,
+      "w_pos": 210.0,
       "w_neg": 0,
-      "z_score": 2.2014,
-      "p_value": 0.027708,
-      "effect_size_r": 0.8987,
+      "z_score": 3.9199,
+      "p_value": 8.9e-05,
+      "effect_size_r": 0.8765,
       "is_significant_005": true,
-      "is_significant_001": false,
-      "n_nonzero": 6
+      "is_significant_001": true,
+      "n_nonzero": 20
     }
   },
   "ARKH\u00c9-Trajectory-Sentinel_vs_Semantic-Event-Classifier-Baseline": {
@@ -44,15 +44,15 @@
     },
     "wilcoxon_lead_steps": {
       "test": "Wilcoxon signed-rank (paired)",
-      "w_stat": 15.0,
-      "w_pos": 30.0,
-      "w_neg": 15.0,
-      "z_score": 0.8885,
-      "p_value": 0.374259,
-      "effect_size_r": 0.2962,
-      "is_significant_005": false,
-      "is_significant_001": false,
-      "n_nonzero": 9
+      "w_stat": 0,
+      "w_pos": 153.0,
+      "w_neg": 0,
+      "z_score": 3.6214,
+      "p_value": 0.000293,
+      "effect_size_r": 0.8783,
+      "is_significant_005": true,
+      "is_significant_001": true,
+      "n_nonzero": 17
     }
   }
 }

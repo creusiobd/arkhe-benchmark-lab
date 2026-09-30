@@ -1,7 +1,7 @@
 {
   "experiment_name": "grant_candidate_v0.3",
-  "timestamp_utc": "2026-09-30T13:18:38.712574+00:00",
-  "git_commit_hash": "e46e319182b529279eb3e89f62c3e271a7816a2f",
+  "timestamp_utc": "2026-09-30T15:47:48.456984+00:00",
+  "git_commit_hash": "a65d8f04f3e210a60e62fbc53f75496fce4ca9d0",
   "python_version": "3.14.7",
   "platform": "Windows-11-10.0.26200-SP0",
   "dataset_hashes": {
@@ -12,7 +12,7 @@
   },
   "total_trajectories": 65,
   "total_executions": 195,
-  "total_evaluation_time_seconds": 0.1436,
+  "total_evaluation_time_seconds": 0.7908,
   "detectors": [
     {
       "name": "Deterministic-Event-Rule-Baseline",
@@ -21,7 +21,7 @@
       "client_mode": "local",
       "trajectories_evaluated": 65,
       "flagged_trajectories": 42,
-      "avg_latency_ms": 0.25
+      "avg_latency_ms": 0.31
     },
     {
       "name": "Semantic-Event-Classifier-Baseline",
@@ -30,16 +30,16 @@
       "client_mode": "offline_proxy",
       "trajectories_evaluated": 65,
       "flagged_trajectories": 25,
-      "avg_latency_ms": 0.3
+      "avg_latency_ms": 0.49
     },
     {
       "name": "ARKH\u00c9-Trajectory-Sentinel",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "mode": "TRAJECTORY_AWARE",
       "client_mode": "local",
       "trajectories_evaluated": 65,
       "flagged_trajectories": 20,
-      "avg_latency_ms": 0.94
+      "avg_latency_ms": 10.62
     }
   ],
   "failures_and_retries": {

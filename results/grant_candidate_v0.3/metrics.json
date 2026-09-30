@@ -33,9 +33,9 @@
     "accuracy": 1.0,
     "false_positives": 0,
     "false_negatives": 0,
-    "mean_lead_steps": 0.3,
-    "median_lead_steps": 0,
-    "pre_violation_detection_rate": 0.3,
-    "pre_violation_detections_count": 6
+    "mean_lead_steps": 1.0,
+    "median_lead_steps": 1,
+    "pre_violation_detection_rate": 1.0,
+    "pre_violation_detections_count": 20
   }
 }

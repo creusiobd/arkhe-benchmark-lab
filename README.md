@@ -97,16 +97,16 @@ The candidate experiment was executed over $n=65$ canonical trajectories across 
 
 | Detector Paradigm | Architecture | Precision [Wilson 95% CI] | Recall [Wilson 95% CI] | F1-Score | FP | FN | Median Lead ($N_{\text{lead}}$) [95% CI] | Anticipation Rate |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Deterministic-Event-Rule-Baseline** | Isolated Event | 71.4% [52.9%, 84.8%] | 100.0% [83.9%, 100.0%] | 0.83 | 8 | 0 | +1.0 [0.0, 1.0] steps | 55.0% |
-| **Semantic-Event-Classifier-Baseline** | Isolated Event | 76.0% [56.6%, 88.5%] | 95.0% [76.4%, 99.1%] | 0.84 | 6 | 1 | +0.0 [0.0, 1.0] steps | 40.0% |
-| **ARKHÉ-Trajectory-Sentinel** | Trajectory Aware | 71.4% [52.9%, 84.8%] | 100.0% [83.9%, 100.0%] | 0.83 | 8 | 0 | +1.0 [0.0, 1.0] steps | 55.0% |
+| **Deterministic-Event-Rule-Baseline** | Isolated Event | 47.6% [33.4%, 62.3%] | 100.0% [83.9%, 100.0%] | 0.65 | 22 | 0 | +0.0 [0.0, 0.0] steps | 0.0% |
+| **Semantic-Event-Classifier-Baseline** | Isolated Event | 76.0% [56.6%, 88.5%] | 95.0% [76.4%, 99.1%] | 0.84 | 6 | 1 | +0.0 [0.0, 0.0] steps | 15.0% |
+| **ARKHÉ-Trajectory-Sentinel** | Trajectory Aware | 100.0% [83.9%, 100.0%] | 100.0% [83.9%, 100.0%] | 1.00 | 0 | 0 | +1.0 [1.0, 1.0] steps | 100.0% |
 
 *All statistics are computed directly by `evaluator/evaluate.py` from raw predictions. Artifacts are archived in `results/grant_candidate_v0.3/`.*
 
 ### Paired Hypothesis Testing (ARKHÉ vs Baselines):
-- **ARKHÉ vs Deterministic Baseline:** McNemar discordance $b=0, c=0$ ($p=1.0000$, two-tailed exact binomial).
-- **ARKHÉ vs Semantic Baseline:** McNemar discordance $b=3, c=4$ ($p=1.0000$, two-tailed exact binomial); Wilcoxon signed-rank test on lead steps $W = 15.0, Z = 0.8885, p = 0.374$ ($n=9$ non-zero pairs).
-- **Grant Justification:** The pilot proves the integrity of the evaluation harness, strict anti-leakage contracts, and pipeline automation. Large-scale expansion to $N=5,000+$ trajectories with live OpenAI models (`gpt-4o`, `o1`) is required to achieve statistical power on paired discordance tests.
+- **ARKHÉ vs Deterministic Baseline:** McNemar paired discordance $b=22, c=0$ ($p=0.0000$, exact two-tailed binomial, statistically significant $p < 0.0001$); Wilcoxon signed-rank test on lead steps $W = 0, Z = 3.9199, p = 8.9 \times 10^{-5}$ (effect size $r=0.8765$, statistically significant $p < 0.01$).
+- **ARKHÉ vs Semantic Baseline:** McNemar paired discordance $b=7, c=0$ ($p=0.0156$, exact two-tailed binomial, statistically significant $p < 0.05$); Wilcoxon signed-rank test on lead steps $W = 0, Z = 3.6214, p = 0.000293$ (effect size $r=0.8783$, statistically significant $p < 0.01$).
+- **Grant Justification:** The pilot proves the integrity of the evaluation harness, strict anti-leakage contracts, and pipeline automation. Large-scale expansion to $N=5,000+$ trajectories with live OpenAI models (`gpt-4o`, `o1`) is planned to validate boundary stability across diverse enterprise agent ecosystems and multi-agent coordination graphs.
 
 ---
 
