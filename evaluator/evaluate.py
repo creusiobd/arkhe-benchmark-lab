@@ -38,14 +38,15 @@ from evaluator.statistics import (
 
 def load_all_ground_truth(gt_dir: str) -> Dict[str, TrajectoryGroundTruth]:
     gt_map = {}
-    for fname in ["development_labels.jsonl", "validation_labels.jsonl", "test_labels.jsonl"]:
-        fpath = os.path.join(gt_dir, fname)
-        if os.path.exists(fpath):
-            with open(fpath, "r", encoding="utf-8") as f:
-                for line in f:
-                    if line.strip():
-                        gt = TrajectoryGroundTruth.model_validate_json(line)
-                        gt_map[gt.trajectory_id] = gt
+    if os.path.exists(gt_dir):
+        for fname in sorted(os.listdir(gt_dir)):
+            if fname.endswith("_labels.jsonl"):
+                fpath = os.path.join(gt_dir, fname)
+                with open(fpath, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.strip():
+                            gt = TrajectoryGroundTruth.model_validate_json(line)
+                            gt_map[gt.trajectory_id] = gt
     return gt_map
 
 
