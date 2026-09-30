@@ -1,0 +1,128 @@
+{
+  "dataset_version": "v0.3.0",
+  "total_trajectories": 65,
+  "total_steps": 282,
+  "unique_vocabulary_size": 340,
+  "total_tokens_evaluated": 4508,
+  "type_token_ratio_ttr": 0.0754,
+  "mean_tokens_per_step": 15.99,
+  "holdout_disjointness_guarantee": {
+    "is_disjoint": true,
+    "development_templates": [
+      "tmpl_pi_dev",
+      "tmpl_tool_dev",
+      "tmpl_sec_dev",
+      "tmpl_egress_dev",
+      "tmpl_bypass_dev"
+    ],
+    "blind_holdout_templates": [
+      "tmpl_pi_holdout",
+      "tmpl_tool_holdout",
+      "tmpl_sec_holdout",
+      "tmpl_egress_holdout",
+      "tmpl_bypass_holdout"
+    ]
+  },
+  "splits": {
+    "development": {
+      "total_trajectories": 20,
+      "total_steps": 87,
+      "templates": [
+        "tmpl_bypass_dev",
+        "tmpl_egress_dev",
+        "tmpl_sec_dev",
+        "tmpl_pi_dev",
+        "tmpl_tool_dev"
+      ],
+      "labels_distribution": {
+        "benign": 7,
+        "near_violation": 7,
+        "violation": 6
+      },
+      "families_distribution": {
+        "indirect_prompt_injection": 4,
+        "tool_scope_expansion": 4,
+        "secret_exposure": 4,
+        "unauthorized_external_communication": 4,
+        "human_intervention_bypass_or_concealment": 4
+      },
+      "sha256_observations": "fa1cd2020dbc524d0b1291a8a788d8481f973cbba57206f94ebd50fc2f4aa74e",
+      "sha256_ground_truth": "04ba253c6046711f4d638e5ae5cfa1bce73f74f7ad535d30b8484a7a6dade79f"
+    },
+    "validation": {
+      "total_trajectories": 10,
+      "total_steps": 43,
+      "templates": [
+        "tmpl_bypass_dev",
+        "tmpl_egress_dev",
+        "tmpl_sec_dev",
+        "tmpl_pi_dev",
+        "tmpl_tool_dev"
+      ],
+      "labels_distribution": {
+        "benign": 4,
+        "near_violation": 3,
+        "violation": 3
+      },
+      "families_distribution": {
+        "indirect_prompt_injection": 2,
+        "tool_scope_expansion": 2,
+        "secret_exposure": 2,
+        "unauthorized_external_communication": 2,
+        "human_intervention_bypass_or_concealment": 2
+      },
+      "sha256_observations": "bd5113a4160112aa2d26dd796d17d8575cd2edf234b9b9801848f6cf964d5420",
+      "sha256_ground_truth": "c4dd93d9e71db9c8ddd6cd83f1b9ba42f4a961d3a2dad6af5efaf4ee4387b42a"
+    },
+    "test": {
+      "total_trajectories": 20,
+      "total_steps": 87,
+      "templates": [
+        "tmpl_bypass_dev",
+        "tmpl_egress_dev",
+        "tmpl_sec_dev",
+        "tmpl_pi_dev",
+        "tmpl_tool_dev"
+      ],
+      "labels_distribution": {
+        "benign": 7,
+        "near_violation": 7,
+        "violation": 6
+      },
+      "families_distribution": {
+        "indirect_prompt_injection": 4,
+        "tool_scope_expansion": 4,
+        "secret_exposure": 4,
+        "unauthorized_external_communication": 4,
+        "human_intervention_bypass_or_concealment": 4
+      },
+      "sha256_observations": "68c6fc5d765d8be8b961286844861c8975429004caa23b18a0deed44d42c51cc",
+      "sha256_ground_truth": "030e8ebaa26d377854e3c2bf33a8c87eec39128717ce6d35b65c2635c5fc35a8"
+    },
+    "blind_holdout": {
+      "total_trajectories": 15,
+      "total_steps": 65,
+      "templates": [
+        "tmpl_egress_holdout",
+        "tmpl_tool_holdout",
+        "tmpl_sec_holdout",
+        "tmpl_pi_holdout",
+        "tmpl_bypass_holdout"
+      ],
+      "labels_distribution": {
+        "benign": 5,
+        "near_violation": 5,
+        "violation": 5
+      },
+      "families_distribution": {
+        "indirect_prompt_injection": 3,
+        "tool_scope_expansion": 3,
+        "secret_exposure": 3,
+        "unauthorized_external_communication": 3,
+        "human_intervention_bypass_or_concealment": 3
+      },
+      "sha256_observations": "34b8f4545c6a2ebe55138a7afa9b40eda4f0ffb33836c0e196c20e8f2f6289e0",
+      "sha256_ground_truth": "fa5765fde646de64490548f0d1591f5396a04f5889ca2fed4535009b9fbbb00b"
+    }
+  }
+}
