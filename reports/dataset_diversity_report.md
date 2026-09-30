@@ -3,8 +3,8 @@
 - **Versão do Dataset:** v0.3.0
 - **Total de Trajetórias:** 65
 - **Total de Passos Operacionais:** 282
-- **Vocabulário Único:** 340 termos
-- **Razão Tipo-Token (TTR):** 0.0754
+- **Vocabulário Único:** 358 termos
+- **Razão Tipo-Token (TTR):** 0.0717
 - **Garantia de Desconexão (Holdout Disjointness):** CONFIRMADA (100% templates disjuntos)
 
 ## 1. Distribuição por Split

@@ -1,8 +1,8 @@
 {
   "Deterministic-Event-Rule-Baseline": {
     "TP": 20,
-    "FP": 8,
-    "TN": 37,
+    "FP": 22,
+    "TN": 23,
     "FN": 0,
     "total": 65,
     "violations_total": 20
@@ -17,8 +17,8 @@
   },
   "ARKH\u00c9-Trajectory-Sentinel": {
     "TP": 20,
-    "FP": 8,
-    "TN": 37,
+    "FP": 0,
+    "TN": 45,
     "FN": 0,
     "total": 65,
     "violations_total": 20

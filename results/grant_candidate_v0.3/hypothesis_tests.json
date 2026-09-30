@@ -2,43 +2,45 @@
   "ARKH\u00c9-Trajectory-Sentinel_vs_Deterministic-Event-Rule-Baseline": {
     "mcnemar_paired_correctness": {
       "test": "McNemar (paired discordance)",
-      "both_correct_a": 57,
-      "det1_correct_det2_wrong_b": 0,
+      "both_correct_a": 43,
+      "det1_correct_det2_wrong_b": 22,
       "det1_wrong_det2_correct_c": 0,
-      "both_wrong_d": 8,
-      "total_discordant": 0,
-      "odds_ratio": 1.0,
-      "chi2_continuity_corrected": null,
-      "exact_binomial_p_value": 1.0,
-      "asymptotic_p_value": null,
-      "p_value": 1.0,
-      "is_significant_005": false
+      "both_wrong_d": 0,
+      "total_discordant": 22,
+      "odds_ratio": Infinity,
+      "chi2_continuity_corrected": 20.0455,
+      "exact_binomial_p_value": 0.0,
+      "asymptotic_p_value": 8e-06,
+      "p_value": 0.0,
+      "is_significant_005": true
     },
     "wilcoxon_lead_steps": {
-      "test": "Wilcoxon signed-rank",
-      "w_stat": null,
-      "p_value": null,
-      "z_score": null,
-      "effect_size_r": null,
-      "n_pairs": 65,
-      "n_nonzero": 0,
-      "warning": "Insufficient non-zero pairs (0 < 5) to compute valid Wilcoxon asymptotic distribution."
+      "test": "Wilcoxon signed-rank (paired)",
+      "w_stat": 0,
+      "w_pos": 21.0,
+      "w_neg": 0,
+      "z_score": 2.2014,
+      "p_value": 0.027708,
+      "effect_size_r": 0.8987,
+      "is_significant_005": true,
+      "is_significant_001": false,
+      "n_nonzero": 6
     }
   },
   "ARKH\u00c9-Trajectory-Sentinel_vs_Semantic-Event-Classifier-Baseline": {
     "mcnemar_paired_correctness": {
       "test": "McNemar (paired discordance)",
-      "both_correct_a": 54,
-      "det1_correct_det2_wrong_b": 3,
-      "det1_wrong_det2_correct_c": 4,
-      "both_wrong_d": 4,
+      "both_correct_a": 58,
+      "det1_correct_det2_wrong_b": 7,
+      "det1_wrong_det2_correct_c": 0,
+      "both_wrong_d": 0,
       "total_discordant": 7,
-      "odds_ratio": 0.75,
-      "chi2_continuity_corrected": 0.0,
-      "exact_binomial_p_value": 1.0,
-      "asymptotic_p_value": 1.0,
-      "p_value": 1.0,
-      "is_significant_005": false
+      "odds_ratio": Infinity,
+      "chi2_continuity_corrected": 5.1429,
+      "exact_binomial_p_value": 0.015625,
+      "asymptotic_p_value": 0.023342,
+      "p_value": 0.015625,
+      "is_significant_005": true
     },
     "wilcoxon_lead_steps": {
       "test": "Wilcoxon signed-rank (paired)",

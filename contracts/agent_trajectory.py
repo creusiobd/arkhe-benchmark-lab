@@ -44,6 +44,17 @@ class StepOutcomeStatus(str, Enum):
     BLOCKED = "BLOCKED"
     FAILED = "FAILED"
     WARNED = "WARNED"
+    CONTAINED = "CONTAINED"
+    DENIED = "DENIED"
+
+    @property
+    def is_containment_signal(self) -> bool:
+        return self in (
+            StepOutcomeStatus.BLOCKED,
+            StepOutcomeStatus.WARNED,
+            StepOutcomeStatus.CONTAINED,
+            StepOutcomeStatus.DENIED,
+        )
 
 
 # ==============================================================================

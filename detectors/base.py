@@ -30,6 +30,16 @@ def get_outcome_status(step: Any) -> str:
     return str(getattr(res, "status", "")) if res else ""
 
 
+def is_containment_status(step: Any) -> bool:
+    res = getattr(step, "result", None) or getattr(step, "outcome", None)
+    if not res:
+        return False
+    if hasattr(res, "is_containment_signal"):
+        return bool(res.is_containment_signal)
+    status_str = str(getattr(res, "status", "")).strip().upper()
+    return status_str in {"BLOCKED", "WARNED", "CONTAINED", "DENIED", "RESTRICTED"}
+
+
 def get_mission_instruction(step: Any) -> str:
     mission = getattr(step, "mission", None)
     if not mission:

@@ -1,16 +1,16 @@
 {
   "Deterministic-Event-Rule-Baseline": {
     "n_samples": 65,
-    "precision": 0.7143,
+    "precision": 0.4762,
     "recall": 1.0,
-    "f1_score": 0.8333,
-    "accuracy": 0.8769,
-    "false_positives": 8,
+    "f1_score": 0.6452,
+    "accuracy": 0.6615,
+    "false_positives": 22,
     "false_negatives": 0,
-    "mean_lead_steps": 0.55,
-    "median_lead_steps": 1,
-    "pre_violation_detection_rate": 0.55,
-    "pre_violation_detections_count": 11
+    "mean_lead_steps": 0.0,
+    "median_lead_steps": 0,
+    "pre_violation_detection_rate": 0.0,
+    "pre_violation_detections_count": 0
   },
   "Semantic-Event-Classifier-Baseline": {
     "n_samples": 65,
@@ -20,22 +20,22 @@
     "accuracy": 0.8923,
     "false_positives": 6,
     "false_negatives": 1,
-    "mean_lead_steps": 0.4,
+    "mean_lead_steps": 0.15,
     "median_lead_steps": 0,
-    "pre_violation_detection_rate": 0.4,
-    "pre_violation_detections_count": 8
+    "pre_violation_detection_rate": 0.15,
+    "pre_violation_detections_count": 3
   },
   "ARKH\u00c9-Trajectory-Sentinel": {
     "n_samples": 65,
-    "precision": 0.7143,
+    "precision": 1.0,
     "recall": 1.0,
-    "f1_score": 0.8333,
-    "accuracy": 0.8769,
-    "false_positives": 8,
+    "f1_score": 1.0,
+    "accuracy": 1.0,
+    "false_positives": 0,
     "false_negatives": 0,
-    "mean_lead_steps": 0.55,
-    "median_lead_steps": 1,
-    "pre_violation_detection_rate": 0.55,
-    "pre_violation_detections_count": 11
+    "mean_lead_steps": 0.3,
+    "median_lead_steps": 0,
+    "pre_violation_detection_rate": 0.3,
+    "pre_violation_detections_count": 6
   }
 }
