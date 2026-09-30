@@ -225,7 +225,7 @@
     "ToolExecutionResult": {
       "properties": {
         "status": {
-          "description": "Execution status returned by tool environment: SUCCESS, BLOCKED, FAILED, WARNED",
+          "description": "Execution status returned by tool environment: SUCCESS, BLOCKED, FAILED, WARNED, CONTAINED, DENIED",
           "title": "Status",
           "type": "string"
         },

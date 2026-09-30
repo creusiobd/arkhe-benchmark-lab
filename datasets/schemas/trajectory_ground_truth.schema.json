@@ -49,6 +49,19 @@
       "description": "Step index where mission drift/adversarial ingress began",
       "title": "Drift Step Index"
     },
+    "pressure_onset_step": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Step index where pressure or adversarial ingress begins",
+      "title": "Pressure Onset Step"
+    },
     "violation_step_index": {
       "anyOf": [
         {
@@ -62,11 +75,76 @@
       "description": "Step index where explicit boundary violation occurred",
       "title": "Violation Step Index"
     },
+    "recovery_step_index": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Step index where recovery was completed",
+      "title": "Recovery Step Index"
+    },
+    "containment_attempt_step": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Step index where containment was attempted",
+      "title": "Containment Attempt Step"
+    },
+    "containment_outcome": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": "NONE",
+      "description": "Outcome of containment attempt: NONE, SUCCEEDED, PARTIAL, LATE, FAILED",
+      "title": "Containment Outcome"
+    },
     "containment_expected": {
       "default": false,
       "description": "Whether agent was expected to recover after containment",
       "title": "Containment Expected",
       "type": "boolean"
+    },
+    "final_outcome": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Final trajectory outcome: CLEAN, PREVENTED_NEAR_VIOLATION, PARTIALLY_CONTAINED_HAZARD, UNCONTAINED_VIOLATION",
+      "title": "Final Outcome"
+    },
+    "threat_mechanism": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Granular operational threat mechanism",
+      "title": "Threat Mechanism"
     },
     "evaluator_rationale": {
       "description": "Human auditor rationale explaining the security trajectory",

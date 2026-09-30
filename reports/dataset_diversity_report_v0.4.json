@@ -1,0 +1,186 @@
+{
+  "dataset_version": "v0.4_hard",
+  "random_seed": 20260930,
+  "total_trajectories": 50,
+  "total_steps": 134,
+  "vocabulary_metrics": {
+    "total_vocabulary_size": 893,
+    "jaccard_similarity": {
+      "development_vs_validation": 0.132,
+      "development_vs_test": 0.1677,
+      "validation_vs_test": 0.1154
+    }
+  },
+  "whole_family_disjointness_audit": {
+    "family_overlap_dev_val": [],
+    "family_overlap_dev_test": [],
+    "family_overlap_val_test": [],
+    "mechanism_overlap_dev_val": [],
+    "mechanism_overlap_dev_test": [],
+    "mechanism_overlap_val_test": [],
+    "is_strictly_disjoint": true
+  },
+  "hard_scenarios_coverage_audit": {
+    "contains_benign_with_external_note": true,
+    "contains_benign_with_adversarial_vocab": true,
+    "contains_hard_negatives_env_access": true,
+    "contains_hard_negatives_local_net_access": true,
+    "contains_near_violations_without_warned": true,
+    "contains_structural_violations_without_keywords": true,
+    "contains_late_containment": true,
+    "contains_partial_containment": true,
+    "contains_failed_containment": true
+  },
+  "splits": {
+    "development": {
+      "total_trajectories": 20,
+      "total_steps": 59,
+      "step_lengths": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        4,
+        3,
+        2,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        2,
+        3
+      ],
+      "families": [
+        "indirect_prompt_injection",
+        "tool_scope_expansion"
+      ],
+      "mechanisms": [
+        "dynamic_execution_privilege_escalation",
+        "prompt_mediated_control_hijacking"
+      ],
+      "classes_distribution": {
+        "benign": 8,
+        "near_violation": 6,
+        "violation": 6
+      },
+      "containment_distribution": {
+        "NONE": 10,
+        "SUCCEEDED": 4,
+        "PARTIAL": 2,
+        "LATE": 2,
+        "FAILED": 2
+      },
+      "final_outcome_distribution": {
+        "CLEAN": 8,
+        "PREVENTED_NEAR_VIOLATION": 4,
+        "PARTIALLY_CONTAINED_HAZARD": 2,
+        "UNCONTAINED_VIOLATION": 6
+      },
+      "sha256_observations": "acd0d2917ddd847a89337d1e7aa10bf9d88dd088d4214b5afd710a9f29f0a85a",
+      "sha256_ground_truth": "4e96da999145a499dcd9f803496570d6d7501371628d0eaca4428cf6a2adb939"
+    },
+    "validation": {
+      "total_trajectories": 10,
+      "total_steps": 26,
+      "step_lengths": [
+        3,
+        3,
+        3,
+        2,
+        3,
+        3,
+        3,
+        2,
+        2,
+        2
+      ],
+      "families": [
+        "secret_exposure"
+      ],
+      "mechanisms": [
+        "unauthorized_credential_harvesting"
+      ],
+      "classes_distribution": {
+        "benign": 4,
+        "near_violation": 3,
+        "violation": 3
+      },
+      "containment_distribution": {
+        "NONE": 5,
+        "SUCCEEDED": 2,
+        "PARTIAL": 1,
+        "LATE": 1,
+        "FAILED": 1
+      },
+      "final_outcome_distribution": {
+        "CLEAN": 4,
+        "PREVENTED_NEAR_VIOLATION": 2,
+        "PARTIALLY_CONTAINED_HAZARD": 1,
+        "UNCONTAINED_VIOLATION": 3
+      },
+      "sha256_observations": "3c9e50310a8a028e4c8c1f78a2671bfff5a56129886f052a864299c7e7aa4876",
+      "sha256_ground_truth": "4f34c4a8f6f6f05e963fc9264640bfbf7474edde8c5857d3a46484bd677d8e36"
+    },
+    "test": {
+      "total_trajectories": 20,
+      "total_steps": 49,
+      "step_lengths": [
+        2,
+        2,
+        3,
+        2,
+        3,
+        3,
+        3,
+        2,
+        2,
+        3,
+        2,
+        2,
+        3,
+        2,
+        3,
+        3,
+        3,
+        2,
+        2,
+        2
+      ],
+      "families": [
+        "human_intervention_bypass_or_concealment",
+        "unauthorized_external_communication"
+      ],
+      "mechanisms": [
+        "audit_trail_tampering_and_approval_bypass",
+        "covert_network_channel_exfiltration"
+      ],
+      "classes_distribution": {
+        "benign": 8,
+        "near_violation": 6,
+        "violation": 6
+      },
+      "containment_distribution": {
+        "NONE": 10,
+        "SUCCEEDED": 4,
+        "PARTIAL": 2,
+        "LATE": 2,
+        "FAILED": 2
+      },
+      "final_outcome_distribution": {
+        "CLEAN": 8,
+        "PREVENTED_NEAR_VIOLATION": 4,
+        "PARTIALLY_CONTAINED_HAZARD": 2,
+        "UNCONTAINED_VIOLATION": 6
+      },
+      "sha256_observations": "9ee500f89c2fb89ebb4db2d63bacb31006e6693b124bbb34d6a955beb331c7cc",
+      "sha256_ground_truth": "f766abbc704a21205fce6cf80f0b4287d8fa755fce86fc2055243152322b42ce"
+    }
+  }
+}
