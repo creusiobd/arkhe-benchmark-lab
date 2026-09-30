@@ -36,8 +36,7 @@ COPY --chown=appuser:appgroup k8s/ ./k8s/
 COPY --chown=appuser:appgroup ci/ ./ci/
 COPY --chown=appuser:appgroup templates/ ./templates/
 COPY --chown=appuser:appgroup static/ ./static/
-COPY --chown=appuser:appgroup arkhe_pitch_deck_presentation.html ./arkhe_pitch_deck_presentation.html
-COPY --chown=appuser:appgroup arkhe_pov_executive_summary.html ./arkhe_pov_executive_summary.html
+COPY --chown=appuser:appgroup arkhe_*.html ./
 
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080

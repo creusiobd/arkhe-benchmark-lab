@@ -51,7 +51,6 @@ test1_nominal_baseline_report.json
 test2_silent_drift_report.json
 test3_closed_loop_mitigation_report.json
 test4_time_machine_audit_report.json
-arkhe_pov_executive_summary.html
 
 # Local Scratch Scripts & Workspaces
 scratch/
