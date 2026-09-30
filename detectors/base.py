@@ -12,13 +12,16 @@ ISOLATION & IMMUTABILITY GUARANTEE:
 """
 
 import time
+import hashlib
 from abc import ABC, abstractmethod
 from typing import Optional, List, Any
 from pydantic import BaseModel, Field
 from contracts.observation import StepObservation, TrajectoryObservation
 from contracts.prediction import (
     StepPrediction, TrajectoryPrediction, PredictedClass,
-    AlertEvent, ResolutionEvent, ContainmentEvent, AlertSeverity, FinalOutcome
+    AlertEmitted, AlertResolved, ContainmentAttempted,
+    AlertEvent, ResolutionEvent, ContainmentEvent,
+    AlertSeverity, FinalOutcome
 )
 
 
@@ -90,9 +93,9 @@ class BaseDetector(ABC):
         start_time = time.perf_counter()
         history: List[StepObservation] = []
         step_predictions: List[StepPrediction] = []
-        alerts: List[AlertEvent] = []
-        resolutions: List[ResolutionEvent] = []
-        containments: List[ContainmentEvent] = []
+        alerts: List[AlertEmitted] = []
+        resolutions: List[AlertResolved] = []
+        containments: List[ContainmentAttempted] = []
         first_alert_step: Optional[int] = None
         max_risk = 0.0
 
@@ -111,63 +114,95 @@ class BaseDetector(ABC):
             if pred.is_alert:
                 if first_alert_step is None:
                     first_alert_step = pred.step_index
-                alert_evt = AlertEvent(
-                    alert_id=f"alert_{trajectory.trajectory_id[:8]}_{self.name[:10]}_{pred.step_index}",
-                    trajectory_id=trajectory.trajectory_id,
-                    detector_name=self.name,
-                    detector_version=self.version,
-                    step_index=pred.step_index,
-                    timestamp=step_ts,
-                    risk_score=float(pred.accumulated_trajectory_risk),
-                    threshold=float(getattr(self, "risk_threshold", 50.0)),
-                    severity=AlertSeverity.CRITICAL if pred.accumulated_trajectory_risk >= 75.0 else AlertSeverity.HIGH,
-                    evidence={
-                        "explanation": pred.explanation,
-                        "mission_divergence": pred.mission_divergence_score,
-                        "boundary_proximity": pred.boundary_proximity,
-                    }
-                )
-                alerts.append(alert_evt)
+                alert_hash = hashlib.sha256(
+                    f"{trajectory.trajectory_id}:{self.name}:{pred.step_index}".encode("utf-8")
+                ).hexdigest()[:16]
+                alert_id = f"alert_{alert_hash}"
+
+                # Idempotent registration: do not duplicate event if reprocessed
+                if not any(a.alert_id == alert_id for a in alerts):
+                    alert_evt = AlertEmitted(
+                        event_type="alert_emitted",
+                        schema_version="1.0.0",
+                        alert_id=alert_id,
+                        trajectory_id=trajectory.trajectory_id,
+                        detector_name=self.name,
+                        detector_version=self.version,
+                        step_index=pred.step_index,
+                        timestamp=step_ts,
+                        risk_score=float(pred.accumulated_trajectory_risk),
+                        threshold=float(getattr(self, "risk_threshold", 50.0)),
+                        severity=AlertSeverity.CRITICAL if pred.accumulated_trajectory_risk >= 75.0 else AlertSeverity.HIGH,
+                        evidence={
+                            "explanation": pred.explanation,
+                            "mission_divergence": float(pred.mission_divergence_score),
+                            "boundary_proximity": float(pred.boundary_proximity),
+                            "state_change_score": float(pred.state_change_score),
+                            "behavioral_persistence": float(pred.behavioral_persistence),
+                            "confidence": float(pred.confidence),
+                        },
+                        explanation=pred.explanation
+                    )
+                    alerts.append(alert_evt)
 
             # 2. Resolution Event (Recorded when alert condition subsides or explicit recovery occurs)
-            # Never erases or mutates previously emitted AlertEvents
+            # Never erases or mutates previously emitted AlertEmitted events
             if len(alerts) > 0 and not pred.is_alert:
                 is_recovery_explanation = "TRAJECTORY RECOVERY" in pred.explanation
                 is_nominal_basin = pred.accumulated_trajectory_risk < getattr(self, "risk_threshold", 50.0)
                 if is_recovery_explanation or is_nominal_basin:
-                    res_evt = ResolutionEvent(
-                        resolution_id=f"res_{trajectory.trajectory_id[:8]}_{pred.step_index}",
-                        alert_id=alerts[-1].alert_id,
-                        trajectory_id=trajectory.trajectory_id,
-                        step_index=pred.step_index,
-                        timestamp=step_ts,
-                        resolution_type="NOMINAL_RECOVERY" if is_recovery_explanation else "RISK_SUBSIDED",
-                        evidence={
-                            "explanation": pred.explanation,
-                            "risk_score": float(pred.accumulated_trajectory_risk),
-                        }
-                    )
-                    resolutions.append(res_evt)
+                    res_hash = hashlib.sha256(
+                        f"{trajectory.trajectory_id}:{alerts[-1].alert_id}:{pred.step_index}".encode("utf-8")
+                    ).hexdigest()[:16]
+                    res_id = f"res_{res_hash}"
+                    if not any(r.event_id == res_id for r in resolutions):
+                        res_evt = AlertResolved(
+                            event_type="alert_resolved",
+                            schema_version="1.0.0",
+                            event_id=res_id,
+                            resolution_id=res_id,
+                            alert_id=alerts[-1].alert_id,
+                            trajectory_id=trajectory.trajectory_id,
+                            step_index=pred.step_index,
+                            timestamp=step_ts,
+                            resolution_reason="NOMINAL_RECOVERY" if is_recovery_explanation else "RISK_SUBSIDED",
+                            resolution_type="NOMINAL_RECOVERY" if is_recovery_explanation else "RISK_SUBSIDED",
+                            evidence={
+                                "explanation": pred.explanation,
+                                "risk_score": float(pred.accumulated_trajectory_risk),
+                            }
+                        )
+                        resolutions.append(res_evt)
 
             # 3. Containment Event (Recorded when observable containment occurs)
             # Note: containment_succeeded is NOT inferred merely because the agent retreated
             if is_containment_status(step):
                 status_str = get_outcome_status(step)
                 is_explicitly_succeeded = status_str.upper() in {"CONTAINED", "BLOCKED", "RESTRICTED"}
-                containment_evt = ContainmentEvent(
-                    containment_id=f"cnt_{trajectory.trajectory_id[:8]}_{pred.step_index}",
-                    trajectory_id=trajectory.trajectory_id,
-                    step_index=pred.step_index,
-                    timestamp=step_ts,
-                    containment_attempted=True,
-                    containment_succeeded=is_explicitly_succeeded if is_explicitly_succeeded else None,
-                    action_taken=f"Tool execution returned status: {status_str}",
-                    evidence={
-                        "raw_observation": get_raw_observation(step)[:200],
-                        "status": status_str,
-                    }
-                )
-                containments.append(containment_evt)
+                associated_alert_id = alerts[-1].alert_id if len(alerts) > 0 else "none"
+                cnt_hash = hashlib.sha256(
+                    f"{trajectory.trajectory_id}:{associated_alert_id}:{pred.step_index}".encode("utf-8")
+                ).hexdigest()[:16]
+                cnt_id = f"cnt_{cnt_hash}"
+                if not any(c.event_id == cnt_id for c in containments):
+                    containment_evt = ContainmentAttempted(
+                        event_type="containment_attempted",
+                        schema_version="1.0.0",
+                        event_id=cnt_id,
+                        containment_id=cnt_id,
+                        alert_id=alerts[-1].alert_id if len(alerts) > 0 else None,
+                        trajectory_id=trajectory.trajectory_id,
+                        step_index=pred.step_index,
+                        timestamp=step_ts,
+                        containment_attempted=True,
+                        containment_succeeded=is_explicitly_succeeded if is_explicitly_succeeded else None,
+                        action_taken=f"Tool execution returned status: {status_str}",
+                        evidence={
+                            "raw_observation": get_raw_observation(step)[:200],
+                            "status": status_str,
+                        }
+                    )
+                    containments.append(containment_evt)
 
         duration_ms = (time.perf_counter() - start_time) * 1000.0
 
