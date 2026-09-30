@@ -79,7 +79,7 @@ def instantiate_detector(detector_config: Dict[str, Any]) -> BaseDetector:
     if "DeterministicEventDetector" in class_path:
         return DeterministicEventDetector()
     elif "SemanticEventDetector" in class_path:
-        return SemanticEventDetector()
+        return SemanticEventDetector(**params)
     elif "ArkheTrajectoryDetector" in class_path:
         thresh = params.get("risk_threshold", 50.0)
         return ArkheTrajectoryDetector(risk_threshold=thresh)
@@ -192,6 +192,7 @@ def run_benchmark(config_path: str):
                 "name": det.name,
                 "version": det.version,
                 "mode": det.detection_mode,
+                "client_mode": getattr(det, "client_mode", "local"),
                 "trajectories_evaluated": detector_stats[det.name]["trajectories_evaluated"],
                 "flagged_trajectories": detector_stats[det.name]["flagged_count"],
                 "avg_latency_ms": round(
