@@ -7,7 +7,12 @@ from typing import Optional
 import httpx
 
 TARGET_URL = os.getenv("TARGET_URL", "http://localhost:8080/v1/charge")
-CONFIG_URL = os.getenv("CONFIG_URL", "http://localhost:8080/admin/load/config")
+CONFIG_URL = os.getenv("CONFIG_URL", "")
+if not CONFIG_URL:
+    if "v1/charge" in TARGET_URL:
+        CONFIG_URL = TARGET_URL.split("/v1/charge")[0] + "/admin/load/config"
+    else:
+        CONFIG_URL = "http://localhost:8080/admin/load/config"
 DEFAULT_TPS = float(os.getenv("TARGET_TPS", "120.0"))
 
 # Estado mutável sincronizado dinamicamente em tempo real com o backend
