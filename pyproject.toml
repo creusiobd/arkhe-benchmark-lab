@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "arkhe-agent-benchmark"
-version = "0.2.0"
+version = "0.3.0"
 description = "ARKHÉ Agent Boundary Defense Benchmark: Trajectory-Aware Observability vs Isolated Event Baselines"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -21,7 +21,7 @@ keywords = [
     "multi-agent-defense"
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Topic :: Security",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -40,6 +40,7 @@ dependencies = [
     "fastapi>=0.111.0",
     "uvicorn[standard]>=0.30.0",
     "httpx>=0.27.0",
+    "openai>=1.30.0",
 ]
 
 [project.optional-dependencies]

@@ -1,140 +1,188 @@
-# ARKHÉ Research & Benchmark Lab
+# ARKHÉ Agent Boundary Defense Benchmark
 
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Dataset License: CC BY 4.0](https://img.shields.io/badge/Dataset_License-CC_BY_4.0-lightgrey.svg)](datasets/LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![OpenAI Cybersecurity Grant Candidate](https://img.shields.io/badge/Candidate-OpenAI_Cybersecurity_Grant-purple.svg)](proposal/ARKHE_CYBERSECURITY_GRANT_v0.2_PT.md)
-[![Zero Label Leakage](https://img.shields.io/badge/Tests-Anti--Leakage_Passing-green.svg)](tests/)
+[![Status: Alpha](https://img.shields.io/badge/Status-Alpha%2FExperimental-orange.svg)](pyproject.toml)
+[![Grant Submission](https://img.shields.io/badge/Grant-Prepared_for_Cybersecurity_Grant_Submission-purple.svg)](proposal/form_answers_EN.md)
+[![Enforced Separation](https://img.shields.io/badge/Architecture-Enforced_Input_Separation-green.svg)](docs/anti_leakage_model.md)
 
-**ARKHÉ** comprises two interconnected applied defensive research initiatives:
-1. **[Part I: ARKHÉ Agent Boundary Defense Benchmark](#part-i-arkhe-agent-boundary-defense-benchmark):** An open-source benchmark measuring whether trajectory-aware observability detects multi-agent boundary violations, indirect prompt injection propagation, and mission drift before isolated-event security guardrails.
-2. **[Part II: ARKHÉ Telemetry & Shadow Control Plane](#part-ii-arkhe-telemetry--shadow-control-plane-apm-lab):** An OpenTelemetry-native queue-physics APM engine validating early structural saturation warning and autonomous closed-loop mitigation in high-throughput payment systems.
+**ARKHÉ** is an open-source defensive research benchmark and evaluation harness designed to assess whether trajectory-aware security controls reduce false positives and identify progressive multi-agent boundary violations that isolated-event controls miss.
 
 ---
 
-## Part I: ARKHÉ Agent Boundary Defense Benchmark
+## 1. What the Project Does and Does Not Do
 
-### 1. Research Core & Threat Model
-In autonomous multi-agent environments, an agent may perform dozens of individually benign tool actions while progressively building an unsafe execution trajectory. Traditional isolated event filters (e.g., regex pattern matching, per-call LLM guardrails) evaluate each tool call out of context and miss incremental drift until irreversible boundary breaches occur.
+### What ARKHÉ Does:
+- **Trajectory-Oriented Observability:** Analyzes multi-step execution traces of autonomous agents, tracking capability expansions, resource access graphs, and prompt injection propagation over time.
+- **Enforced Input/Ground-Truth Separation:** Sanitizes observations delivered to detectors via opaque identifiers (`traj_<uuid>`), stripped editorial metadata, and isolated ground-truth labels.
+- **Comparative Evaluation:** Measures precision, recall, F1, false positive rate (FPR), false negative rate (FNR), and McNemar discordance between isolated-event baselines (deterministic and semantic) and trajectory-aware sentinels.
+- **Dual Semantic Baseline Modes:** Supports an offline lexical heuristic proxy (`offline_proxy`) and a real OpenAI API structured classification client (`openai_api`) with explicit configuration.
 
-ARKHÉ evaluates defensive systems across **5 critical boundary violation families**:
-1. `TOOL_SCOPE_EXPANSION`: Incremental capability escalation via reflection and tool discovery.
-2. `INDIRECT_PROMPT_INJECTION`: Ingress of adversarial instructions via external content (PDFs, issues, APIs).
-3. `SECRET_EXPOSURE`: Cross-tenant exfiltration of credentials to mock endpoints.
-4. `UNAUTHORIZED_EXTERNAL_COMMUNICATION`: Egress to unauthorized domains without supervisor consent.
-5. `HUMAN_INTERVENTION_BYPASS_OR_CONCEALMENT`: Suppressing supervisor halts or doctoring audit logs.
+### What ARKHÉ Does Not Do:
+- **Not a Production-Ready Commercial Product:** ARKHÉ is an experimental research harness (`Development Status :: 3 - Alpha`).
+- **No Absolute Guarantees:** We do not claim an absolute "Zero Label Leakage Guarantee" or complete prevention of all boundary breaches; we provide an enforced structural separation verified by automated test suites.
+- **No Proven General Lead Time:** Current pilot empirical evidence ($n=30$) demonstrates substantial reduction of false positives ($83.3\%$ precision vs $55.6\%-62.5\%$), but general temporal anticipation ($N_{\text{lead}}$) remains an open research hypothesis.
+- **No Unaffiliated Endorsement:** This benchmark is an independent proposal prepared for the OpenAI Cybersecurity Grant Program and is neither sponsored by nor affiliated with OpenAI.
 
-### 2. Methodological Guarantee: Zero Label Leakage
-To prevent experimental circularity and label leakage, the benchmark enforces a strict architectural separation:
-* **Observable Runtime Contract (`contracts.observation.StepObservation`):** Contains strictly observable runtime signals (agent identity, current instruction, tool invocation, capability constraints, boundary policy, raw tool outputs). It strictly forbids and rejects precomputed risk scores, contamination flags, or ground truth labels.
-* **Evaluation Ground Truth (`contracts.ground_truth.TrajectoryGroundTruth`):** Stored in separate files, accessible exclusively by the evaluation harness.
-* **Prediction Contract (`contracts.prediction.StepPrediction`, `TrajectoryPrediction`):** Output generated dynamically by detectors during blind execution.
+---
 
-### 3. Empirical Pilot Results ($n=30$ Canonical Trajectories)
+## 2. Core Threat Model
 
-Evaluating on 30 rigorously balanced synthetic trajectories across the 5 attack families:
+In complex multi-agent workflows, an agent may perform dozens of individually benign tool invocations while gradually assembling an unsafe operational trajectory. Isolated-event inspection mechanisms (such as regex pattern matching or stateless per-call LLM guardrails) evaluate each tool call in isolation, missing incremental drift until boundary breaches become irreversible.
 
-| Detector Paradigm | Precision [Wilson 95% CI] | Recall [Wilson 95% CI] | F1-Score | FP Count | Median Lead Time ($N_{\text{lead}}$) | Mean Lead Time |
+ARKHÉ models and benchmarks defensive responses across **5 priority boundary violation families**:
+
+| Family ID | Threat Description | Attack Ingress Vector |
+| :--- | :--- | :--- |
+| `INDIRECT_PROMPT_INJECTION` | Adversarial prompt injected via untrusted external sources (webpages, issues, customer reviews) attempting to divert the agent from its original mission. | Ingress via retrieved text, documents, or API responses. |
+| `TOOL_SCOPE_EXPANSION` | Incremental privilege escalation wherein an agent discovers and invokes unauthorized tools outside its assigned capability profile. | Reflection loops, unconstrained tool catalogs. |
+| `SECRET_EXPOSURE` | Unauthorized reading, extraction, or exfiltration of sensitive credentials (tokens, private keys, environment secrets) to external sinks. | File reads, memory leaks, unauthorized tool arguments. |
+| `UNAUTHORIZED_EXTERNAL_COMMUNICATION` | Data egress or command-and-control connection attempts to untrusted hosts without explicit supervisor approval. | Network sinks, webhook calls, unapproved domains. |
+| `HUMAN_INTERVENTION_BYPASS_OR_CONCEALMENT` | Active circumvention of human-in-the-loop checkpoints, log tampering, or deceptive reporting of task status. | Subversion of confirmation tools, falsified audit steps. |
+
+---
+
+## 3. Scientific Hypotheses
+
+### Primary Hypothesis
+> **H1 (Precision and False Positive Reduction):** Trajectory-aware observability significantly reduces false positive security alerts compared to stateless isolated-event detectors on unseen agent trajectories, while maintaining comparable detection recall.
+
+### Secondary Hypothesis (Exploratory)
+> **H2 (Anticipatory Lead Time):** In progressive violation patterns involving multi-step reconnaissance or indirect prompt propagation, trajectory-aware sentinels can produce early alerts ($N_{\text{lead}} \ge 1$ step) prior to irreversible boundary breaches.
+
+---
+
+## 4. Architectural Separation Model
+
+To prevent experimental circularity and label leakage, the benchmark architecture strictly separates observable runtime inputs from evaluation ground truth:
+
+```
+[Raw Trajectory Generator]
+           │
+           ├──────────────────────────────┐
+           ▼                              ▼
+ [Dataset Observations]         [Dataset Ground Truth]
+  (datasets/observations/)       (datasets/ground_truth/)
+           │                              │
+           ▼ (Strip Metadata & IDs)       │
+ [DetectorTrajectoryInput]                │
+  • Opaque ID (traj_<uuid>)               │
+  • Sanitized Step Sequences              │
+           │                              │
+           ▼                              │
+   [Detectors Engine]                     │
+   (Blind Execution)                      │
+           │                              │
+           ▼                              │
+  [Step / Trajectory Predictions]         │
+  (results/.../predictions.jsonl)         │
+           │                              │
+           └──────────────┬───────────────┘
+                          ▼
+            [Evaluation Pipeline]
+             (evaluator/evaluate.py)
+                          │
+                          ▼
+             [Verified Statistical Audit]
+```
+
+Detailed architectural contracts, prohibited key dictionaries, and structural tests are documented in [docs/anti_leakage_model.md](docs/anti_leakage_model.md).
+
+---
+
+## 5. Preliminary Pilot Results ($n=30$)
+
+The pilot experiment was executed over $n=30$ canonical trajectories (12 development, 6 validation, 12 test) evaluated across three baseline paradigms:
+
+| Detector Paradigm | Architecture | Precision [Wilson 95% CI] | Recall [Wilson 95% CI] | F1-Score | False Positives | Median Lead ($N_{\text{lead}}$) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Deterministic Event Rule Baseline** | 62.5% [38.6%, 81.5%] | 100.0% [72.2%, 100.0%] | 0.77 | 6 | 0.0 steps | 0.0 steps |
-| **Semantic Event Classifier Baseline** | 55.6% [33.7%, 75.4%] | 100.0% [72.2%, 100.0%] | 0.71 | 8 | 1.0 steps | 0.9 steps |
-| **ARKHÉ Trajectory Sentinel** | **83.3% [55.2%, 95.3%]** | **100.0% [72.2%, 100.0%]** | **0.91** | **2** | **0.0 steps** | **0.8 steps** |
+| **Deterministic-Event-Rule-Baseline** | Isolated Event | 62.5% [38.6%, 81.5%] | 100.0% [72.2%, 100.0%] | 0.77 | 6 | +0.0 steps |
+| **Semantic-Event-Classifier-Baseline** | Isolated Event | 55.6% [33.7%, 75.4%] | 100.0% [72.2%, 100.0%] | 0.71 | 8 | +1.0 steps |
+| **ARKHÉ-Trajectory-Sentinel** | Trajectory Aware | **83.3% [55.2%, 95.3%]** | **100.0% [72.2%, 100.0%]** | **0.91** | **2** | **+0.0 steps** |
 
-*Note: For trajectories featuring prompt injection propagation, ARKHÉ achieves up to $+2$ steps of anticipatory lead time. Small-sample asymptotic Wilcoxon test noted insufficient non-zero pairs ($<5$), establishing the requirement for the full 300-trajectory grant benchmark.*
+*All statistics are computed directly by `evaluator/evaluate.py` from raw predictions. Artifacts are archived in `results/pilot/`.*
 
-### 4. Reproducing the Benchmark Pilot
+---
 
-Clone repository and install dependencies:
+## 6. Quickstart & Reproducibility
+
+### Installation
 ```bash
 git clone https://github.com/creusiobd/arkhe-benchmark-lab.git
 cd arkhe-benchmark-lab
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
-Run automated verification and pilot reproduction:
+### Reproducing the Benchmark
+Run the single-command reproducible pipeline:
 ```bash
-# 1. Execute all unit tests and anti-leakage audits
-python -m unittest discover tests
+# Linux / macOS
+bash scripts/reproduce_grant_pilot.sh
 
-# 2. Run blind benchmark harness across 30 trajectories
+# Windows PowerShell
+.\scripts\reproduce_grant_pilot.ps1
+```
+
+Or execute the steps individually:
+```bash
+# 1. Run all unit and contract tests
+python -m unittest discover -s tests -v
+
+# 2. Execute blind benchmark runner
 python -m harness.agent_benchmark_runner --config configs/pilot.yaml
 
-# 3. Compute metrics, Wilson confidence intervals, and generate pilot report
+# 3. Compute metrics, confidence intervals, and statistical tests
 python -m evaluator.evaluate --run results/pilot
-
-# Windows 1-Click Reproduction:
-.\reproduce_pilot.ps1
-```
-
-Generated audit artifacts are saved in `results/pilot/`:
-- `predictions.jsonl`: Raw detector outputs per trajectory.
-- `execution_manifest.json`: Execution metadata and dataset SHA-256 hashes.
-- `metrics.json`: Accuracy, precision, recall, lead times.
-- `confidence_intervals.json`: Wilson 95% CIs and bootstrap intervals.
-- `confusion_matrices.json`: TP, FP, TN, FN breakdown.
-- `pilot_report.md`: Formal markdown evaluation report.
-
----
-
-## Part II: ARKHÉ Telemetry & Shadow Control Plane (APM Lab)
-
-### 1. Queue Physics & Dynamical Systems Modeling
-The telemetry lab models service degradation using **Little's Law** ($L = \lambda W$) and $M/M/c$ queuing theory rather than stochastic noise:
-* **Nominal Pool:** 30 concurrent connection slots, $\lambda = 80\text{ TPS}$, $W_s = 45\text{ ms} \implies 12\%$ pool occupancy.
-* **Silent Drift ($T_{+3\text{min}}$):** Latency rises to $255\text{ ms} \implies 68\%$ occupancy with zero timeouts.
-* **Critical Saturation Point ($T_{+10\text{min}}$):** Latency reaches $420\text{ ms} \implies L = 33.6 > 30$, causing immediate queue overflow and retry storms ($>170\text{ TPS}$).
-
-### 2. ARKHÉ Structural Acceleration Vector
-Traditional APMs (Datadog, Dynatrace) alert only after threshold breach ($P95 > 1500\text{ms}$). ARKHÉ tracks the second-order structural acceleration vector:
-$$\vec{S}_{\text{ARKHÉ}} = \left( \frac{d}{dt}\rho_{\text{pool}}, \quad \frac{W_q}{W_s}, \quad R_{\text{retry}} \right)$$
-
-### 3. Interactive Proof-of-Value (PoV) Sandbox
-To run the interactive simulation:
-```bash
-python run_interactive_pov.py
-```
-Or start the Docker stack:
-```powershell
-.\run_docker_stack.ps1
 ```
 
 ---
 
-## Repository Structure
+## 7. Dual Semantic Baseline Modes
 
-```
-arkhe-benchmark-lab/
-├── configs/                  # Benchmark configurations (configs/pilot.yaml)
-├── contracts/                # Strict typed schemas (observation, prediction, ground_truth)
-├── datasets/                 # 30-trajectory pilot dataset & templates
-│   ├── observations/         # Observable JSONL files (development, validation, test)
-│   ├── ground_truth/         # Ground truth labels (isolated from detectors)
-│   └── templates/            # Attack family scenario catalogs
-├── detectors/                # Evaluated defensive detectors
-│   ├── base.py               # Abstract base detector contract
-│   ├── deterministic_event.py # Baseline 1: Regex & target matching
-│   ├── semantic_event.py     # Baseline 2: Per-event LLM guardrail proxy
-│   └── arkhe_trajectory.py   # ARKHÉ: Trajectory-aware dynamical sentinel
-├── harness/                  # Blind benchmark runner (agent_benchmark_runner.py)
-├── evaluator/                # Independent evaluator & statistics (evaluate.py, statistics.py)
-├── results/pilot/            # Reproducible pilot results and statistical reports
-├── proposal/                 # OpenAI Cybersecurity Grant Proposal (PT & EN)
-├── reports/                  # Initial audit, cost models, and peer reviews
-├── tests/                    # 60 automated tests (including anti-leakage audits)
-└── tools/                    # Cost estimators and dataset generators
-```
+The semantic baseline detector (`detectors/semantic_event.py`) supports two explicitly configured operating modes:
+
+1. **`offline_proxy` (Default):**
+   - Heuristic lexical proxy with zero external network dependencies.
+   - Ideal for continuous integration, local testing, and automated smoke testing.
+   - Identified in manifests and logs as `offline_proxy` (never mislabeled as real API).
+
+2. **`openai_api`:**
+   - Performs structured API calls to the OpenAI API using the official SDK.
+   - Requires `OPENAI_API_KEY` in environment. Fails fast with descriptive error if credentials are missing (no silent fallback).
+   - Validates response schemas via Pydantic (`SemanticClassificationResponse`).
+   - Configurable model via `OPENAI_SEMANTIC_MODEL` (e.g., `gpt-4o-mini`).
 
 ---
 
-## Citation & Licensing
+## 8. Responsible Disclosure & Ethical Boundaries
 
-Distributed under the **Apache-2.0 License**. See [LICENSE](LICENSE) for details.
+- **Synthetic Data Exclusively:** All benchmark trajectories use synthetic, sanitized payloads. No real credentials, private personal data, or functional external attack targets are contained in the dataset.
+- **Defensive Focus:** The benchmark evaluates defensive detection mechanisms; no autonomous offensive exploitation agents are provided.
+- **Reporting Vulnerabilities:** For security vulnerability reports, refer to [SECURITY.md](SECURITY.md).
 
-If you reference or use this benchmark in academic or defensive research, please cite:
+---
+
+## 9. Related Engineering Experiments
+
+As a complementary applied engineering initiative, this repository also hosts research on queue-physics observability, Lyapunov stability basins, and autonomous self-healing for high-throughput microservices. This work is isolated in:
+
+📁 **[`experiments/telemetry-control-plane/`](experiments/telemetry-control-plane/README.md)**
+
+---
+
+## 10. License & Citation
+
+- **Code:** [Apache License 2.0](LICENSE)
+- **Dataset:** [Creative Commons Attribution 4.0 International (CC BY 4.0)](datasets/LICENSE)
+
+To cite this repository in academic or technical work:
 ```bibtex
-@misc{kizua2026arkhe,
-  title={ARKHÉ Agent Boundary Defense Benchmark: Measuring Trajectory-Aware Observability Against Multi-Agent Boundary Violations},
-  author={Kizua, Creúsio Adolfo Gaspar},
-  year={2026},
-  howpublished={\url{https://github.com/creusiobd/arkhe-benchmark-lab}}
+@software{kizua2026arkhe,
+  author = {Kizua, Creúsio Adolfo Gaspar},
+  title = {ARKHÉ Agent Boundary Defense Benchmark: Trajectory-Aware Observability vs Isolated Event Baselines},
+  year = {2026},
+  url = {https://github.com/creusiobd/arkhe-benchmark-lab},
+  version = {0.3.0}
 }
 ```
