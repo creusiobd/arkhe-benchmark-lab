@@ -1,0 +1,34 @@
+{{- if .Values.operator.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "arkhe.fullname" . }}-operator
+  labels:
+    {{- include "arkhe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: operator
+spec:
+  replicas: {{ .Values.operator.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "arkhe.name" . }}-operator
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "arkhe.name" . }}-operator
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: operator
+    spec:
+      serviceAccountName: {{ include "arkhe.fullname" . }}-operator
+      containers:
+        - name: operator
+          image: "{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}"
+          imagePullPolicy: {{ .Values.operator.image.pullPolicy }}
+          env:
+            - name: TELEMETRY_WS_URL
+              value: {{ .Values.operator.telemetryWsUrl | default (printf "ws://%s-service:%d/ws/telemetry" (include "arkhe.fullname" .) (int .Values.service.port)) | quote }}
+            - name: ARKHE_K8S_MOCK
+              value: "false"
+          resources:
+            {{- toYaml .Values.operator.resources | nindent 12 }}
+{{- end }}

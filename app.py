@@ -77,6 +77,79 @@ class AdaptivePoolSemaphore:
 
 antifraud_pool = AdaptivePoolSemaphore(30)
 
+def calculate_mmck_metrics(arrival_rate: float, service_rate: float, c: int, K: int) -> dict:
+    """
+    Calcula a solução analítica exata em forma fechada para o sistema de filas M/M/c/K (Kendall).
+    arrival_rate (lambda): taxa de chegadas de Poisson (TPS)
+    service_rate (mu): taxa de atendimento por servidor (1 / tempo_servico_segundos)
+    c: número de servidores concorrentes em paralelo (capacidade do pool)
+    K: capacidade total finita do sistema (servidores + buffer da fila)
+    """
+    if arrival_rate <= 0 or service_rate <= 0 or c <= 0 or K < c:
+        return {
+            "arrival_rate_tps": round(arrival_rate, 1),
+            "service_rate_per_sec": round(service_rate, 1),
+            "servers_c": c,
+            "capacity_k": K,
+            "traffic_intensity_rho": 0.0,
+            "p_loss_ratio": 0.0,
+            "p_loss_pct": 0.0,
+            "l_q_expected": 0.0,
+            "w_q_ms_expected": 0.0,
+            "lambda_effective_tps": round(arrival_rate, 1)
+        }
+    
+    a = arrival_rate / service_rate
+    rho = a / c
+    
+    # Cálculo das probabilidades normalizadas p_n
+    terms = []
+    current_term = 1.0  # para n=0: a^0 / 0! = 1
+    terms.append(current_term)
+    
+    for n in range(1, c):
+        current_term = current_term * a / n
+        terms.append(current_term)
+        
+    term_c = current_term * a / c  # a^c / c!
+    terms.append(term_c)
+    
+    curr = term_c
+    for n in range(c + 1, K + 1):
+        curr = curr * rho
+        terms.append(curr)
+        
+    sum_terms = sum(terms)
+    p0 = 1.0 / sum_terms if sum_terms > 0 else 0.0
+    
+    probs = [t * p0 for t in terms]
+    
+    # Probabilidade de perda / bloqueio P_K (rejeição de buffer finito)
+    p_loss = probs[K] if K < len(probs) else 0.0
+    
+    # Taxa efetiva de chegada lambda_eff = lambda * (1 - P_K)
+    lambda_eff = arrival_rate * (1.0 - p_loss)
+    
+    # Tamanho médio esperado da fila L_q = sum_{n=c}^K (n - c) * p_n
+    l_q = sum((n - c) * probs[n] for n in range(c, K + 1))
+    
+    # Tempo médio de espera na fila W_q = L_q / lambda_eff (Lei de Little)
+    w_q_sec = (l_q / lambda_eff) if lambda_eff > 0 else 0.0
+    w_q_ms = w_q_sec * 1000.0
+    
+    return {
+        "arrival_rate_tps": round(arrival_rate, 1),
+        "service_rate_per_sec": round(service_rate, 1),
+        "servers_c": c,
+        "capacity_k": K,
+        "traffic_intensity_rho": round(rho, 4),
+        "p_loss_ratio": round(p_loss, 6),
+        "p_loss_pct": round(p_loss * 100.0, 4),
+        "l_q_expected": round(l_q, 2),
+        "w_q_ms_expected": round(w_q_ms, 2),
+        "lambda_effective_tps": round(lambda_eff, 1)
+    }
+
 # Estado global da simulação
 class SimulationEnvironment:
     def __init__(self):
@@ -84,6 +157,11 @@ class SimulationEnvironment:
         self.antifraud_latency_base_ms: float = 45.0
         self.antifraud_jitter_ms: float = 10.0
         self.network_error_rate: float = 0.001
+        
+        # Controle de Carga Contínua e Simulação Estocástica de Alta Fidelidade (M/M/c/K)
+        self.target_tps: float = 120.0
+        self.stochastic_mode: bool = True
+        self.system_capacity_k: int = 60
         
         # Cenário atual
         self.current_scenario: str = "nominal"
@@ -191,9 +269,10 @@ async def telemetry_broadcaster_task():
     while True:
         next_tick += TARGET_INTERVAL
         try:
-            if stream_manager.active_connections:
+            if stream_manager.active_connections or sim_env.mitigation_enabled:
                 payload = await build_telemetry_payload()
-                await stream_manager.broadcast(payload)
+                if stream_manager.active_connections:
+                    await stream_manager.broadcast(payload)
         except Exception:
             pass
         now = time.perf_counter()
@@ -231,6 +310,15 @@ mimetypes.add_type("text/css", ".css")
 
 # Monta diretório de recursos estáticos modulares (CSS, JS Vanilla ES6+, Assets)
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Monta distribuição de produção do Angular 17 Dashboard
+angular_dist_dir = os.path.join(os.path.dirname(__file__), "dashboard-angular", "dist", "arkhe-dashboard-angular", "browser")
+if os.path.exists(angular_dist_dir):
+    from fastapi.responses import RedirectResponse
+    @app.get("/ng", include_in_schema=False)
+    async def redirect_angular():
+        return RedirectResponse(url="/ng/")
+    app.mount("/ng", StaticFiles(directory=angular_dist_dir, html=True), name="angular")
 
 # --- MODELOS DE DADOS ---
 @dataclass
@@ -280,6 +368,15 @@ async def stage_antifraud_analysis(intent: PaymentIntent) -> Tuple[float, float,
         )
 
         queue_start = time.perf_counter()
+        
+        # 1. Verificação de Capacidade Finita K (M/M/c/K Buffer Drop)
+        cur_in_flight = (cur_cap - antifraud_pool.available_slots) + sim_env.antifraud_waiters
+        if sim_env.stochastic_mode and cur_in_flight >= sim_env.system_capacity_k:
+            span.set_status(Status(StatusCode.ERROR, "Antifraud M/M/c/K Finite Buffer Full (K reached)"))
+            span.set_attribute("error.type", "MMcKBufferExhaustion")
+            sim_env.pool_exhausted_total += 1
+            raise HTTPException(status_code=503, detail="Antifraud buffer full (M/M/c/K drop)")
+
         sim_env.antifraud_waiters += 1
         
         try:
@@ -300,18 +397,21 @@ async def stage_antifraud_analysis(intent: PaymentIntent) -> Tuple[float, float,
 
         service_start = time.perf_counter()
         try:
+            risk_score = (int(intent.card_token[-2:], 16) % 100) if len(intent.card_token) >= 2 else 15
             if use_fast_path:
                 # FAST-PATH AUTÔNOMO: validação em cache rápido (12ms) em vez de 255ms/420ms
                 latency = 0.012
-                risk_score = (int(intent.card_token[-2:], 16) % 100) if len(intent.card_token) >= 2 else 15
                 sim_env.prevented_failures_count += 1
+            elif sim_env.stochastic_mode:
+                # SIMULAÇÃO ESTOCÁSTICA DE ALTA FIDELIDADE: Distribuição Exponencial Markoviana M (taxa mu = 1 / mean)
+                mean_sec = max(0.005, sim_env.antifraud_latency_base_ms / 1000.0)
+                latency = max(0.002, float(np.random.exponential(scale=mean_sec)))
             else:
                 latency = np.random.normal(
                     sim_env.antifraud_latency_base_ms,
                     sim_env.antifraud_jitter_ms
                 )
                 latency = max(5.0, latency) / 1000.0
-                risk_score = (int(intent.card_token[-2:], 16) % 100) if len(intent.card_token) >= 2 else 15
             
             await asyncio.sleep(latency)
             span.set_attribute("antifraud.risk_score", risk_score)
@@ -595,13 +695,27 @@ async def build_telemetry_payload() -> dict:
             })
 
     # 4. Calcula antecedência operacional (Lead Time)
-    if sim_env.t_sentinel_alert is not None:
-        if sim_env.t_sre_alert is None:
-            lead_time_sec = now - sim_env.t_sentinel_alert
-        else:
-            lead_time_sec = sim_env.t_sre_alert - sim_env.t_sentinel_alert
-    else:
+    if sim_env.t_sentinel_alert is not None and sim_env.t_sre_alert is not None:
+        lead_time_sec = round(sim_env.t_sre_alert - sim_env.t_sentinel_alert, 1)
+        lead_time_status = "CONSOLIDATED"
+        lead_time_display = f"+{lead_time_sec:.1f}s"
+        lead_time_desc = f"Antecedência comprovada de {lead_time_sec:.1f}s sobre o alarme SRE convencional."
+    elif sim_env.t_sentinel_alert is not None and sim_env.t_sre_alert is None:
+        elapsed_obs = round(now - sim_env.t_sentinel_alert, 1)
+        lead_time_sec = None
+        lead_time_status = "OBSERVING_PENDING_BASELINE"
+        lead_time_display = f"Pendente ({elapsed_obs:.1f}s obs)"
+        lead_time_desc = f"Detecção antecipada ativa há {elapsed_obs:.1f}s. Monitor convencional SRE ainda não disparou (antecipação em curso, em observação)."
+    elif sim_env.t_sentinel_alert is None and sim_env.t_sre_alert is not None:
         lead_time_sec = 0.0
+        lead_time_status = "NO_ANTICIPATION"
+        lead_time_display = "0.0s (Sem antecedência)"
+        lead_time_desc = "Alarme convencional disparou sem antecipação pelo Sentinel."
+    else:
+        lead_time_sec = None
+        lead_time_status = "NOT_APPLICABLE"
+        lead_time_display = "N/D"
+        lead_time_desc = "Regime nominal estável. Nenhum alarme de saturação ativo."
 
     # 5. Cálculo Formal do SLA, SLI e Error Budget (Google SRE Framework)
     total_attempts = max(1, sim_env.attempts_total)
@@ -631,17 +745,53 @@ async def build_telemetry_payload() -> dict:
     elif burn_rate > 1.0:
         burn_rate_status = f"CONSUMO ACELERADO ({burn_rate}x)"
 
-    if arkhe_res.triggered:
-        score = max(70.0, arkhe_res.confidence_score * 100.0)
-    else:
-        rho = obs["resources"]["antifraud_pool_utilization_ratio"]
-        score = max(0.0, min(100.0, rho * 45.0))
+    # Fonte de verdade do Score de Risco Instantâneo (0 a 100%):
+    # Baseado na utilização física observada do pool (rho)
+    rho = obs["resources"]["antifraud_pool_utilization_ratio"]
+    score = round(min(100.0, max(0.0, rho * 100.0)), 1)
 
-    level = "healthy"
-    if score >= 85: level = "critical"
-    elif score >= 70: level = "high"
-    elif score >= 50: level = "unstable"
-    elif score >= 30: level = "attention"
+    # Classificação unificada dos limiares de risco estático:
+    # < 45.0%: Nominal (healthy)
+    # 45.0% a 74.9%: Alerta Precoce (warning)
+    # >= 75.0%: Crítico (critical)
+    if score >= 75.0:
+        risk_state = "critical"
+        level = "critical"
+        state_label = "CRÍTICO (Ruptura >= 75%)"
+    elif score >= 45.0:
+        risk_state = "early_warning"
+        level = "warning"
+        state_label = "ALERTA PRECOCE (45% - 75%)"
+    else:
+        risk_state = "nominal"
+        level = "healthy"
+        state_label = "NOMINAL (Estável < 45%)"
+
+    # Sinal Preditivo / Dinâmico de Trajetória (separado do risco estático)
+    d_rho_dt = arkhe_res.vector.get("d_rho_dt_per_min", 0.0)
+    history_rhos = [s["resources"]["antifraud_pool_utilization_ratio"] * 100.0 for s in sim_env.arkhe_engine.window_history]
+    base_rho_pct = history_rhos[0] if history_rhos else (score if score < 25.0 else 17.0)
+    delta_pp = round(score - base_rho_pct, 1)  # Variação em pontos percentuais (p.p.)
+    delta_rel_pct = round(((score - base_rho_pct) / max(0.1, base_rho_pct)) * 100.0, 1) # Variação relativa (%)
+
+    trajectory_active = arkhe_res.triggered
+    trajectory_signal = {
+        "active": trajectory_active,
+        "signal_type": "PREDICTIVE_TREND" if trajectory_active else "STABLE_BASIN",
+        "signal_label": "ALERTA PRECOCE PREDITIVO (TENDÊNCIA)" if trajectory_active else "BACIA ESTÁVEL",
+        "trend_slope_per_min": round(d_rho_dt, 3),
+        "delta_abs_pp": delta_pp,
+        "delta_rel_pct": delta_rel_pct,
+        "trend_summary": (
+            f"Aceleração de saturação (+{delta_pp:.1f} p.p., +{delta_rel_pct:.1f}% relativo à base)"
+            if trajectory_active and delta_pp > 0 else (
+                f"Estável ({delta_pp:+.1f} p.p. / {delta_rel_pct:+.1f}%)"
+            )
+        ),
+        "trigger_reason": arkhe_res.trigger_reason if trajectory_active else "Operação laminar na bacia de atração nominal",
+        "rules_violated_count": arkhe_res.rules_violated_count,
+        "heuristic_severity": arkhe_res.confidence_score
+    }
 
     # 6. Grafo Topológico Interativo (DAG dos 6 Hops Arquiteturais)
     antifraud_lat = sim_env.antifraud_latency_base_ms
@@ -688,7 +838,7 @@ async def build_telemetry_payload() -> dict:
                 "icon": "🌐",
                 "status": gw_status,
                 "latency_ms": 8.0,
-                "load": "120 TPS",
+                "load": f"{int(sim_env.target_tps)} TPS",
                 "metrics": {"lag_ms": obs["runtime"]["event_loop_lag_ms"], "concurrency": "Non-blocking"}
             },
             {
@@ -750,11 +900,11 @@ async def build_telemetry_payload() -> dict:
             }
         ],
         "edges": [
-            {"from": "gateway", "to": "hsm_limits", "tps": 120, "status": "normal"},
-            {"from": "hsm_limits", "to": "semaphore", "tps": 120, "status": "degraded" if hsm_status != "healthy" else "normal"},
-            {"from": "semaphore", "to": "antifraud", "tps": 120 if sem_status == "healthy" else 60, "status": "congested" if sem_status != "healthy" else "normal"},
-            {"from": "antifraud", "to": "acquirer", "tps": 120 if af_status != "critical" else 40, "status": "congested" if af_status == "critical" else "normal"},
-            {"from": "acquirer", "to": "ledger", "tps": int(120 * (1.0 - sim_env.acquirer_flapping_rate)), "status": "congested" if acq_status != "healthy" else "normal"}
+            {"from": "gateway", "to": "hsm_limits", "tps": int(sim_env.target_tps), "status": "normal"},
+            {"from": "hsm_limits", "to": "semaphore", "tps": int(sim_env.target_tps), "status": "degraded" if hsm_status != "healthy" else "normal"},
+            {"from": "semaphore", "to": "antifraud", "tps": int(sim_env.target_tps) if sem_status == "healthy" else max(10, int(sim_env.target_tps * 0.5)), "status": "congested" if sem_status != "healthy" else "normal"},
+            {"from": "antifraud", "to": "acquirer", "tps": int(sim_env.target_tps) if af_status != "critical" else max(5, int(sim_env.target_tps * 0.33)), "status": "congested" if af_status == "critical" else "normal"},
+            {"from": "acquirer", "to": "ledger", "tps": int(sim_env.target_tps * (1.0 - sim_env.acquirer_flapping_rate)), "status": "congested" if acq_status != "healthy" else "normal"}
         ]
     }
 
@@ -849,11 +999,24 @@ async def build_telemetry_payload() -> dict:
         "sentinel": {
             "score": round(score, 1),
             "level": level,
+            "risk_state": risk_state,
+            "state_label": state_label,
             "triggered": arkhe_res.triggered,
             "trigger_reason": arkhe_res.trigger_reason,
             "vector": arkhe_res.vector,
-            "lead_time_seconds": round(lead_time_sec, 1),
-            "lead_time_minutes": round(lead_time_sec / 60.0, 2)
+            "lead_time_seconds": round(lead_time_sec, 1) if lead_time_sec is not None else None,
+            "lead_time_minutes": round(lead_time_sec / 60.0, 2) if lead_time_sec is not None else None,
+            "lead_time_status": lead_time_status,
+            "lead_time_display": lead_time_display,
+            "lead_time_description": lead_time_desc,
+            "trajectory_signal": trajectory_signal,
+            "timeline": {
+                "t_zero_timestamp": sim_env.scenario_started_at,
+                "elapsed_seconds": round(now - sim_env.scenario_started_at, 1),
+                "t_sentinel_offset_sec": round(sim_env.t_sentinel_alert - sim_env.scenario_started_at, 1) if sim_env.t_sentinel_alert else None,
+                "t_sre_offset_sec": round(sim_env.t_sre_alert - sim_env.scenario_started_at, 1) if sim_env.t_sre_alert else None,
+                "reference_origin": "T=0 marca a injeção do cenário / início da simulação controlada"
+            }
         },
         "sre_governance": {
             "target_sla_availability_pct": 99.90,
@@ -882,12 +1045,29 @@ async def build_telemetry_payload() -> dict:
         "projection": projection_data,
         "recent_journeys": list(sim_env.recent_journeys)[:15],
         "event_logs": list(sim_env.event_logs),
+        "load_config": {
+            "target_tps": round(sim_env.target_tps, 1),
+            "stochastic_mode": sim_env.stochastic_mode,
+            "mode_label": "SIMULAÇÃO ESTOCÁSTICA DE ALTA FIDELIDADE (M/M/c/K)" if sim_env.stochastic_mode else "DETERMINÍSTICO (PACING UNIFORME)",
+            "system_capacity_k": sim_env.system_capacity_k,
+            "servers_c": antifraud_pool.capacity,
+            "mmck_metrics": calculate_mmck_metrics(
+                arrival_rate=sim_env.target_tps,
+                service_rate=1000.0 / max(1.0, sim_env.antifraud_latency_base_ms),
+                c=antifraud_pool.capacity,
+                K=sim_env.system_capacity_k
+            )
+        },
         "stream_meta": {
             "timestamp": now,
             "protocol": "websocket_v1",
             "frequency_hz": 20
         }
     }
+# --- OPENTELEMETRY PROTOCOL (OTLP) ENDPOINTS & PROMETHEUS SCRAPER ---
+from otel.receiver import otel_router, set_payload_builder
+set_payload_builder(build_telemetry_payload)
+app.include_router(otel_router)
 
 # --- ENDPOINTS HTTP E WEBSOCKET ---
 
@@ -917,12 +1097,68 @@ async def websocket_telemetry_stream(websocket: WebSocket):
                 await trigger_scenario(sc_name)
             elif data == "toggle_mitigation":
                 await toggle_mitigation()
+            elif data.startswith("set_tps:"):
+                try:
+                    val = float(data.split(":", 1)[1])
+                    await set_target_tps(tps=val)
+                except ValueError:
+                    pass
+            elif data.startswith("delta_tps:"):
+                try:
+                    delta = float(data.split(":", 1)[1])
+                    await set_target_tps(delta=delta)
+                except ValueError:
+                    pass
+            elif data == "toggle_stochastic":
+                await toggle_stochastic_mode()
             elif data == "ping":
                 await websocket.send_text("pong")
     except WebSocketDisconnect:
         stream_manager.disconnect(websocket)
     except Exception:
         stream_manager.disconnect(websocket)
+
+# --- CONTROLADOR DINÂMICO DE CARGA CONTÍNUA & SIMULAÇÃO ESTOCÁSTICA M/M/c/K ---
+
+@app.get("/admin/load/config")
+async def get_load_config():
+    mu = 1000.0 / max(1.0, sim_env.antifraud_latency_base_ms)
+    c = antifraud_pool.capacity
+    K = c + 30
+    sim_env.system_capacity_k = K
+    mmck = calculate_mmck_metrics(sim_env.target_tps, mu, c, K)
+    return {
+        "target_tps": round(sim_env.target_tps, 1),
+        "stochastic_mode": sim_env.stochastic_mode,
+        "mode_label": "SIMULAÇÃO ESTOCÁSTICA DE ALTA FIDELIDADE (M/M/c/K)" if sim_env.stochastic_mode else "DETERMINÍSTICO (PACING UNIFORME)",
+        "system_capacity_k": sim_env.system_capacity_k,
+        "servers_c": c,
+        "mmck_metrics": mmck
+    }
+
+@app.post("/admin/load/tps")
+async def set_target_tps(tps: Optional[float] = Query(default=None), delta: Optional[float] = Query(default=None)):
+    if delta is not None:
+        new_tps = sim_env.target_tps + delta
+    elif tps is not None:
+        new_tps = tps
+    else:
+        raise HTTPException(status_code=400, detail="Parâmetro 'tps' ou 'delta' é obrigatório.")
+    
+    sim_env.target_tps = max(10.0, min(500.0, round(new_tps, 1)))
+    sim_env.add_log(f"⚡ CARGA CONTÍNUA: Taxa ajustada para {sim_env.target_tps:.0f} TPS.", "info")
+    return await get_load_config()
+
+@app.post("/admin/load/adjust")
+async def adjust_target_tps(delta: float = Query(...)):
+    return await set_target_tps(delta=delta)
+
+@app.post("/admin/load/toggle_stochastic")
+async def toggle_stochastic_mode():
+    sim_env.stochastic_mode = not sim_env.stochastic_mode
+    mode_name = "M/M/c/K ESTOCÁSTICO (Poisson λ + Exp μ + Buffer K)" if sim_env.stochastic_mode else "DETERMINÍSTICO (Pacing Uniforme)"
+    sim_env.add_log(f"🎲 FÍSICA DE FILAS: Modo alterado para {mode_name}.", "info")
+    return await get_load_config()
 
 # --- CONTROLADOR INTERATIVO DE CENÁRIOS E MITIGAÇÃO ---
 
@@ -945,6 +1181,11 @@ async def toggle_mitigation():
 async def trigger_scenario(scenario_name: str):
     sim_env.current_scenario = scenario_name
     sim_env.scenario_started_at = time.time()
+    # Reset alert timestamps e histórico para isolamento temporal limpo entre cenários
+    sim_env.t_sentinel_alert = None
+    sim_env.t_sre_alert = None
+    sim_env.arkhe_engine = ArkheTrajectoryEngine()
+    sim_env.traditional_monitor = TraditionalSREMonitor(sustained_checks_required=2)
     
     if scenario_name == "nominal":
         sim_env.antifraud_latency_base_ms = 45.0
@@ -952,7 +1193,7 @@ async def trigger_scenario(scenario_name: str):
         sim_env.hsm_extra_delay_ms = 0.0
         sim_env.acquirer_flapping_rate = 0.0
         sim_env.network_jitter_p99_active = False
-        sim_env.scenario_description = "1. Operação Nominal (45ms, Pool ~10%)"
+        sim_env.scenario_description = "1. Operação Nominal (45ms, Pool ~10-15%)"
         sim_env.mitigation_active = False
         sim_env.mitigation_fast_path_active = False
         antifraud_pool.scale_to(30)
@@ -977,32 +1218,29 @@ async def trigger_scenario(scenario_name: str):
         sim_env.add_log("Caos Injetado: Ruptura de Concorrência (420ms).", "danger")
 
     elif scenario_name == "recover":
-        sim_env.antifraud_latency_base_ms = 45.0
-        sim_env.antifraud_jitter_ms = 10.0
-        sim_env.hsm_extra_delay_ms = 0.0
-        sim_env.acquirer_flapping_rate = 0.0
-        sim_env.network_jitter_p99_active = False
-        sim_env.scenario_description = "4. Autocura / Restauração do Sistema (45ms)"
-        sim_env.t_sentinel_alert = None
-        sim_env.t_sre_alert = None
-        sim_env.technical_timeouts_total = 0
-        sim_env.pool_exhausted_total = 0
-        sim_env.mitigation_active = False
-        sim_env.mitigation_fast_path_active = False
-        antifraud_pool.scale_to(30)
-        sim_env.add_log("Sistema restaurado para estado saudável de fábrica.", "success")
+        return await reset_simulation()
 
     elif scenario_name == "hsm_saturation":
+        sim_env.antifraud_latency_base_ms = 45.0
+        sim_env.antifraud_jitter_ms = 10.0
         sim_env.hsm_extra_delay_ms = 120.0
-        sim_env.scenario_description = "5. Gargalo de HSM / Criptografia (120ms CPU Contention)"
-        sim_env.add_log("Caos Injetado: Gargalo de HSM / Criptografia (120ms).", "danger")
+        sim_env.acquirer_flapping_rate = 0.0
+        sim_env.network_jitter_p99_active = False
+        sim_env.scenario_description = "5. Degradação HSM / Criptografia (120ms CPU Contention)"
+        sim_env.add_log("Caos Injetado: Degradação de HSM / Criptografia (120ms).", "danger")
 
     elif scenario_name == "acquirer_flapping":
+        sim_env.antifraud_latency_base_ms = 45.0
+        sim_env.hsm_extra_delay_ms = 0.0
         sim_env.acquirer_flapping_rate = 0.35
+        sim_env.network_jitter_p99_active = False
         sim_env.scenario_description = "6. Flapping na Adquirente Externa (35% Falhas / Flapping)"
         sim_env.add_log("Caos Injetado: Flapping na Adquirente Externa (35%).", "warning")
 
     elif scenario_name == "network_jitter":
+        sim_env.antifraud_latency_base_ms = 45.0
+        sim_env.hsm_extra_delay_ms = 0.0
+        sim_env.acquirer_flapping_rate = 0.0
         sim_env.network_jitter_p99_active = True
         sim_env.scenario_description = "7. Jitter Assimétrico de Rede (P99 Outlier > 1200ms)"
         sim_env.add_log("Caos Injetado: Jitter Assimétrico de Rede P99.", "warning")
@@ -1014,6 +1252,23 @@ async def trigger_scenario(scenario_name: str):
         "scenario": sim_env.current_scenario,
         "description": sim_env.scenario_description
     }
+
+@app.post("/admin/chaos/set_drift")
+async def set_drift_custom(antifraud_latency_ms: float = Query(default=255.0), jitter_ms: float = Query(default=15.0)):
+    sim_env.antifraud_latency_base_ms = antifraud_latency_ms
+    sim_env.antifraud_jitter_ms = jitter_ms
+    if antifraud_latency_ms >= 400:
+        sim_env.current_scenario = "rupture"
+        sim_env.scenario_description = f"3. Ruptura de Concorrência ({antifraud_latency_ms}ms)"
+    elif antifraud_latency_ms > 100:
+        sim_env.current_scenario = "drift"
+        sim_env.scenario_description = f"2. Drift no Antifraude ({antifraud_latency_ms}ms)"
+    else:
+        sim_env.current_scenario = "nominal"
+        sim_env.scenario_description = "1. Operação Nominal (45ms)"
+    sim_env.scenario_started_at = time.time()
+    sim_env.add_log(f"Caos customizado aplicado: Latência base {antifraud_latency_ms}ms.", "warning")
+    return {"status": "applied", "antifraud_latency_ms": antifraud_latency_ms, "jitter_ms": jitter_ms}
 
 @app.post("/admin/chaos/reset")
 async def reset_simulation():
@@ -1043,6 +1298,8 @@ async def reset_simulation():
     sim_env.recent_latencies.clear()
     sim_env.recent_journeys.clear()
     sim_env.mitigation_actions.clear()
+    sim_env.arkhe_engine = ArkheTrajectoryEngine()
+    sim_env.traditional_monitor = TraditionalSREMonitor(sustained_checks_required=2)
     sim_env.add_log("Reset geral executado com sucesso.", "info")
     return {"message": "State reset to factory nominal"}
 
@@ -1058,3 +1315,23 @@ async def serve_cockpit():
         return HTMLResponse(content=html)
     except Exception as e:
         return HTMLResponse(content=f"<h1>Erro ao carregar cockpit: {e}</h1>", status_code=500)
+
+@app.get("/presentation", response_class=HTMLResponse)
+@app.get("/pitch", response_class=HTMLResponse)
+async def serve_pitch_deck():
+    """Serve a apresentação interativa executiva em HTML."""
+    pres_path = os.path.join(os.path.dirname(__file__), "arkhe_pitch_deck_presentation.html")
+    if os.path.exists(pres_path):
+        with open(pres_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse(content="<h1>Apresentação não encontrada</h1>", status_code=404)
+
+@app.get("/pov", response_class=HTMLResponse)
+async def serve_pov_report():
+    """Serve o Laudo Executivo de Prova de Valor (PoV)."""
+    pov_path = os.path.join(os.path.dirname(__file__), "arkhe_pov_executive_summary.html")
+    if os.path.exists(pov_path):
+        with open(pov_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse(content="<h1>Relatório PoV não gerado. Execute 'python run_interactive_pov.py' primeiro.</h1>", status_code=404)
+

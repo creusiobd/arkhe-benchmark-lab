@@ -7,8 +7,38 @@ from typing import Optional
 import httpx
 
 TARGET_URL = os.getenv("TARGET_URL", "http://localhost:8080/v1/charge")
-TARGET_TPS = float(os.getenv("TARGET_TPS", "120.0"))
-INTERVAL = 1.0 / TARGET_TPS
+CONFIG_URL = os.getenv("CONFIG_URL", "")
+if not CONFIG_URL:
+    if "v1/charge" in TARGET_URL:
+        CONFIG_URL = TARGET_URL.split("/v1/charge")[0] + "/admin/load/config"
+    else:
+        CONFIG_URL = "http://localhost:8080/admin/load/config"
+DEFAULT_TPS = float(os.getenv("TARGET_TPS", "120.0"))
+
+# Estado mutável sincronizado dinamicamente em tempo real com o backend
+load_state = {
+    "target_tps": DEFAULT_TPS,
+    "stochastic_mode": True
+}
+
+async def sync_config_loop():
+    """Sincroniza continuamente a taxa de injeção (TPS) e o modo M/M/c/K com o backend."""
+    async with httpx.AsyncClient(timeout=2.0) as client:
+        while True:
+            try:
+                res = await client.get(CONFIG_URL)
+                if res.status_code == 200:
+                    data = res.json()
+                    new_tps = float(data.get("target_tps", load_state["target_tps"]))
+                    new_stoch = bool(data.get("stochastic_mode", load_state["stochastic_mode"]))
+                    if abs(new_tps - load_state["target_tps"]) > 0.01 or new_stoch != load_state["stochastic_mode"]:
+                        load_state["target_tps"] = new_tps
+                        load_state["stochastic_mode"] = new_stoch
+                        mode_name = "M/M/c/K Estocástico (Poisson)" if new_stoch else "Determinístico"
+                        print(f"[*] ⚡ Sincronização Dinâmica: {new_tps:.0f} TPS contínuos | Modo: {mode_name}", flush=True)
+            except Exception:
+                pass
+            await asyncio.sleep(0.5)
 
 async def send_charge_attempt(client: httpx.AsyncClient, tx_id: str, attempt_num: int):
     headers = {
@@ -41,10 +71,11 @@ async def worker(queue: asyncio.Queue, client: httpx.AsyncClient):
 
 async def run_load(duration_seconds: Optional[float] = None):
     queue = asyncio.Queue()
-    limits = httpx.Limits(max_keepalive_connections=300, max_connections=800)
+    limits = httpx.Limits(max_keepalive_connections=400, max_connections=1000)
     async with httpx.AsyncClient(limits=limits) as client:
-        workers = [asyncio.create_task(worker(queue, client)) for _ in range(80)]
-        print(f"[*] Gerador de carga ativo em {TARGET_URL} @ {TARGET_TPS} TPS nominais...")
+        workers = [asyncio.create_task(worker(queue, client)) for _ in range(120)]
+        syncer_task = asyncio.create_task(sync_config_loop())
+        print(f"[*] Gerador de carga ativo em {TARGET_URL} @ {load_state['target_tps']} TPS (M/M/c/K dinâmico)...", flush=True)
         counter = 0
         start_t = time.time()
         try:
@@ -56,13 +87,23 @@ async def run_load(duration_seconds: Optional[float] = None):
                 await queue.put(tx_id)
                 counter += 1
                 
+                # Cálculo do intervalo entre chegadas (Inter-Arrival Time):
+                # Modo Estocástico: Processo de Poisson puro onde inter-chegadas ~ Exp(lambda)
+                # Modo Determinístico: Intervalo fixo 1 / lambda
+                cur_tps = max(5.0, load_state["target_tps"])
+                if load_state["stochastic_mode"]:
+                    target_interval = random.expovariate(cur_tps)
+                else:
+                    target_interval = 1.0 / cur_tps
+                
                 elapsed = time.perf_counter() - t0
-                sleep_time = max(0.0, INTERVAL - elapsed)
+                sleep_time = max(0.0, target_interval - elapsed)
                 await asyncio.sleep(sleep_time)
         except (KeyboardInterrupt, asyncio.CancelledError):
             pass
         finally:
             print("[*] Encerrando emissão de carga.")
+            syncer_task.cancel()
             for w in workers:
                 w.cancel()
 

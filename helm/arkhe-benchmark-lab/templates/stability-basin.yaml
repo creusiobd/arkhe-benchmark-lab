@@ -1,0 +1,34 @@
+{{- if and .Values.operator.enabled .Values.operator.stabilityBasin.enabled }}
+apiVersion: resilience.arkhe.io/v1alpha1
+kind: ArkheStabilityBasin
+metadata:
+  name: {{ .Values.operator.stabilityBasin.name | default (printf "%s-basin" (include "arkhe.fullname" .)) }}
+  labels:
+    {{- include "arkhe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: resilience-policy
+spec:
+  workloadRef:
+    kind: Deployment
+    name: {{ include "arkhe.fullname" . }}
+    apiVersion: apps/v1
+  stabilityConstraints:
+    targetThroughputTps: {{ .Values.operator.stabilityBasin.targetThroughputTps | default 120.0 }}
+    maxRhoBasin: {{ .Values.operator.stabilityBasin.maxRhoBasin | default 0.50 }}
+    maxQueueWaitRatio: {{ .Values.operator.stabilityBasin.maxQueueWaitRatio | default 0.25 }}
+    criticalTimeToCollapseSeconds: {{ .Values.operator.stabilityBasin.criticalTimeToCollapseSeconds | default 30 }}
+    samplingFrequencyHz: 20
+  mitigation:
+    predictiveHpa:
+      enabled: {{ .Values.operator.stabilityBasin.predictiveHpa.enabled | default true }}
+      minReplicas: {{ .Values.operator.stabilityBasin.predictiveHpa.minReplicas | default 2 }}
+      maxReplicas: {{ .Values.operator.stabilityBasin.predictiveHpa.maxReplicas | default 60 }}
+      scaleMultiplier: {{ .Values.operator.stabilityBasin.predictiveHpa.scaleMultiplier | default 2.0 }}
+      cooldownSeconds: {{ .Values.operator.stabilityBasin.predictiveHpa.cooldownSeconds | default 120 }}
+    fastPathBypass:
+      enabled: {{ .Values.operator.stabilityBasin.fastPathBypass.enabled | default true }}
+      trafficBypassRatio: {{ .Values.operator.stabilityBasin.fastPathBypass.trafficBypassRatio | default 0.70 }}
+      targetCacheService: {{ .Values.operator.stabilityBasin.fastPathBypass.targetCacheService | default "redis-l2-cache" | quote }}
+  telemetrySource:
+    endpointUri: {{ .Values.operator.telemetryWsUrl | default (printf "ws://%s-service:%d/ws/telemetry" (include "arkhe.fullname" .) (int .Values.service.port)) | quote }}
+    protocol: websocket
+{{- end }}

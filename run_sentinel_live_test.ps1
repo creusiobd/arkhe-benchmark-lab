@@ -19,9 +19,13 @@ try {
     Write-Host "      -> ARKHÉ SENTINEL ATIVO (Status: $($health.status), Modo: $($health.mode))" -ForegroundColor Green
 } catch {
     Write-Host "      -> Sentinel não detectado na porta 8000. Iniciando em background..." -ForegroundColor Gray
-    $sentinelPath = "C:\Users\anonimo\Downloads\arkhe-sentinel-trajectory-core-main"
-    $sentinelProc = Start-Process python -ArgumentList "-m uvicorn api.main:app --port 8000" -WorkingDirectory $sentinelPath -PassThru -WindowStyle Hidden
-    Start-Sleep -Seconds 3
+    $sentinelPath = if ($env:SENTINEL_CORE_PATH) { $env:SENTINEL_CORE_PATH } else { Join-Path (Get-Location) "..\arkhe-sentinel-trajectory-core" }
+    if (Test-Path $sentinelPath) {
+        $sentinelProc = Start-Process python -ArgumentList "-m uvicorn api.main:app --port 8000" -WorkingDirectory $sentinelPath -PassThru -WindowStyle Hidden
+        Start-Sleep -Seconds 3
+    } else {
+        Write-Host "      -> Sentinel Core path não encontrado em $sentinelPath. Defina SENTINEL_CORE_PATH." -ForegroundColor Red
+    }
 }
 
 # 2. Inicia o Card Authorization Lab na porta 8080

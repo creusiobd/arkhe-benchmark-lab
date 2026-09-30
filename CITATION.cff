@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this benchmark or codebase in your defensive security research, please cite it as below."
+title: "ARKHÉ Agent Boundary Defense Benchmark: Measuring Trajectory-Aware Observability Against Multi-Agent Boundary Violations"
+authors:
+  - family-names: "Kizua"
+    given-names: "Creúsio Adolfo Gaspar"
+    affiliation: "Independent Defensive Research / ARKHÉ Project"
+version: "0.2.0"
+date-released: "2026-09-29"
+license: "Apache-2.0"
+repository-code: "https://github.com/creusiobd/arkhe-benchmark-lab"
+url: "https://github.com/creusiobd/arkhe-benchmark-lab"
+keywords:
+  - "agent boundary defense"
+  - "trajectory observability"
+  - "prompt injection propagation"
+  - "multi-agent security"
+  - "defensive cybersecurity benchmark"

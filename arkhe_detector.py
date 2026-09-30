@@ -10,6 +10,8 @@ class ArkheDetectionResult:
     vector: Dict[str, float]
     predicted_time_to_collapse_sec: Optional[float]
     confidence_score: float
+    rules_violated_count: int = 0
+    heuristic_severity_score: float = 0.0
 
 class ArkheTrajectoryEngine:
     """
@@ -35,7 +37,9 @@ class ArkheTrajectoryEngine:
                 trigger_reason=None,
                 vector={},
                 predicted_time_to_collapse_sec=None,
-                confidence_score=0.0
+                confidence_score=0.0,
+                rules_violated_count=0,
+                heuristic_severity_score=0.0
             )
 
         current = self.window_history[-1]
@@ -80,11 +84,11 @@ class ArkheTrajectoryEngine:
             ttc = (1.0 - rho) / slope
 
         # Critérios de detecção antecipada do ARKHÉ:
-        # - Trajetória de saturação rápida (rho > 0.50 e d_rho/dt > 0.05/min)
-        # - Fila física acumulando (W_q / W_s > 0.8 com W_q > 25ms)
-        # - Amplificação de retries detectada no cliente (retry_amp > 1.12 com base estatística)
+        # - Trajetória de aceleração de saturação (rho >= 0.35 com d_rho/dt > 0.02/min, ou rho >= 0.60)
+        # - Fila física acumulando (W_q / W_s > 0.6 com W_q > 15ms)
+        # - Amplificação de retries detectada no cliente (retry_amp > 1.10 com base estatística)
         total_txs = traffic.get("unique_transactions_total", 0)
-        is_trajectory_anomaly = (rho >= 0.40 and d_rho_dt_min > 0.03) or (rho >= 0.60)
+        is_trajectory_anomaly = (rho >= 0.35 and d_rho_dt_min > 0.02) or (rho >= 0.60)
         is_queue_forming = (wq_ws_ratio > 0.6 and avg_wq > 15.0)
         is_retry_amplification = (retry_amp > 1.10 and total_txs >= 50)
 
@@ -97,14 +101,20 @@ class ArkheTrajectoryEngine:
             if is_retry_amplification:
                 reasons.append(f"Amplificação de retries detectada (R_retry={retry_amp:.2f})")
 
-            confidence = min(0.99, 0.70 + (0.10 * len(reasons)) + (0.15 * rho))
+            # Índice determinístico de severidade heurística (0.0 a 1.0) baseado na concordância de regras
+            # NOTA: Não é probabilidade bayesiana nem alegação estatística fechada
+            rules_count = len(reasons)
+            severity = min(0.99, round(0.65 + (0.10 * rules_count) + (0.15 * rho), 2))
+
             return ArkheDetectionResult(
                 triggered=True,
                 timestamp=now,
                 trigger_reason=" | ".join(reasons),
                 vector=vector,
                 predicted_time_to_collapse_sec=round(ttc, 1) if ttc else None,
-                confidence_score=round(confidence, 2)
+                confidence_score=severity,
+                rules_violated_count=rules_count,
+                heuristic_severity_score=severity
             )
 
         return ArkheDetectionResult(
@@ -113,5 +123,7 @@ class ArkheTrajectoryEngine:
             trigger_reason=None,
             vector=vector,
             predicted_time_to_collapse_sec=None,
-            confidence_score=0.0
+            confidence_score=0.0,
+            rules_violated_count=0,
+            heuristic_severity_score=0.0
         )

@@ -1,0 +1,88 @@
+name: ARKHÉ Resilience Gate (Lyapunov Stability CI/CD)
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+concurrency:
+  group: resilience-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lyapunov-resilience-gate:
+    name: Lyapunov Stability & Closed-Loop Resilience Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Full Unit & Operator Test Suite
+        run: |
+          python -m unittest discover tests -v
+
+      - name: Start ARKHÉ Background Server
+        run: |
+          python -m uvicorn app:app --host 127.0.0.1 --port 8080 --no-access-log &
+          echo "SERVER_PID=$!" >> $GITHUB_ENV
+          
+          # Aguarda inicialização do servidor
+          for i in {1..20}; do
+            if curl -s http://127.0.0.1:8080/telemetry/live > /dev/null; then
+              echo "✓ Servidor ARKHÉ online e saudável!"
+              break
+            fi
+            echo "Aguardando servidor subir (tentativa $i)..."
+            sleep 1
+          done
+
+      - name: Start Continuous Synthetic Load Generator (120 TPS)
+        run: |
+          export TARGET_URL="http://127.0.0.1:8080/v1/charge"
+          export TARGET_TPS="120.0"
+          python load_gen.py &
+          echo "LOADGEN_PID=$!" >> $GITHUB_ENV
+          sleep 2
+
+      - name: Execute ARKHÉ Resilience Gate
+        run: |
+          python ci/resilience_gate.py \
+            --base-http "http://127.0.0.1:8080" \
+            --base-ws "ws://127.0.0.1:8080/ws/telemetry" \
+            --max-rho 0.50 \
+            --max-wq-ws 0.25 \
+            --max-p95-ms 1500.0 \
+            --frames 100 \
+            --output-markdown "$GITHUB_STEP_SUMMARY" \
+            --output-json "resilience_gate_report.json"
+
+      - name: Upload Resilience Gate Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arkhe-resilience-gate-report
+          path: |
+            resilience_gate_report.json
+            resilience_gate_summary.md
+          retention-days: 14
+
+      - name: Cleanup Background Processes
+        if: always()
+        run: |
+          kill -9 $SERVER_PID 2>/dev/null || true
+          kill -9 $LOADGEN_PID 2>/dev/null || true

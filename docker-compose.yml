@@ -39,6 +39,7 @@ services:
         condition: service_healthy
     environment:
       - TARGET_URL=http://card-auth-lab:8080/v1/charge
+      - CONFIG_URL=http://card-auth-lab:8080/admin/load/config
       - TARGET_TPS=80
       - PYTHONUNBUFFERED=1
     restart: unless-stopped

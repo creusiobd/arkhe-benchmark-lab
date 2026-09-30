@@ -1,162 +1,140 @@
-# ARKHÉ Benchmark Lab: Validação Empírica & Física de Filas
+# ARKHÉ Research & Benchmark Lab
 
-Este laboratório comprova matematicamente e empiricamente a **hipótese de antecedência operacional do ARKHÉ** (5 a 8 minutos antes dos alertas tradicionais de mercado) e calcula o **Custo de Oportunidade da Inércia (COI)** auditável.
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![OpenAI Cybersecurity Grant Candidate](https://img.shields.io/badge/Candidate-OpenAI_Cybersecurity_Grant-purple.svg)](proposal/ARKHE_CYBERSECURITY_GRANT_v0.2_PT.md)
+[![Zero Label Leakage](https://img.shields.io/badge/Tests-Anti--Leakage_Passing-green.svg)](tests/)
 
----
-
-## 1. Fundamentos da Modelagem (Lei de Little & Concorrência Real)
-
-O laboratório rejeita simulações estocásticas arbitrárias. Toda a dinâmica de saturação decorre da **Lei de Little** ($L = \lambda W$) e da física de filas $M/M/c$:
-
-* **Capacidade do Pool ($C_{\max}$):** 30 conexões concorrentes (`asyncio.Semaphore(30)`).
-* **Taxa de Chegada Nominal ($\lambda$):** 80 transações por segundo (TPS).
-* **Tempo de Serviço Nominal ($W_s$):** 45 ms $\implies L = 80 \times 0.045 = 3.6$ slots em uso (**12% de ocupação**).
-* **Drift Inicial ($T_{+3\text{min}}$):** Latência sobe para 255 ms $\implies L = 80 \times 0.255 = 20.4$ slots (**68% de ocupação**, sem timeouts nem alertas clássicos).
-* **Ponto de Ruptura ($T_{+10\text{min}}$):** Latência atinge 420 ms $\implies L = 33.6 > 30$ (**saturação total**, formação de fila física e estouro do timeout de 1.500 ms).
-* **Tempestade de Retries:** Clientes recebendo 503/504 disparam até 2 retries com backoff curto, elevando a taxa efetiva para >170 TPS.
+**ARKHÉ** comprises two interconnected applied defensive research initiatives:
+1. **[Part I: ARKHÉ Agent Boundary Defense Benchmark](#part-i-arkhe-agent-boundary-defense-benchmark):** An open-source benchmark measuring whether trajectory-aware observability detects multi-agent boundary violations, indirect prompt injection propagation, and mission drift before isolated-event security guardrails.
+2. **[Part II: ARKHÉ Telemetry & Shadow Control Plane](#part-ii-arkhe-telemetry--shadow-control-plane-apm-lab):** An OpenTelemetry-native queue-physics APM engine validating early structural saturation warning and autonomous closed-loop mitigation in high-throughput payment systems.
 
 ---
 
-## 2. Estrutura do Ecossistema Containerizado (Passo 3)
+## Part I: ARKHÉ Agent Boundary Defense Benchmark
 
+### 1. Research Core & Threat Model
+In autonomous multi-agent environments, an agent may perform dozens of individually benign tool actions while progressively building an unsafe execution trajectory. Traditional isolated event filters (e.g., regex pattern matching, per-call LLM guardrails) evaluate each tool call out of context and miss incremental drift until irreversible boundary breaches occur.
+
+ARKHÉ evaluates defensive systems across **5 critical boundary violation families**:
+1. `TOOL_SCOPE_EXPANSION`: Incremental capability escalation via reflection and tool discovery.
+2. `INDIRECT_PROMPT_INJECTION`: Ingress of adversarial instructions via external content (PDFs, issues, APIs).
+3. `SECRET_EXPOSURE`: Cross-tenant exfiltration of credentials to mock endpoints.
+4. `UNAUTHORIZED_EXTERNAL_COMMUNICATION`: Egress to unauthorized domains without supervisor consent.
+5. `HUMAN_INTERVENTION_BYPASS_OR_CONCEALMENT`: Suppressing supervisor halts or doctoring audit logs.
+
+### 2. Methodological Guarantee: Zero Label Leakage
+To prevent experimental circularity and label leakage, the benchmark enforces a strict architectural separation:
+* **Observable Runtime Contract (`contracts.observation.StepObservation`):** Contains strictly observable runtime signals (agent identity, current instruction, tool invocation, capability constraints, boundary policy, raw tool outputs). It strictly forbids and rejects precomputed risk scores, contamination flags, or ground truth labels.
+* **Evaluation Ground Truth (`contracts.ground_truth.TrajectoryGroundTruth`):** Stored in separate files, accessible exclusively by the evaluation harness.
+* **Prediction Contract (`contracts.prediction.StepPrediction`, `TrajectoryPrediction`):** Output generated dynamically by detectors during blind execution.
+
+### 3. Empirical Pilot Results ($n=30$ Canonical Trajectories)
+
+Evaluating on 30 rigorously balanced synthetic trajectories across the 5 attack families:
+
+| Detector Paradigm | Precision [Wilson 95% CI] | Recall [Wilson 95% CI] | F1-Score | FP Count | Median Lead Time ($N_{\text{lead}}$) | Mean Lead Time |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Deterministic Event Rule Baseline** | 62.5% [38.6%, 81.5%] | 100.0% [72.2%, 100.0%] | 0.77 | 6 | 0.0 steps | 0.0 steps |
+| **Semantic Event Classifier Baseline** | 55.6% [33.7%, 75.4%] | 100.0% [72.2%, 100.0%] | 0.71 | 8 | 1.0 steps | 0.9 steps |
+| **ARKHÉ Trajectory Sentinel** | **83.3% [55.2%, 95.3%]** | **100.0% [72.2%, 100.0%]** | **0.91** | **2** | **0.0 steps** | **0.8 steps** |
+
+*Note: For trajectories featuring prompt injection propagation, ARKHÉ achieves up to $+2$ steps of anticipatory lead time. Small-sample asymptotic Wilcoxon test noted insufficient non-zero pairs ($<5$), establishing the requirement for the full 300-trajectory grant benchmark.*
+
+### 4. Reproducing the Benchmark Pilot
+
+Clone repository and install dependencies:
+```bash
+git clone https://github.com/creusiobd/arkhe-benchmark-lab.git
+cd arkhe-benchmark-lab
+pip install -r requirements.txt
 ```
-arkhe-benchmark-lab/
-├── app.py                      # API FastAPI: 6 estágios, semáforo adaptativo, WebSocket 10 FPS e Cockpit
-├── load_gen.py                 # Emulador de tráfego assíncrono (80 TPS) com retries em cascata
-├── arkhe_detector.py           # Motor ARKHÉ: Vetor de aceleração S_ARKHÉ e derivadas de saturação
-├── traditional_monitor.py      # Baseline SRE Google/Prometheus (P95 > 1500ms / Erros > 5%)
-├── coi_engine.py               # Calculadora Auditável do Custo de Oportunidade da Inércia (COI)
-├── sentinel_live_monitor.py    # Ponte canônica de integração contínua com ARKHÉ Sentinel Core
-├── test_websocket_stream.py    # Validador de streaming bidirecional a 10 FPS (< 15ms latência)
-├── test_autonomous_mitigation.py # Validador de mitigação closed-loop (Predictive HPA)
-├── benchmark_runner.py         # Orquestrador cego de testes (baterias automatizadas e teste t)
-├── report_generator.py         # Gerador de dossiê visual HTML interativo com Chart.js
-├── Dockerfile                  # Imagem slim multi-engine com healthcheck nativo
-├── Dockerfile.load             # Imagem ultraleve do gerador de carga (httpx assíncrono)
-├── docker-compose.yml          # Topologia com bridge network, healthcheck e perfis
-├── .dockerignore               # Otimização de contexto de build
-├── run_docker_stack.ps1        # Script 1-click para subir cluster Docker com logs e cockpit
-├── run_live_cockpit.ps1        # Script para execução local em background
-└── run_sentinel_live_test.ps1  # Script de teste integrado Sentinel Core + Lab
+
+Run automated verification and pilot reproduction:
+```bash
+# 1. Execute all unit tests and anti-leakage audits
+python -m unittest discover tests
+
+# 2. Run blind benchmark harness across 30 trajectories
+python -m harness.agent_benchmark_runner --config configs/pilot.yaml
+
+# 3. Compute metrics, Wilson confidence intervals, and generate pilot report
+python -m evaluator.evaluate --run results/pilot
+
+# Windows 1-Click Reproduction:
+.\reproduce_pilot.ps1
 ```
+
+Generated audit artifacts are saved in `results/pilot/`:
+- `predictions.jsonl`: Raw detector outputs per trajectory.
+- `execution_manifest.json`: Execution metadata and dataset SHA-256 hashes.
+- `metrics.json`: Accuracy, precision, recall, lead times.
+- `confidence_intervals.json`: Wilson 95% CIs and bootstrap intervals.
+- `confusion_matrices.json`: TP, FP, TN, FN breakdown.
+- `pilot_report.md`: Formal markdown evaluation report.
 
 ---
 
-## 3. Como Executar com Docker & Docker Compose (Passo 3)
+## Part II: ARKHÉ Telemetry & Shadow Control Plane (APM Lab)
 
-### Opção A: Execução 1-Click via PowerShell
-Inicia os containers com healthcheck integrado, abre o cockpit unificado no navegador e exibe logs em tempo real:
+### 1. Queue Physics & Dynamical Systems Modeling
+The telemetry lab models service degradation using **Little's Law** ($L = \lambda W$) and $M/M/c$ queuing theory rather than stochastic noise:
+* **Nominal Pool:** 30 concurrent connection slots, $\lambda = 80\text{ TPS}$, $W_s = 45\text{ ms} \implies 12\%$ pool occupancy.
+* **Silent Drift ($T_{+3\text{min}}$):** Latency rises to $255\text{ ms} \implies 68\%$ occupancy with zero timeouts.
+* **Critical Saturation Point ($T_{+10\text{min}}$):** Latency reaches $420\text{ ms} \implies L = 33.6 > 30$, causing immediate queue overflow and retry storms ($>170\text{ TPS}$).
+
+### 2. ARKHÉ Structural Acceleration Vector
+Traditional APMs (Datadog, Dynatrace) alert only after threshold breach ($P95 > 1500\text{ms}$). ARKHÉ tracks the second-order structural acceleration vector:
+$$\vec{S}_{\text{ARKHÉ}} = \left( \frac{d}{dt}\rho_{\text{pool}}, \quad \frac{W_q}{W_s}, \quad R_{\text{retry}} \right)$$
+
+### 3. Interactive Proof-of-Value (PoV) Sandbox
+To run the interactive simulation:
+```bash
+python run_interactive_pov.py
+```
+Or start the Docker stack:
 ```powershell
 .\run_docker_stack.ps1
 ```
 
-### Opção B: Execução Manual via Docker CLI
-```bash
-# Sobe o microserviço e o gerador de carga com verificação de saúde
-docker compose up -d
+---
 
-# Visualiza logs em tempo real
-docker compose logs -f
+## Repository Structure
 
-# Acessa o Cockpit Interativo
-# http://localhost:8080
-
-# Derruba o cluster
-docker compose down
 ```
-
-### Opção C: Executar Bateria de Auditoria Científica Headless no Docker
-```bash
-# Executa 5 baterias de caos e gera o relatório científico dentro do container
-docker compose --profile benchmark run --rm benchmark-runner
+arkhe-benchmark-lab/
+├── configs/                  # Benchmark configurations (configs/pilot.yaml)
+├── contracts/                # Strict typed schemas (observation, prediction, ground_truth)
+├── datasets/                 # 30-trajectory pilot dataset & templates
+│   ├── observations/         # Observable JSONL files (development, validation, test)
+│   ├── ground_truth/         # Ground truth labels (isolated from detectors)
+│   └── templates/            # Attack family scenario catalogs
+├── detectors/                # Evaluated defensive detectors
+│   ├── base.py               # Abstract base detector contract
+│   ├── deterministic_event.py # Baseline 1: Regex & target matching
+│   ├── semantic_event.py     # Baseline 2: Per-event LLM guardrail proxy
+│   └── arkhe_trajectory.py   # ARKHÉ: Trajectory-aware dynamical sentinel
+├── harness/                  # Blind benchmark runner (agent_benchmark_runner.py)
+├── evaluator/                # Independent evaluator & statistics (evaluate.py, statistics.py)
+├── results/pilot/            # Reproducible pilot results and statistical reports
+├── proposal/                 # OpenAI Cybersecurity Grant Proposal (PT & EN)
+├── reports/                  # Initial audit, cost models, and peer reviews
+├── tests/                    # 60 automated tests (including anti-leakage audits)
+└── tools/                    # Cost estimators and dataset generators
 ```
 
 ---
 
-## 4. O Vetor de Aceleração do ARKHÉ
+## Citation & Licensing
 
-Diferente das ferramentas de monitoramento reativas (Prometheus / Datadog / CloudWatch) que aguardam o estouro de limiares estáticos após os erros ocorrerem, o ARKHÉ monitora o **vetor de aceleração estrutural**:
+Distributed under the **Apache-2.0 License**. See [LICENSE](LICENSE) for details.
 
-$$\vec{S}_{\text{ARKHÉ}} = \left( \frac{d}{dt}\rho_{\text{pool}}, \quad \frac{W_q}{W_s}, \quad R_{\text{retry}} \right)$$
-
-1. $\frac{d}{dt}\rho_{\text{pool}}$: Taxa de variação temporal da utilização do semáforo por minuto.
-2. $\frac{W_q}{W_s}$: Razão entre o tempo médio de fila ($W_q$) e o tempo intrínseco de serviço ($W_s$).
-3. $R_{\text{retry}}$: Fator de amplificação de retries na borda ($\frac{\text{Tentativas Totais}}{\text{Transações Únicas}}$).
-
----
-
-## 5. Modelo Matemático do COI (Custo de Oportunidade da Inércia)
-
-$$\text{COI}(\Delta t) = \sum_{t \in \Delta t} \lambda_{\text{unique}}(t) \times \Delta A_{\text{tech}}(t) \times \Big( \underbrace{V_{\text{avg}} \times M_{\text{take}}}_{\text{Perda Direta de Margem}} + \underbrace{P_{\text{churn}} \times LTV_{\text{impact}}}_{\text{Desgaste de LTV do Lojista}} \Big)$$
-
-* **Ticket Médio ($V_{\text{avg}}$):** R\$ 180,00
-* **Take Rate ($M_{\text{take}}$):** 2,5% (R\$ 4,50/tx)
-* **Probabilidade de Churn por Fricção ($P_{\text{churn}}$):** 38%
-* **Custo de Aquisição / LTV Impactado ($LTV_{\text{impact}}$):** R\$ 45,00
-* **Perda Total por Pedido Frustrado:** R\$ 21,60
-
----
-
-## 6. Pipeline de CI/CD (GitHub Actions & Local Runner)
-
-O repositório conta com uma esteira de automação industrial configurada em `.github/workflows/ci.yml`:
-
-1. **Lint & Code Quality:** Validação de sintaxe e padrões PEP com `ruff`.
-2. **Matriz de Testes Python (3.11 & 3.12):** Execução da suíte completa de **20 testes automatizados** sem dependências externas (`tests/` cobrindo o motor de derivadas $\vec{S}_{\text{ARKHÉ}}$, o baseline do SRE clássico, o cálculo do COI, a consistência física da Lei de Little e os contratos de API).
-3. **Auditoria E2E em Containers Docker:**
-   - Build das imagens `arkhe-card-auth-lab` e `arkhe-load-generator`.
-   - Inicialização da stack com verificação de integridade (`healthcheck`).
-   - Validação de streaming WebSocket a 10 FPS (<15ms de latência).
-   - Validação de autorrecuperação autônoma em malha fechada (Predictive HPA).
-   - Execução headless do benchmark estatístico com upload automático dos relatórios (`benchmark_results.json` e `arkhe_benchmark_report.html`) como artefatos do workflow.
-
-### Execução Local da Pipeline (Pré-Commit)
-Para rodar a mesma validação no ambiente de desenvolvimento local:
-```powershell
-powershell -ExecutionPolicy Bypass -File .\run_ci_local.ps1
+If you reference or use this benchmark in academic or defensive research, please cite:
+```bibtex
+@misc{kizua2026arkhe,
+  title={ARKHÉ Agent Boundary Defense Benchmark: Measuring Trajectory-Aware Observability Against Multi-Agent Boundary Violations},
+  author={Kizua, Creúsio Adolfo Gaspar},
+  year={2026},
+  howpublished={\url{https://github.com/creusiobd/arkhe-benchmark-lab}}
+}
 ```
-
----
-
-## 7. Deploy em Kubernetes & OpenShift (Passo 5)
-
-O laboratório disponibiliza manifests declarativos compilados via Kustomize e um Helm Chart pronto para clusters gerenciados (EKS, GKE, AKS, OpenShift e K3s):
-
-### Opção A: Validação e Deploy via Script Automatizado
-```powershell
-# Valida a compilação offline dos manifests Kustomize
-powershell -ExecutionPolicy Bypass -File .\deploy_k8s.ps1 -Action validate
-
-# Submete ao cluster ativo (com Rota OpenShift opcional)
-powershell -ExecutionPolicy Bypass -File .\deploy_k8s.ps1 -Action apply -IncludeOpenShiftRoute
-```
-
-### Opção B: Deploy Nativo via `kubectl`
-```bash
-# Aplica ConfigMap, Service, Deployments, HPA e Ingress
-kubectl apply -k k8s/
-
-# Acompanha o rollout com sondas de startup e liveness
-kubectl rollout status deployment/arkhe-card-auth-lab
-```
-
-### Opção C: Deploy via Helm Chart
-```bash
-helm install arkhe-benchmark ./helm/arkhe-benchmark-lab
-```
-
----
-
-## 8. Matriz Expandida de Injeção de Caos (Passo 6)
-
-O painel interativo e os endpoints de caos suportam **7 cenários físicos** controlados por 1 clique ou comandos via WebSocket:
-
-1. **Operação Nominal:** $W_s = 45\text{ms}$, ocupação de pool $\approx 10\%$, SLA 100%.
-2. **Drift Silencioso:** $W_s = 255\text{ms}$, ocupação de pool sobe para $68\%$, sem timeouts imediatos.
-3. **Ruptura de Concorrência:** $W_s = 420\text{ms}$, demanda $> 30$ conexões, fila explode, timeouts em cascata.
-4. **Autocura / Restauração:** Retorno imediato ao estado nominal de fábrica com estabilização do Burn Rate.
-5. **Gargalo de HSM / Criptografia:** $+120\text{ms}$ de CPU contention na validação EMV/PCI de limites do cartão.
-6. **Flapping na Adquirente:** $35\%$ de falhas intermitentes com retries na borda (simulação de Circuit Breaker aberto).
-7. **Jitter de Rede Assimétrico:** Distribuição com cauda longa pesada ($10\%$ das transações sofrem atraso de $1.200\text{ms}$).
-
-

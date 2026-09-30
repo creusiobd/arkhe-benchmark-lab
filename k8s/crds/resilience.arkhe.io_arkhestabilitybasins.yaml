@@ -1,0 +1,210 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: arkhestabilitybasins.resilience.arkhe.io
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+    description: "ARKHÉ Stability Basin: Define e governa limites cibernéticos de Lyapunov e Little's Law para workloads críticos."
+spec:
+  group: resilience.arkhe.io
+  names:
+    kind: ArkheStabilityBasin
+    listKind: ArkheStabilityBasinList
+    plural: arkhestabilitybasins
+    singular: arkhestabilitybasin
+    shortNames:
+      - asb
+      - basin
+      - arkhebasin
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+        scale:
+          specReplicasPath: .spec.mitigation.predictiveHpa.maxReplicas
+          statusReplicasPath: .status.currentReplicas
+      additionalPrinterColumns:
+        - name: Workload
+          type: string
+          description: "Target Workload Name"
+          jsonPath: .spec.workloadRef.name
+        - name: Status
+          type: string
+          description: "Basin Stability Status"
+          jsonPath: .status.phase
+        - name: Rho Limit
+          type: number
+          description: "Max Rho Basin Bound"
+          jsonPath: .spec.stabilityConstraints.maxRhoBasin
+        - name: Current Rho
+          type: number
+          description: "Observed Pool Utilization Rho"
+          jsonPath: .status.currentRho
+        - name: TTC
+          type: string
+          description: "Predicted Time-To-Collapse"
+          jsonPath: .status.timeToCollapse
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: "ArkheStabilityBasin é a especificação declarativa de resiliência cibernética autônoma para Kubernetes."
+          required:
+            - spec
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              required:
+                - workloadRef
+                - stabilityConstraints
+                - mitigation
+              properties:
+                workloadRef:
+                  type: object
+                  description: "Referência ao workload K8s protegido pelo ARKHÉ."
+                  required:
+                    - kind
+                    - name
+                  properties:
+                    kind:
+                      type: string
+                      enum: [Deployment, StatefulSet, Rollout]
+                      default: Deployment
+                    name:
+                      type: string
+                    apiVersion:
+                      type: string
+                      default: apps/v1
+                stabilityConstraints:
+                  type: object
+                  description: "Restrições matemáticas da Bacia de Estabilidade de Lyapunov."
+                  required:
+                    - maxRhoBasin
+                    - maxQueueWaitRatio
+                  properties:
+                    targetThroughputTps:
+                      type: number
+                      default: 120.0
+                      description: "Throughput nominal esperado em transações por segundo (TPS)."
+                    maxRhoBasin:
+                      type: number
+                      minimum: 0.1
+                      maximum: 0.95
+                      default: 0.50
+                      description: "Ocupação máxima de recursos (rho) antes do rompimento da Bacia de Lyapunov."
+                    maxQueueWaitRatio:
+                      type: number
+                      minimum: 0.01
+                      maximum: 2.0
+                      default: 0.25
+                      description: "Razão limite entre tempo de espera na fila e tempo de serviço (W_q / W_s)."
+                    criticalTimeToCollapseSeconds:
+                      type: integer
+                      minimum: 1
+                      maximum: 300
+                      default: 30
+                      description: "Limiar de TTC em segundos para disparar auto-mitigação preventiva."
+                    samplingFrequencyHz:
+                      type: integer
+                      default: 20
+                      description: "Frequência de amostragem telemétrica (em Hz/FPS)."
+                mitigation:
+                  type: object
+                  description: "Políticas de remediação autônoma em Malha Fechada (Closed-Loop)."
+                  required:
+                    - predictiveHpa
+                  properties:
+                    predictiveHpa:
+                      type: object
+                      required:
+                        - enabled
+                        - maxReplicas
+                      properties:
+                        enabled:
+                          type: boolean
+                          default: true
+                        minReplicas:
+                          type: integer
+                          default: 2
+                        maxReplicas:
+                          type: integer
+                          default: 60
+                        scaleMultiplier:
+                          type: number
+                          default: 2.0
+                          description: "Fator multiplicador elástico de réplicas ao detectar colapso."
+                        cooldownSeconds:
+                          type: integer
+                          default: 120
+                    fastPathBypass:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                          default: true
+                        trafficBypassRatio:
+                          type: number
+                          minimum: 0.1
+                          maximum: 0.9
+                          default: 0.70
+                          description: "Percentual de tráfego de baixo risco roteado para cache analítico L2."
+                        targetCacheService:
+                          type: string
+                          default: "redis-l2-cache"
+                    circuitBreaker:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                          default: false
+                        shedNonEssentialTraffic:
+                          type: boolean
+                          default: true
+                telemetrySource:
+                  type: object
+                  description: "Configuração do canal de telemetria em alta resolução."
+                  properties:
+                    endpointUri:
+                      type: string
+                      default: "ws://127.0.0.1:8080/ws/telemetry"
+                    protocol:
+                      type: string
+                      enum: [websocket, otel_grpc, arrow_flight]
+                      default: websocket
+            status:
+              type: object
+              description: "Estado em tempo real da Bacia de Estabilidade observado pelo Controller."
+              properties:
+                phase:
+                  type: string
+                  enum: [LaminarHealthy, DriftWarning, CriticalBreach, Mitigated, Recovering]
+                  default: LaminarHealthy
+                currentRho:
+                  type: number
+                currentWqWsRatio:
+                  type: number
+                dRhoDtPerMin:
+                  type: number
+                timeToCollapse:
+                  type: string
+                currentReplicas:
+                  type: integer
+                activeMitigations:
+                  type: array
+                  items:
+                    type: string
+                lastActuationTimestamp:
+                  type: string
+                observedGeneration:
+                  type: integer

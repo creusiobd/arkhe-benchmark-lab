@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARKHÉ — Executive Pitch Deck (Apresentação Interativa)</title>
+    <style>
+        :root {
+            --bg-main: #070a11;
+            --bg-card: rgba(18, 26, 43, 0.75);
+            --border-card: rgba(56, 189, 248, 0.2);
+            --accent-cyan: #38bdf8;
+            --accent-purple: #a855f7;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-yellow: #f59e0b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-light);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+
+        /* Top Progress & Navigation Bar */
+        .top-nav {
+            height: 54px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+        }
+
+        .brand {
+            font-weight: 800;
+            font-size: 1.15rem;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .slide-counter {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-light);
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .progress-bar-container {
+            height: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            width: 100%;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+            width: 8.33%;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Slide Viewport */
+        .presentation-deck {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 2rem;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.97) translateY(15px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1) translateY(0);
+        }
+
+        /* Typography & Components */
+        .badge-pill {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 0.2rem 0.65rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.75rem;
+            width: fit-content;
+        }
+
+        .slide-title {
+            font-size: 2.25rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .slide-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin-top: 1rem;
+        }
+
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .glass-card h4 {
+            font-size: 1.1rem;
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .glass-card p {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+
+        .stat-huge {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1;
+            color: var(--accent-green);
+        }
+
+        /* Slide specific styles */
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 10px;
+            overflow: hidden;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+        }
+
+        .table-custom th, .table-custom td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .table-custom th {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Interactive Lyapunov Canvas */
+        .orbit-container {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .canvas-box {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            background: #050811;
+            border: 1px solid var(--border-card);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Presenter Notes Drawer */
+        .notes-drawer {
+            position: fixed;
+            bottom: 50px;
+            left: 2rem;
+            right: 2rem;
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            font-size: 0.85rem;
+            color: #e5e7eb;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 1000;
+        }
+
+        .notes-drawer.open {
+            display: block;
+        }
+
+        /* Bottom Controls Bar */
+        .bottom-bar {
+            height: 48px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            background: rgba(11, 15, 25, 0.85);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .keys-hint {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        kbd {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-family: monospace;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation -->
+    <div class="top-nav">
+        <div class="brand">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="4"></circle>
+                <line x1="4.93" y1="4.93" x2="9.17" y2="9.17"></line>
+                <line x1="14.83" y1="14.83" x2="19.07" y2="19.07"></line>
+                <line x1="14.83" y1="9.17" x2="19.07" y2="4.93"></line>
+                <line x1="4.93" y1="19.07" x2="9.17" y2="14.83"></line>
+            </svg>
+            ARKHÉ EXECUTIVE PITCH DECK
+        </div>
+        <div class="slide-counter" id="slideCounter">Slide 01 / 12</div>
+        <div class="nav-actions">
+            <button class="btn" onclick="toggleNotes()">📝 Notas (N)</button>
+            <button class="btn" onclick="prevSlide()">◀ Anterior</button>
+            <button class="btn" onclick="nextSlide()" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">Próximo ▶</button>
+            <button class="btn" onclick="toggleFullscreen()">⛶ Fullscreen (F)</button>
+        </div>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- Main Slide Viewport -->
+    <main class="presentation-deck">
+
+        <!-- Slide 1: Capa -->
+        <section class="slide active" data-notes="Inicie a apresentação destacando que o ARKHÉ não é 'mais um dashboard', mas uma camada ativa de controle cibernético para mission-critical.">
+            <div class="badge-pill">Autonomous Cybernetic Resilience</div>
+            <h1 class="slide-title" style="font-size: 3.5rem; background: linear-gradient(135deg, #38bdf8, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                ARKHÉ
+            </h1>
+            <p class="slide-subtitle" style="font-size: 1.35rem; color: #e2e8f0; max-width: 800px;">
+                Resiliência Cibernética Autônoma para Infraestruturas Financeiras de Missão Crítica
+            </p>
+            <div style="margin: 1.5rem 0; padding: 1rem 1.25rem; border-left: 4px solid var(--accent-cyan); background: rgba(56, 189, 248, 0.08); border-radius: 0 8px 8px 0; max-width: 750px;">
+                <p style="font-style: italic; font-size: 1.05rem; color: #f1f5f9;">
+                    "Sistemas de observabilidade tradicionais dizem por que seu sistema caiu.<br>
+                    <strong>O ARKHÉ impede que ele caia.</strong>"
+                </p>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 2rem; margin-top: 1rem;">
+                <div><strong>Apresentador:</strong> Engenharia & Arquitetura ARKHÉ</div>
+                <div><strong>Público:</strong> C-Level, Investidores & Comitê Técnico</div>
+                <div><strong>Segmento:</strong> Fintechs, Adquirentes, Core Banking, PIX</div>
+            </div>
+        </section>
+
+        <!-- Slide 2: A Dor Bilionária -->
+        <section class="slide" data-notes="Destaque que no PIX ou autorização de cartão, uma falha de 3 segundos faz o cliente trocar de aplicativo ou ir direto para o concorrente.">
+            <div class="badge-pill" style="border-color: var(--accent-red); color: var(--accent-red); background: rgba(239, 68, 68, 0.1);">O Problema de Mercado</div>
+            <h2 class="slide-title">A Dor Bilionária da Indisponibilidade</h2>
+            <p class="slide-subtitle">Quedas em sistemas de pagamentos custam fortunas por minuto e geram sanções do Banco Central</p>
+            <div class="card-grid">
+                <div class="glass-card" style="border-color: rgba(239, 68, 68, 0.3);">
+                    <div class="stat-huge" style="color: var(--accent-red);">R$ 50k - 500k</div>
+                    <h4>Custo por Minuto de Queda</h4>
+                    <p>Perda direta de receita para adquirentes e processadoras durante horários de pico (Black Friday, liquidações).</p>
+                </div>
+                <div class="glass-card" style="border-color: rgba(245, 158, 11, 0.3);">
+                    <div class="stat-huge" style="color: var(--accent-yellow);">99.9% SPI</div>
+                    <h4>Exigência Regulatória BACEN</h4>
+                    <p>Resolução 85/2021 exige P99 &lt; 1000ms. Infrações acarretam multas pesadas e suspensão de operação de PIX.</p>
+                </div>
+                <div class="glass-card" style="border-color: rgba(168, 85, 247, 0.3);">
+                    <div class="stat-huge" style="color: var(--accent-purple);">&gt; 1.5x Retries</div>
+                    <h4>Tempestade em Cascata</h4>
+                    <p>Lentidões transitórias disparam retries automáticos nos apps, multiplicando a carga e colapsando o backend.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: O Ponto Cego do APM Legado -->
+        <section class="slide" data-notes="Enfatize a metáfora: Datadog faz uma autópsia espetacular de como o servidor morreu, mas não aplica a massagem cardíaca para salvá-lo.">
+            <div class="badge-pill">A Falácia da Observabilidade Passiva</div>
+            <h2 class="slide-title">As Ferramentas Atuais São "Legistas Digitais"</h2>
+            <p class="slide-subtitle">Alertas tradicionais só disparam após o cliente final já ter sofrido a indisponibilidade</p>
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Atributo</th>
+                        <th>APMs Tradicionais (Datadog, Dynatrace, New Relic)</th>
+                        <th>Impacto no Negócio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Gatilho de Alerta</strong></td>
+                        <td>Taxa de Erro 5xx &gt; 1% ou CPU &gt; 80%</td>
+                        <td>Alerta toca quando o cliente <strong>já foi prejudicado</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Visão de Filas</strong></td>
+                        <td>Cega para saturações estocásticas assintóticas</td>
+                        <td>Fila infla silenciosamente na memória antes do crash</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tempo de Resposta</strong></td>
+                        <td>Humano: PagerDuty acorda engenheiro (15 a 25 min)</td>
+                        <td>Milhões em perdas consolidadas antes da primeira ação</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Abordagem</strong></td>
+                        <td>Passiva / Telemetria pós-morte</td>
+                        <td>Consumo irreversível do Error Budget</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Slide 4: A Solução ARKHÉ -->
+        <section class="slide" data-notes="Apresente o tripé arquitetural: Sensores ultra-rápidos, Kernel de Lyapunov e Atuador Closed-loop sub-50ms.">
+            <div class="badge-pill">A Tese Disruptiva</div>
+            <h2 class="slide-title">Do Monitoramento Passivo ao Controle Cibernético</h2>
+            <p class="slide-subtitle">Engenharia em malha fechada inspirada nos sistemas de voo aeroespaciais autônomos</p>
+            <div class="card-grid">
+                <div class="glass-card">
+                    <div style="font-size: 1.75rem;">📡</div>
+                    <h4>1. Sensores de Alta Frequência</h4>
+                    <p>Telemetria via eBPF e WebSockets a 20 FPS (50ms), capturando a física de filas antes dos logs se acumularem.</p>
+                </div>
+                <div class="glass-card">
+                    <div style="font-size: 1.75rem;">🧠</div>
+                    <h4>2. Kernel Cibernético</h4>
+                    <p>Espaço de Fase de Lyapunov e aproximação de Kingman que detectam desvios orbitais com antecedência matemática.</p>
+                </div>
+                <div class="glass-card">
+                    <div style="font-size: 1.75rem;">⚡</div>
+                    <h4>3. Atuador Closed-Loop</h4>
+                    <p>Dispara Predictive Scale-Out e Fast-Path Cache bypass em &lt; 50ms, restaurando o atrator estável sem humanos.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: O Kernel Matemático -->
+        <section class="slide" data-notes="Para investidores, use a analogia: 'Assim como a NASA calcula órbitas para evitar colisão antes que o satélite caia, nós calculamos a estabilidade de filas antes do timeout.'">
+            <div class="badge-pill">Rigor Científico</div>
+            <h2 class="slide-title">A Ciência por Trás do Diferencial</h2>
+            <p class="slide-subtitle">Fundamentação estocástica que substitui chutes e heurísticas frágeis</p>
+            <div class="card-grid">
+                <div class="glass-card">
+                    <h4>Lei de Little na Concorrência</h4>
+                    <div style="font-family: monospace; font-size: 1.1rem; color: var(--accent-cyan); margin: 0.5rem 0;">L = λ · W</div>
+                    <p>Quando a latência W cresce por contenção de banco, o número de conexões em uso L estoura o limite físico do pool.</p>
+                </div>
+                <div class="glass-card">
+                    <h4>Estabilidade de Lyapunov</h4>
+                    <div style="font-family: monospace; font-size: 1.1rem; color: var(--accent-purple); margin: 0.5rem 0;">V̇ = dV/dt &lt; 0</div>
+                    <p>O sistema é estável se a energia orbital diminui. Derivada positiva sinaliza colapso iminente antes de qualquer erro 504.</p>
+                </div>
+                <div class="glass-card">
+                    <h4>Assíntota de Kingman</h4>
+                    <div style="font-family: monospace; font-size: 1.1rem; color: var(--accent-green); margin: 0.5rem 0;">E[Wq] ∝ ρ / (1 - ρ)</div>
+                    <p>O tempo de espera explode de forma assintótica e não-linear conforme a ocupação ρ passa de 0.65.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Resultados Empíricos Homologados -->
+        <section class="slide" data-notes="Aponte para o 100% de SLI no Teste 3. Mesmo com 420ms de latência injetada, zero transações caíram.">
+            <div class="badge-pill">Evidência Experimental</div>
+            <h2 class="slide-title">Resultados Empíricos: Bateria de 120 TPS</h2>
+            <p class="slide-subtitle">Comprovação experimental em ambiente com concorrência e carga reais</p>
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Métrica Homologada</th>
+                        <th>Teste 1: Nominal</th>
+                        <th>Teste 2: Drift Silencioso</th>
+                        <th>Teste 3: Ruptura + Closed-Loop</th>
+                        <th>Teste 4: Forense / Replay</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Throughput / Carga</strong></td>
+                        <td>120 TPS contínuos</td>
+                        <td>120 TPS contínuos</td>
+                        <td>120 TPS contínuos</td>
+                        <td>120 TPS contínuos</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Latência Injetada</strong></td>
+                        <td>45 ms (Base)</td>
+                        <td>255 ms (Drift)</td>
+                        <td>420 ms (Ruptura)</td>
+                        <td>Multiestado Dinâmico</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ocupação do Pool (ρ)</strong></td>
+                        <td>8.4% (Seguro)</td>
+                        <td>53.3% (Pico 60%)</td>
+                        <td>3.3% (Drenado em ms)</td>
+                        <td>0% → 93% → 0%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Erros HTTP 503/504</strong></td>
+                        <td><strong style="color: var(--accent-green);">0</strong></td>
+                        <td><strong style="color: var(--accent-green);">0</strong></td>
+                        <td><strong style="color: var(--accent-green);">0 (ZERO FALHAS)</strong></td>
+                        <td><strong style="color: var(--accent-green);">0</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Disponibilidade (SLI)</strong></td>
+                        <td>100.00%</td>
+                        <td>100.00%</td>
+                        <td>100.00%</td>
+                        <td>100.00%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Alerta APM Legado</strong></td>
+                        <td>Silêncio</td>
+                        <td><span style="color: var(--accent-red); font-weight: 700;">0 Alertas (CEGO)</span></td>
+                        <td>Silêncio Operacional</td>
+                        <td>Silêncio Operacional</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Detecção ARKHÉ</strong></td>
+                        <td>Nominal (Score 4.9)</td>
+                        <td><strong style="color: var(--accent-cyan);">🚨 CRITICAL (+4.8s Lead)</strong></td>
+                        <td><strong style="color: var(--accent-purple);">🚨 Atuação Frame 26</strong></td>
+                        <td><strong style="color: var(--accent-green);">100% Bit-Exact</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Slide 7: Ponto Cego & Lead Time -->
+        <section class="slide" data-notes="Demonstre a antecedência: +4.8 segundos no tráfego digital é uma eternidade para acionar infraestrutura elástica.">
+            <div class="badge-pill">Vantagem Competitiva</div>
+            <h2 class="slide-title">A Prova do Lead Time (+4.8s de Antecedência)</h2>
+            <p class="slide-subtitle">O APM tradicional acusou normalidade enquanto o ARKHÉ Sentinel antecipou a falha</p>
+            <div class="card-grid">
+                <div class="glass-card" style="border-color: rgba(239, 68, 68, 0.4);">
+                    <h4 style="color: var(--accent-red);">😴 APM Tradicional (Datadog/Dynatrace)</h4>
+                    <ul style="font-size: 0.85rem; color: #cbd5e1; margin-left: 1.25rem; line-height: 1.8;">
+                        <li>P95 = 423ms &lt; 1500ms (Limiar OK)</li>
+                        <li>Taxa de Erro 5xx = 0.0%</li>
+                        <li><strong>Diagnóstico:</strong> Status Verde (Falso Seguro)</li>
+                        <li><strong>Ação:</strong> Zero alertas disparados</li>
+                    </ul>
+                </div>
+                <div class="glass-card" style="border-color: rgba(16, 185, 129, 0.4);">
+                    <h4 style="color: var(--accent-green);">🛡️ ARKHÉ Cybernetic Sentinel</h4>
+                    <ul style="font-size: 0.85rem; color: #cbd5e1; margin-left: 1.25rem; line-height: 1.8;">
+                        <li>Velocidade de Fase: dρ/dt = +14.91/min</li>
+                        <li>Rompimento de Bacia: ρ = 53.3% &gt; 50%</li>
+                        <li><strong>Alerta Preditivo no Frame 3</strong> (Score: 88.0 pts)</li>
+                        <li><strong>Lead Time Conquistado: +4.8 segundos</strong></li>
+                    </ul>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem; background: rgba(16, 185, 129, 0.08); border: 1px solid var(--accent-green); padding: 1rem; border-radius: 8px;">
+                <p style="font-size: 0.95rem; color: #f8fafc;">
+                    <strong>Conclusão Técnica:</strong> Em sistemas de alta vazão, 4.8 segundos permitem redimensionar pods ou rotas de cache antes que um único cliente final receba timeout de rede.
+                </p>
+            </div>
+        </section>
+
+        <!-- Slide 8: Auto-Cura Closed-Loop com Widget Interativo -->
+        <section class="slide" data-notes="Use os botões abaixo para interagir com a Bacia de Lyapunov ao vivo durante a apresentação!">
+            <div class="badge-pill">Simulação Interativa</div>
+            <h2 class="slide-title">Auto-Cura Closed-Loop & Espaço de Fase 2D</h2>
+            <p class="slide-subtitle">Veja a órbita no Espaço de Fase de Lyapunov retornar à bacia estável</p>
+            
+            <div class="orbit-container">
+                <div class="canvas-box">
+                    <canvas id="lyapunovCanvas" width="300" height="300"></canvas>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+                    <div class="glass-card">
+                        <h4>Ações de Mitigação Autônoma Despachadas</h4>
+                        <p><strong>1. Predictive Scale-Out:</strong> Pool expandido de 30 para 60 slots (2.0x)</p>
+                        <p><strong>2. Fast-Path Bypass:</strong> 70% das transações saudáveis roteadas para Cache L2 (12ms)</p>
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn" style="border-color: var(--accent-red); color: var(--accent-red);" onclick="triggerChaosDemo()">💥 Injetar Caos (Drift)</button>
+                        <button class="btn" style="border-color: var(--accent-green); color: var(--accent-green);" onclick="triggerMitigationDemo()">🛡️ Mitigar Closed-Loop</button>
+                        <button class="btn" onclick="resetAttractorDemo()">🔄 Reset Nominal</button>
+                    </div>
+                    <div id="simStatus" style="font-size: 0.85rem; color: var(--accent-green);">
+                        ● Estado: Atrator Confinado na Bacia Segura (ρ = 10%)
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 9: Flight Recorder & BACEN -->
+        <section class="slide" data-notes="Compliance regulatório é a chave de entrada para bancos e adquirentes. O ARKHÉ transforma incidentes em provas auditáveis.">
+            <div class="badge-pill">Compliance & Governança</div>
+            <h2 class="slide-title">Flight Recorder & Auditoria Forense Determinística</h2>
+            <p class="slide-subtitle">Reconstituição bit-a-bit de incidentes em conformidade com BACEN e PCI-DSS</p>
+            <div class="card-grid">
+                <div class="glass-card">
+                    <h4>BACEN Resolução 85/2021</h4>
+                    <p>Atende integralmente ao Artigo 4º, Inciso IV: detecção precoce de anomalias operacionais e rastreabilidade total de falhas cibernéticas.</p>
+                </div>
+                <div class="glass-card">
+                    <h4>PCI-DSS v4.0 (Requisito 10)</h4>
+                    <p>Trilhas de auditoria protegidas por hashes criptográficos imutáveis, impedindo adulteração de logs de transações sensíveis.</p>
+                </div>
+                <div class="glass-card">
+                    <h4>Time Machine Scrubber</h4>
+                    <p>Permite "voltar no tempo" a 20 FPS e exportar um bundle que reproduz o incidente em teste unitário local determinístico.</p>
+                </div>
+            </div>
+            <div style="margin-top: 1rem; padding: 0.85rem; background: #0b0f17; border: 1px dashed var(--border-card); border-radius: 8px; font-family: monospace; font-size: 0.75rem; color: var(--accent-cyan); word-break: break-all;">
+                SHA-256 AUDIT BUNDLE: eb801ee65d8dfa7b00fa616909b7221cdd6016201bb00068474bb99495259365 (100% BIT-EXACT)
+            </div>
+        </section>
+
+        <!-- Slide 10: Modelo de Negócio & TAM -->
+        <section class="slide" data-notes="Modelo Open-Core acelera a adoção bottom-up por engenheiros, enquanto o Enterprise gera ARR escalável por transações.">
+            <div class="badge-pill">Monetização & Mercado</div>
+            <h2 class="slide-title">Modelo de Negócio & TAM (US$ 8.5 Bilhões)</h2>
+            <p class="slide-subtitle">Estratégia Open-Core para tração rápida combinada com licenciamento Enterprise ARR</p>
+            <div class="card-grid">
+                <div class="glass-card">
+                    <h4 style="color: var(--accent-cyan);">1. Community Engine</h4>
+                    <p><strong>Open Source (Free)</strong></p>
+                    <p>SDKs locais, Cockpit Angular autônomo. Cria tração orgânica e "Developer Love" nos times de engenharia.</p>
+                </div>
+                <div class="glass-card">
+                    <h4 style="color: var(--accent-purple);">2. Enterprise Platform</h4>
+                    <p><strong>ARR por TPS / Nó K8s</strong></p>
+                    <p>K8s Operator multi-cluster, mitigação autônoma, Flight Recorder de 90 dias e suporte 24/7 de missão crítica.</p>
+                </div>
+                <div class="glass-card">
+                    <h4 style="color: var(--accent-green);">3. Resilience Assurance</h4>
+                    <p><strong>SLA Pack & FinOps</strong></p>
+                    <p>Garantia de zero timeouts 504 e coparticipação na economia de infraestrutura em nuvem (FinOps).</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 11: ROI Financeiro & Calculadora Interativa -->
+        <section class="slide" data-notes="Demonstre a economia real: o ARKHÉ se paga no primeiro incidente evitado, gerando mais de R$ 2 milhões por ano em valor.">
+            <div class="badge-pill">Retorno Sobre Investimento</div>
+            <h2 class="slide-title">ROI Econômico: &gt; R$ 2.000.000 / Ano</h2>
+            <p class="slide-subtitle">O ARKHÉ se paga integralmente no primeiro incidente de alta concorrência evitado</p>
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Dimensão de Valor</th>
+                        <th>Sem ARKHÉ (Abordagem Legada)</th>
+                        <th>Com ARKHÉ Cybernetic</th>
+                        <th>Economia Líquida / Ano</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Custo de Indisponibilidade</strong></td>
+                        <td>2 quedas/ano (R$ 1.7M perdidos)</td>
+                        <td><strong style="color: var(--accent-green);">Zero incidentes de queda</strong></td>
+                        <td><strong style="color: var(--accent-green);">+ R$ 1.700.000</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Multas BACEN / SPI</strong></td>
+                        <td>Risco de suspensão no PIX</td>
+                        <td>100% de cumprimento SLA</td>
+                        <td>Risco Mitigado</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Over-provisioning de Nuvem</strong></td>
+                        <td>+250% nós ociosos por medo</td>
+                        <td>35% de redução com HPA preditivo</td>
+                        <td><strong style="color: var(--accent-green);">+ R$ 360.000</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fadiga de On-Call / Churn SRE</strong></td>
+                        <td>Alertas noturnos / Burnout</td>
+                        <td>Autocura sem acordar o time</td>
+                        <td>Produtividade Máxima</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Slide 12: Roadmap & Chamado à Ação -->
+        <section class="slide" data-notes="Feche convidando os membros para rodar o 'python run_interactive_pov.py' ou visitar o Cockpit ao vivo em localhost:8080/ng/.">
+            <div class="badge-pill">Próximos Passos</div>
+            <h2 class="slide-title">Roadmap de Execução & Chamado à Ação</h2>
+            <p class="slide-subtitle">Do laboratório validado à liderança global de resiliência cibernética autônoma</p>
+            <div class="card-grid">
+                <div class="glass-card">
+                    <h4>Q4 2026: Design Partners</h4>
+                    <p>Implantação em modo "Shadow" em 3 instituições financeiras de vanguarda (banco digital, adquirente, gateway).</p>
+                </div>
+                <div class="glass-card">
+                    <h4>Q1 2027: K8s Operator GA</h4>
+                    <p>Lançamento do Helm Chart oficial e distribuição enterprise multi-nuvem (AWS EKS, GCP GKE, Azure AKS).</p>
+                </div>
+                <div class="glass-card">
+                    <h4>Q2 2027: Certificação Global</h4>
+                    <p>Módulo de certificação automática contínua para PIX, FedNow e open-banking internacional.</p>
+                </div>
+            </div>
+            
+            <div style="margin-top: 1.5rem; text-align: center; padding: 1.5rem; background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(168, 85, 247, 0.1)); border: 1px solid var(--accent-cyan); border-radius: 12px;">
+                <h3 style="font-size: 1.25rem; color: #fff; margin-bottom: 0.5rem;">Pronto para Blindar sua Operação?</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                    Execute o Sandbox de 15 minutos em sua máquina ou visite o Cockpit operacional ao vivo:
+                </p>
+                <div style="display: inline-flex; gap: 1rem;">
+                    <span style="background: #0b0f17; border: 1px solid var(--border-card); padding: 0.5rem 1rem; border-radius: 6px; font-family: monospace; color: var(--accent-cyan);">python run_interactive_pov.py</span>
+                    <a href="http://127.0.0.1:8080/ng/" target="_blank" class="btn" style="border-color: var(--accent-purple); color: var(--accent-purple); text-decoration: none;">Acessar Cockpit Web ↗</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Presenter Notes Drawer -->
+    <div class="notes-drawer" id="notesDrawer">
+        <strong style="color: var(--accent-cyan);">📝 NOTAS DO APRESENTADOR:</strong>
+        <p id="notesContent" style="margin-top: 0.5rem;"></p>
+    </div>
+
+    <!-- Bottom Controls & Hints -->
+    <footer class="bottom-bar">
+        <div class="keys-hint">
+            <span>Navegação: <kbd>◀</kbd> <kbd>▶</kbd> ou <kbd>Espaço</kbd></span>
+            <span>Tela Cheia: <kbd>F</kbd></span>
+            <span>Notas: <kbd>N</kbd></span>
+        </div>
+        <div>ARKHÉ Cybernetic Control Platform • Arquitetura de Alta Performance</div>
+    </footer>
+
+    <!-- Interactive Logic -->
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const progressBar = document.getElementById('progressBar');
+        const slideCounter = document.getElementById('slideCounter');
+        const notesDrawer = document.getElementById('notesDrawer');
+        const notesContent = document.getElementById('notesContent');
+
+        function updateSlide() {
+            slides.forEach((s, idx) => {
+                s.classList.toggle('active', idx === currentSlide);
+            });
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            progressBar.style.width = progress + '%';
+            slideCounter.textContent = `Slide ${String(currentSlide + 1).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+            
+            const note = slides[currentSlide].getAttribute('data-notes') || 'Sem notas adicionais.';
+            notesContent.textContent = note;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+        }
+
+        function toggleNotes() {
+            notesDrawer.classList.toggle('open');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                prevSlide();
+            } else if (e.key.toLowerCase() === 'f') {
+                toggleFullscreen();
+            } else if (e.key.toLowerCase() === 'n') {
+                toggleNotes();
+            }
+        });
+
+        // Interactive 2D Lyapunov Attractor Canvas Simulation
+        const canvas = document.getElementById('lyapunovCanvas');
+        const ctx = canvas.getContext('2d');
+        let angle = 0;
+        let radius = 35;
+        let targetRadius = 35;
+        let orbitColor = '#10b981';
+        let statusText = document.getElementById('simStatus');
+
+        function renderLyapunov() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+
+            // Safe Basin Boundary (Green dotted circle)
+            ctx.beginPath();
+            ctx.arc(cx, cy, 60, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 4]);
+            ctx.stroke();
+
+            // Critical Boundary (Red outer circle)
+            ctx.beginPath();
+            ctx.arc(cx, cy, 115, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([6, 6]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Smooth interpolation
+            radius += (targetRadius - radius) * 0.05;
+
+            // Current Attractor Point & Trail
+            angle += 0.05;
+            const x = cx + Math.cos(angle) * radius;
+            const y = cy + Math.sin(angle) * (radius * 0.85);
+
+            // Orbit line
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, radius, radius * 0.85, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = orbitColor;
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Glowing moving particle
+            ctx.beginPath();
+            ctx.arc(x, y, 6, 0, Math.PI * 2);
+            ctx.fillStyle = orbitColor;
+            ctx.shadowColor = orbitColor;
+            ctx.shadowBlur = 12;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            requestAnimationFrame(renderLyapunov);
+        }
+
+        function triggerChaosDemo() {
+            targetRadius = 110;
+            orbitColor = '#ef4444';
+            statusText.innerHTML = '<span style="color: #ef4444;">🚨 ALERTA: Derivada dV/dt &gt; 0! Órbita rompendo a Bacia de Estabilidade (ρ = 93%)</span>';
+        }
+
+        function triggerMitigationDemo() {
+            targetRadius = 40;
+            orbitColor = '#a855f7';
+            statusText.innerHTML = '<span style="color: #a855f7;">⚡ MITIGAÇÃO ATIVA: Predictive HPA + Fast-Path acionados! Reestabilizando atrator...</span>';
+            setTimeout(() => {
+                orbitColor = '#10b981';
+                statusText.innerHTML = '<span style="color: #10b981;">● ESTÁVEL: Atrator reconduzido ao centro de equilíbrio (ρ = 22%)</span>';
+            }, 1200);
+        }
+
+        function resetAttractorDemo() {
+            targetRadius = 35;
+            orbitColor = '#10b981';
+            statusText.innerHTML = '<span style="color: #10b981;">● Estado: Regime Nominal Estável (ρ = 10%)</span>';
+        }
+
+        // Initialize
+        updateSlide();
+        renderLyapunov();
+    </script>
+</body>
+</html>

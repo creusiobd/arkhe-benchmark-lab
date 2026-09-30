@@ -1,0 +1,26 @@
+apiVersion: resilience.arkhe.io/v1alpha1
+kind: ArkheMitigationRule
+metadata:
+  name: trigger-predictive-hpa-on-phase-acceleration
+  namespace: payments-prod
+  labels:
+    app.kubernetes.io/part-of: arkhe-resilience
+spec:
+  targetBasinRef:
+    name: core-payments-basin
+    namespace: payments-prod
+  trigger:
+    metric: sentinel_score
+    operator: Gte
+    threshold: 70.0
+    evaluationWindowSeconds: 1
+  action:
+    type: PredictiveScaleOut
+    parameters:
+      targetDeployment: payment-authorization-service
+      scaleMultiplier: 2.0
+      targetCapacity: 60
+      logReason: "Rompimento do atrator de Lyapunov detectado pelo Sentinel IA"
+  rollbackPolicy:
+    autoRecoverAfterSeconds: 120
+    stabilizationThreshold: 0.35
