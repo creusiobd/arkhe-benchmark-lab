@@ -30,15 +30,19 @@ Thank you for your interest in contributing to the ARKHÉ Agent Boundary Defense
 
 3. **Run Verification & Tests:**
    ```bash
-   python -m unittest discover tests
+   python -m unittest discover tests -v
    ```
 
-4. **Verify Pilot Reproduction:**
+4. **Verify Grant Candidate v0.3 Reproduction:**
    ```bash
-   python -m harness.agent_benchmark_runner --config configs/pilot.yaml
-   python -m evaluator.evaluate --run results/pilot
+   # On POSIX / Linux / macOS:
+   bash scripts/reproduce_grant_pilot.sh
+
+   # On Windows PowerShell:
+   powershell -ExecutionPolicy Bypass -File scripts/reproduce_grant_pilot.ps1
    ```
 
 5. **Submit a Pull Request:**
    - Explain the defensive contribution.
    - Include test logs and ensure all anti-leakage checks pass.
+   - Target the `feat/*` branch or open a draft PR against `main`. Do not push directly to `main`.

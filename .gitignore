@@ -5,6 +5,17 @@ __pycache__/
 *.so
 .Python
 
+# Node & Build artifacts
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+coverage/
+.angular/
+**/dashboard-angular/.angular/
+
 # Environments & Virtual Envs
 env/
 venv/

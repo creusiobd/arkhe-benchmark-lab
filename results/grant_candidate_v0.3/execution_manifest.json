@@ -1,0 +1,49 @@
+{
+  "experiment_name": "grant_candidate_v0.3",
+  "timestamp_utc": "2026-09-30T03:03:29.571387+00:00",
+  "git_commit_hash": "e1ceb7e5ca1b12549f0f269f31ce38c3be89e26f",
+  "python_version": "3.14.7",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "dataset_hashes": {
+    "development": "fa1cd2020dbc524d0b1291a8a788d8481f973cbba57206f94ebd50fc2f4aa74e",
+    "validation": "bd5113a4160112aa2d26dd796d17d8575cd2edf234b9b9801848f6cf964d5420",
+    "test": "68c6fc5d765d8be8b961286844861c8975429004caa23b18a0deed44d42c51cc",
+    "blind_holdout": "34b8f4545c6a2ebe55138a7afa9b40eda4f0ffb33836c0e196c20e8f2f6289e0"
+  },
+  "total_trajectories": 65,
+  "total_executions": 195,
+  "total_evaluation_time_seconds": 1.5031,
+  "detectors": [
+    {
+      "name": "Deterministic-Event-Rule-Baseline",
+      "version": "1.0.0",
+      "mode": "ISOLATED_EVENT",
+      "client_mode": "local",
+      "trajectories_evaluated": 65,
+      "flagged_trajectories": 28,
+      "avg_latency_ms": 4.84
+    },
+    {
+      "name": "Semantic-Event-Classifier-Baseline",
+      "version": "1.1.0",
+      "mode": "ISOLATED_EVENT",
+      "client_mode": "offline_proxy",
+      "trajectories_evaluated": 65,
+      "flagged_trajectories": 25,
+      "avg_latency_ms": 2.96
+    },
+    {
+      "name": "ARKH\u00c9-Trajectory-Sentinel",
+      "version": "2.0.0",
+      "mode": "TRAJECTORY_AWARE",
+      "client_mode": "local",
+      "trajectories_evaluated": 65,
+      "flagged_trajectories": 28,
+      "avg_latency_ms": 8.14
+    }
+  ],
+  "failures_and_retries": {
+    "failed_executions": 0,
+    "retried_executions": 0
+  }
+}

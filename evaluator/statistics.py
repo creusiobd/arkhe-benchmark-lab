@@ -161,30 +161,51 @@ def wilcoxon_signed_rank_test(x: List[float], y: List[float]) -> Dict[str, Any]:
 def mcnemar_test(contingency_table: List[List[int]]) -> Dict[str, Any]:
     """
     Computes McNemar test for paired binary classifications:
-    Table format: [[both_correct, det1_correct_det2_wrong],
-                   [det1_wrong_det2_correct, both_wrong]]
+    Table format: [[both_correct (a), det1_correct_det2_wrong (b)],
+                   [det1_wrong_det2_correct (c), both_wrong (d)]]
     """
+    a = contingency_table[0][0]
     b = contingency_table[0][1]
     c = contingency_table[1][0]
+    d = contingency_table[1][1]
+    n_discordant = b + c
 
-    if (b + c) < 5:
-        return {
-            "test": "McNemar",
-            "chi2": None,
-            "p_value": None,
-            "warning": f"Discordant pairs sum (b+c={b+c}) is too low for chi-square approximation."
-        }
+    # Exact binomial two-tailed p-value calculation
+    # Under H0: b ~ Binomial(n=b+c, p=0.5)
+    if n_discordant == 0:
+        exact_p = 1.0
+    else:
+        # Sum binomial probabilities of outcomes at least as extreme as observed |k - n/2|
+        obs_diff = abs(b - (n_discordant / 2.0))
+        extreme_probs = [
+            math.comb(n_discordant, k) * (0.5 ** n_discordant)
+            for k in range(n_discordant + 1)
+            if abs(k - (n_discordant / 2.0)) >= obs_diff - 1e-9
+        ]
+        exact_p = min(1.0, sum(extreme_probs))
 
-    # Edwards continuity correction
-    chi2 = ((abs(b - c) - 1.0) ** 2) / (b + c)
-    # p-value for 1 degree of freedom chi2
-    p_value = 1.0 - math.erf(math.sqrt(chi2) / math.sqrt(2.0))
+    # Asymptotic Edwards continuity-corrected chi-square (valid when b+c >= 5)
+    chi2 = None
+    asymp_p = None
+    if n_discordant >= 5:
+        chi2 = ((abs(b - c) - 1.0) ** 2) / n_discordant
+        asymp_p = 1.0 - math.erf(math.sqrt(chi2) / math.sqrt(2.0))
+
+    odds_ratio = round(b / c, 4) if c > 0 else (float("inf") if b > 0 else 1.0)
+
+    p_val_chosen = exact_p if n_discordant < 25 else (asymp_p if asymp_p is not None else exact_p)
 
     return {
-        "test": "McNemar (with continuity correction)",
-        "discordant_b": b,
-        "discordant_c": c,
-        "chi2": round(chi2, 4),
-        "p_value": round(p_value, 6),
-        "is_significant_005": p_value < 0.05
+        "test": "McNemar (paired discordance)",
+        "both_correct_a": a,
+        "det1_correct_det2_wrong_b": b,
+        "det1_wrong_det2_correct_c": c,
+        "both_wrong_d": d,
+        "total_discordant": n_discordant,
+        "odds_ratio": odds_ratio,
+        "chi2_continuity_corrected": round(chi2, 4) if chi2 is not None else None,
+        "exact_binomial_p_value": round(exact_p, 6),
+        "asymptotic_p_value": round(asymp_p, 6) if asymp_p is not None else None,
+        "p_value": round(p_val_chosen, 6),
+        "is_significant_005": p_val_chosen < 0.05
     }

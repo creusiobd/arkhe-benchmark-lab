@@ -94,25 +94,42 @@ class StepObservation(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def check_no_label_leakage(cls, data: Any) -> Any:
-        if isinstance(data, dict):
-            forbidden_keys = {
-                "ground_truth_label",
-                "label",
-                "ground_truth_class",
-                "is_attack",
-                "attack_vector",
-                "violation_step_index",
-                "drift_step_index",
-                "mission_divergence_score",
-                "context_contamination_flag",
-                "accumulated_risk_score",
-                "human_annotation_rationale",
-                "evaluator_rationale",
-            }
-            found = forbidden_keys.intersection(data.keys())
-            if found:
-                raise ValueError(f"Label leakage detected! Forbidden fields present in observation: {found}")
+        assert_no_label_leakage(data, context_path="StepObservation")
         return data
+
+
+FORBIDDEN_LEAKAGE_KEYS = {
+    "ground_truth_label",
+    "label",
+    "ground_truth_class",
+    "is_attack",
+    "attack_vector",
+    "attack_category",
+    "violation_step_index",
+    "drift_step_index",
+    "breach_step",
+    "drift_step",
+    "mission_divergence_score",
+    "context_contamination_flag",
+    "accumulated_risk_score",
+    "human_annotation_rationale",
+    "evaluator_rationale",
+    "expected_alert",
+    "severity",
+}
+
+
+def assert_no_label_leakage(data: Any, context_path: str = "") -> None:
+    """Recursively validates that no ground truth or precalculated risk leakage exists."""
+    if isinstance(data, dict):
+        found = FORBIDDEN_LEAKAGE_KEYS.intersection(data.keys())
+        if found:
+            raise ValueError(f"Label leakage detected at '{context_path}'! Forbidden fields present: {found}")
+        for k, v in data.items():
+            assert_no_label_leakage(v, f"{context_path}.{k}" if context_path else str(k))
+    elif isinstance(data, list):
+        for idx, item in enumerate(data):
+            assert_no_label_leakage(item, f"{context_path}[{idx}]")
 
 
 class TrajectoryObservation(BaseModel):
@@ -120,3 +137,28 @@ class TrajectoryObservation(BaseModel):
     trajectory_id: str = Field(..., description="Unique trajectory identifier")
     steps: List[StepObservation] = Field(default_factory=list, description="Ordered observable steps")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Safe metadata (e.g. environment type)")
+
+    @model_validator(mode="before")
+    @classmethod
+    def check_trajectory_leakage(cls, data: Any) -> Any:
+        assert_no_label_leakage(data, context_path="TrajectoryObservation")
+        return data
+
+    def to_sanitized_opaque(self) -> "TrajectoryObservation":
+        """
+        Produces an opaque copy where trajectory_id and step trajectory_ids are hashed to
+        remove any semantic hints (e.g., BEN, NEA, VIO), and metadata is sanitized.
+        """
+        import hashlib
+        opaque_id = f"traj_{hashlib.sha256(self.trajectory_id.encode('utf-8')).hexdigest()[:16]}"
+        sanitized_steps = []
+        for s in self.steps:
+            s_dict = s.model_dump()
+            s_dict["trajectory_id"] = opaque_id
+            sanitized_steps.append(StepObservation.model_validate(s_dict))
+        safe_meta = {k: v for k, v in self.metadata.items() if k in {"synthetic", "environment", "version"}}
+        return TrajectoryObservation(
+            trajectory_id=opaque_id,
+            steps=sanitized_steps,
+            metadata=safe_meta
+        )

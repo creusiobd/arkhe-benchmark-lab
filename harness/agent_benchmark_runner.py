@@ -39,54 +39,7 @@ from detectors.semantic_event import SemanticEventDetector
 from detectors.arkhe_trajectory import ArkheTrajectoryDetector
 
 
-def load_trajectories(directory: str) -> List[Any]:
-    import glob
-    from contracts.agent_trajectory import AgentTrajectory
-    files = glob.glob(os.path.join(directory, "*.json"))
-    trajectories = []
-    for f in sorted(files):
-        with open(f, "r", encoding="utf-8") as fp:
-            data = json.load(fp)
-            trajectories.append(AgentTrajectory.model_validate(data))
-    return trajectories
 
-
-def evaluate_detector_on_trajectory(detector, trajectory) -> Dict[str, Any]:
-    verdicts = []
-    first_detection_step = None
-    history = []
-    for step in trajectory.observable_steps:
-        verdict = detector.evaluate_step(step, trajectory_history=history)
-        verdicts.append(verdict)
-        history.append(step)
-        is_alert = getattr(verdict, "is_violation_suspected", False) or getattr(verdict, "is_alert", False)
-        if is_alert and first_detection_step is None:
-            first_detection_step = getattr(verdict, "step_index", 0)
-
-    is_recovered = any(
-        "TRAJECTORY RECOVERY" in (getattr(v, "reasoning", "") or getattr(v, "explanation", ""))
-        for v in verdicts
-    )
-    is_flagged = (first_detection_step is not None) and not is_recovered
-    violation_step = getattr(trajectory.ground_truth, "violation_step_index", None)
-    is_actual_violation = ("VIOLATION" in str(getattr(trajectory.ground_truth, "ground_truth_label", "")))
-
-    lead_steps = 0
-    if is_actual_violation and is_flagged and violation_step is not None and first_detection_step is not None:
-        lead_steps = max(0, violation_step - first_detection_step)
-
-    return {
-        "trajectory_id": trajectory.trajectory_id,
-        "is_flagged": is_flagged,
-        "first_detection_step": first_detection_step,
-        "violation_step_index": violation_step,
-        "lead_steps": lead_steps,
-        "tp": is_flagged and is_actual_violation,
-        "fp": is_flagged and not is_actual_violation,
-        "tn": not is_flagged and not is_actual_violation,
-        "fn": not is_flagged and is_actual_violation,
-        "verdicts": [v.model_dump() for v in verdicts]
-    }
 
 
 def compute_file_sha256(filepath: str) -> str:
@@ -126,7 +79,7 @@ def instantiate_detector(detector_config: Dict[str, Any]) -> BaseDetector:
     if "DeterministicEventDetector" in class_path:
         return DeterministicEventDetector()
     elif "SemanticEventDetector" in class_path:
-        return SemanticEventDetector()
+        return SemanticEventDetector(**params)
     elif "ArkheTrajectoryDetector" in class_path:
         thresh = params.get("risk_threshold", 50.0)
         return ArkheTrajectoryDetector(risk_threshold=thresh)
@@ -192,9 +145,13 @@ def run_benchmark(config_path: str):
     # Evaluate all splits and all detectors
     for split_name, trajs in loaded_trajectories.items():
         for traj in trajs:
+            # Strictly anonymize trajectory to opaque ID and sanitize metadata
+            # Eliminates any indirect label leakage (e.g., BEN, NEA, VIO in ID strings)
+            sanitized_traj = traj.to_sanitized_opaque()
+
             for det in detectors:
                 t0 = time.perf_counter()
-                pred = det.evaluate_trajectory(traj)
+                pred = det.evaluate_trajectory(sanitized_traj)
                 eval_ms = (time.perf_counter() - t0) * 1000.0
 
                 detector_stats[det.name]["total_time_ms"] += eval_ms
@@ -202,8 +159,10 @@ def run_benchmark(config_path: str):
                 if pred.is_flagged:
                     detector_stats[det.name]["flagged_count"] += 1
 
-                # Record prediction
+                # Record prediction (map back canonical ID for evaluation matching)
                 pred_dict = pred.model_dump()
+                pred_dict["trajectory_id"] = traj.trajectory_id
+                pred_dict["opaque_trajectory_id"] = sanitized_traj.trajectory_id
                 pred_dict["split"] = split_name
                 pred_dict["step_count"] = len(traj.steps)
                 all_predictions.append(pred_dict)
@@ -233,6 +192,7 @@ def run_benchmark(config_path: str):
                 "name": det.name,
                 "version": det.version,
                 "mode": det.detection_mode,
+                "client_mode": getattr(det, "client_mode", "local"),
                 "trajectories_evaluated": detector_stats[det.name]["trajectories_evaluated"],
                 "flagged_trajectories": detector_stats[det.name]["flagged_count"],
                 "avg_latency_ms": round(

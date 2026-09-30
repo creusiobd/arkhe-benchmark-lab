@@ -58,6 +58,28 @@ class TestContractSeparation(unittest.TestCase):
         for imp in imports:
             self.assertNotIn("ground_truth", imp)
 
+    def test_runner_does_not_import_ground_truth(self):
+        runner_file = os.path.join(self.root_dir, "harness", "agent_benchmark_runner.py")
+        imports = self._extract_imported_modules(runner_file)
+        for imp in imports:
+            self.assertNotIn("ground_truth", imp, f"Runner imports forbidden module: {imp}")
+            self.assertNotIn("contracts.agent_trajectory", imp, f"Runner imports forbidden legacy contract: {imp}")
+            self.assertNotIn("evaluator", imp, f"Runner imports evaluator: {imp}")
+
+    def test_no_detector_imports_evaluator(self):
+        detector_files = [
+            os.path.join(self.detectors_dir, f)
+            for f in os.listdir(self.detectors_dir)
+            if f.endswith(".py") and not f.startswith("__")
+        ]
+        for fpath in detector_files:
+            imports = self._extract_imported_modules(fpath)
+            for imp in imports:
+                self.assertNotIn(
+                    "evaluator", imp,
+                    f"Forbidden evaluator import found in detector '{os.path.basename(fpath)}': {imp}"
+                )
+
 
 if __name__ == "__main__":
     unittest.main()
