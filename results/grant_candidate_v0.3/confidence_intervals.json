@@ -1,0 +1,80 @@
+{
+  "Deterministic-Event-Rule-Baseline": {
+    "precision_95_ci": [
+      0.5294,
+      0.8475
+    ],
+    "recall_95_ci": [
+      0.8389,
+      1.0
+    ],
+    "accuracy_95_ci": [
+      0.7755,
+      0.9363
+    ],
+    "median_lead_steps_bootstrap_95_ci": {
+      "point": 1,
+      "ci_lower": 0,
+      "ci_upper": 1,
+      "n": 20,
+      "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
+    },
+    "mean_lead_steps_bootstrap_95_ci": {
+      "point": 0.55,
+      "ci_lower": 0.35,
+      "ci_upper": 0.75
+    }
+  },
+  "Semantic-Event-Classifier-Baseline": {
+    "precision_95_ci": [
+      0.5657,
+      0.885
+    ],
+    "recall_95_ci": [
+      0.7639,
+      0.9911
+    ],
+    "accuracy_95_ci": [
+      0.794,
+      0.9468
+    ],
+    "median_lead_steps_bootstrap_95_ci": {
+      "point": 0,
+      "ci_lower": 0,
+      "ci_upper": 1,
+      "n": 20,
+      "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
+    },
+    "mean_lead_steps_bootstrap_95_ci": {
+      "point": 0.4,
+      "ci_lower": 0.2,
+      "ci_upper": 0.6
+    }
+  },
+  "ARKH\u00c9-Trajectory-Sentinel": {
+    "precision_95_ci": [
+      0.5294,
+      0.8475
+    ],
+    "recall_95_ci": [
+      0.8389,
+      1.0
+    ],
+    "accuracy_95_ci": [
+      0.7755,
+      0.9363
+    ],
+    "median_lead_steps_bootstrap_95_ci": {
+      "point": 1,
+      "ci_lower": 0,
+      "ci_upper": 1,
+      "n": 20,
+      "warning": "Aviso de incerteza: Amostra piloto (n=20) requer cautela ao inferir signific\u00e2ncia populacional."
+    },
+    "mean_lead_steps_bootstrap_95_ci": {
+      "point": 0.55,
+      "ci_lower": 0.35,
+      "ci_upper": 0.75
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "pilot_trajectories": 65,
+  "total_executions": 195,
+  "total_steps_evaluated": 846,
+  "estimated_prompt_tokens": 719100,
+  "estimated_completion_tokens": 101520,
+  "total_estimated_tokens": 820620,
+  "offline_monetary_cost_usd": 0.0,
+  "estimated_live_api_equivalent_usd": 0.1688,
+  "cost_assumptions": "Calculated using OpenAI gpt-4o-mini standard pricing ($0.15/1M input, $0.60/1M output)"
+}

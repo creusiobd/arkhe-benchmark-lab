@@ -260,7 +260,7 @@ def run_evaluation(run_dir: str, gt_dir: Optional[str] = None):
     est_cost_usd = (est_prompt_tokens / 1_000_000 * 0.15) + (est_comp_tokens / 1_000_000 * 0.60)
 
     cost_report = {
-        "pilot_trajectories": 30,
+        "pilot_trajectories": len(gt_map),
         "total_executions": len(predictions),
         "total_steps_evaluated": total_steps,
         "estimated_prompt_tokens": est_prompt_tokens,
@@ -277,14 +277,15 @@ def run_evaluation(run_dir: str, gt_dir: Optional[str] = None):
     generate_markdown_report(report_file, metrics_by_detector, confidence_intervals, confusion_matrices, hypothesis_tests, cost_report)
 
     # Console Summary
-    print_console_summary(metrics_by_detector, confidence_intervals, hypothesis_tests)
+    print_console_summary(metrics_by_detector, confidence_intervals, hypothesis_tests, len(gt_map))
     print(f"\n[OK] All evaluation artifacts saved to {run_dir}")
 
 
 def generate_markdown_report(report_path, metrics, ci, cm, hyp, cost):
+    n_trajs = cost.get("pilot_trajectories", 65)
     with open(report_path, "w", encoding="utf-8") as f:
-        f.write("# ARKHÉ Agent Boundary Defense Benchmark — Relatório de Avaliação do Piloto (n=30)\n\n")
-        f.write("> **Status:** Piloto Técnico Limpo Concluído • **Zero Label Leakage** • **Avaliador Cego Independente**\n\n")
+        f.write(f"# ARKHÉ Agent Boundary Defense Benchmark — Relatório de Avaliação (n={n_trajs})\n\n")
+        f.write("> **Status:** Execução Blind Concluída • **Zero Label Leakage** • **Avaliador Cego Independente**\n\n")
         f.write("## 1. Placar de Performance Empírica com Incerteza Estatística (IC 95%)\n\n")
         f.write("| Detector | Modo | n | Precisão (IC 95%) | Recall (IC 95%) | F1-Score | FP | FN | Lead Steps Mediano (IC 95%) | Taxa Antecipação |\n")
         f.write("| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |\n")
@@ -325,14 +326,14 @@ def generate_markdown_report(report_path, metrics, ci, cm, hyp, cost):
         f.write(f"- **Custo Estimado em API Comercial (gpt-4o-mini):** ${cost['estimated_live_api_equivalent_usd']:.4f} USD\n\n")
 
         f.write("---\n\n## 4. Limitações e Ressalvas Metodológicas Obrigatórias\n\n")
-        f.write("1. **Amostra Piloto (n=30):** O piloto comprova a integridade e viabilidade do pipeline e dos contratos, mas conclusões epidemiológicas e definitivas de segurança exigem a expansão para o dataset completo N=300.\n")
+        f.write(f"1. **Amostra Avaliada (n={n_trajs}):** O benchmark comprova a integridade e viabilidade do pipeline e dos contratos, mas conclusões epidemiológicas e definitivas de segurança exigem a expansão para larga escala (N=5.000+).\n")
         f.write("2. **Ambiente Sintético:** Os cenários utilizam sinks locais simulados e credenciais sintéticas marcadas, evitando qualquer impacto em infraestrutura de terceiros.\n")
         f.write("3. **Determinismo:** Os baselines locais empregam heurísticas determinísticas e proxies semânticos reproduzíveis, documentados como tal.\n")
 
 
-def print_console_summary(metrics, ci, hyp):
+def print_console_summary(metrics, ci, hyp, n_trajs=65):
     print(f"\n================================================================================")
-    print(f"                        TABELA OFICIAL DE AVALIAÇÃO (n=30)")
+    print(f"                        TABELA OFICIAL DE AVALIAÇÃO (n={n_trajs})")
     print(f"================================================================================")
     print(f"{'Detector':<35} | {'Precisão (95% CI)':<22} | {'F1':<6} | {'FP':<4} | {'N_lead Mediano (95% CI)':<22}")
     print("-" * 100)

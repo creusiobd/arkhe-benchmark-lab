@@ -91,17 +91,22 @@ Detailed architectural contracts, prohibited key dictionaries, and structural te
 
 ---
 
-## 5. Preliminary Pilot Results ($n=30$)
+## 5. Candidate Benchmark Results (v0.3, $n=65$)
 
-The pilot experiment was executed over $n=30$ canonical trajectories (12 development, 6 validation, 12 test) evaluated across three baseline paradigms:
+The candidate experiment was executed over $n=65$ canonical trajectories across 4 splits (20 development, 10 validation, 20 test, 15 blind holdout with strictly disjoint attack templates) evaluated across three baseline paradigms:
 
-| Detector Paradigm | Architecture | Precision [Wilson 95% CI] | Recall [Wilson 95% CI] | F1-Score | False Positives | Median Lead ($N_{\text{lead}}$) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Deterministic-Event-Rule-Baseline** | Isolated Event | 62.5% [38.6%, 81.5%] | 100.0% [72.2%, 100.0%] | 0.77 | 6 | +0.0 steps |
-| **Semantic-Event-Classifier-Baseline** | Isolated Event | 55.6% [33.7%, 75.4%] | 100.0% [72.2%, 100.0%] | 0.71 | 8 | +1.0 steps |
-| **ARKHÉ-Trajectory-Sentinel** | Trajectory Aware | **83.3% [55.2%, 95.3%]** | **100.0% [72.2%, 100.0%]** | **0.91** | **2** | **+0.0 steps** |
+| Detector Paradigm | Architecture | Precision [Wilson 95% CI] | Recall [Wilson 95% CI] | F1-Score | FP | FN | Median Lead ($N_{\text{lead}}$) [95% CI] | Anticipation Rate |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Deterministic-Event-Rule-Baseline** | Isolated Event | 71.4% [52.9%, 84.8%] | 100.0% [83.9%, 100.0%] | 0.83 | 8 | 0 | +1.0 [0.0, 1.0] steps | 55.0% |
+| **Semantic-Event-Classifier-Baseline** | Isolated Event | 76.0% [56.6%, 88.5%] | 95.0% [76.4%, 99.1%] | 0.84 | 6 | 1 | +0.0 [0.0, 1.0] steps | 40.0% |
+| **ARKHÉ-Trajectory-Sentinel** | Trajectory Aware | 71.4% [52.9%, 84.8%] | 100.0% [83.9%, 100.0%] | 0.83 | 8 | 0 | +1.0 [0.0, 1.0] steps | 55.0% |
 
-*All statistics are computed directly by `evaluator/evaluate.py` from raw predictions. Artifacts are archived in `results/pilot/`.*
+*All statistics are computed directly by `evaluator/evaluate.py` from raw predictions. Artifacts are archived in `results/grant_candidate_v0.3/`.*
+
+### Paired Hypothesis Testing (ARKHÉ vs Baselines):
+- **ARKHÉ vs Deterministic Baseline:** McNemar discordance $b=0, c=0$ ($p=1.0000$, two-tailed exact binomial).
+- **ARKHÉ vs Semantic Baseline:** McNemar discordance $b=3, c=4$ ($p=1.0000$, two-tailed exact binomial); Wilcoxon signed-rank test on lead steps $W = 15.0, Z = 0.8885, p = 0.374$ ($n=9$ non-zero pairs).
+- **Grant Justification:** The pilot proves the integrity of the evaluation harness, strict anti-leakage contracts, and pipeline automation. Large-scale expansion to $N=5,000+$ trajectories with live OpenAI models (`gpt-4o`, `o1`) is required to achieve statistical power on paired discordance tests.
 
 ---
 
@@ -114,26 +119,26 @@ cd arkhe-benchmark-lab
 python -m pip install -r requirements.txt
 ```
 
-### Reproducing the Benchmark
+### Reproducing the Grant Candidate Benchmark
 Run the single-command reproducible pipeline:
 ```bash
 # Linux / macOS
 bash scripts/reproduce_grant_pilot.sh
 
 # Windows PowerShell
-.\scripts\reproduce_grant_pilot.ps1
+powershell -ExecutionPolicy Bypass -File scripts/reproduce_grant_pilot.ps1
 ```
 
 Or execute the steps individually:
 ```bash
-# 1. Run all unit and contract tests
+# 1. Run all unit and contract tests (100 tests)
 python -m unittest discover -s tests -v
 
-# 2. Execute blind benchmark runner
-python -m harness.agent_benchmark_runner --config configs/pilot.yaml
+# 2. Execute blind benchmark runner on v0.3 dataset
+python -m harness.agent_benchmark_runner --config configs/grant_candidate_v0.3.yaml
 
 # 3. Compute metrics, confidence intervals, and statistical tests
-python -m evaluator.evaluate --run results/pilot
+python -m evaluator.evaluate --run results/grant_candidate_v0.3 --ground-truth datasets/v0.3/ground_truth
 ```
 
 ---
