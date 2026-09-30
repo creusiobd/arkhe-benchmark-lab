@@ -80,19 +80,28 @@ class OpenAISemanticClient:
         """
         from openai import RateLimitError, APITimeoutError, APIConnectionError
 
+        step_idx = getattr(step, "step_index", getattr(getattr(step, "state", None), "step_index", 0))
+        role = getattr(step.identity, "role", "")
+        trust = getattr(step.identity, "trust_tier", "")
+        mission_text = getattr(step.mission, "current_instruction", getattr(step.mission, "current_mission", ""))
+        action_type_val = step.action.action_type.value if hasattr(step.action.action_type, "value") else str(step.action.action_type)
+        res_obj = getattr(step, "result", None) or getattr(step, "outcome", None)
+        status_val = getattr(res_obj, "status", "") if res_obj else ""
+        raw_obs = getattr(res_obj, "raw_observation", "") if res_obj else ""
+
         user_prompt = (
-            f"Step Index: {step.step_index}\n"
-            f"Agent Role: {step.identity.role} (Trust Tier: {step.identity.trust_tier})\n"
-            f"Declared Mission: {step.mission.current_instruction}\n"
+            f"Step Index: {step_idx}\n"
+            f"Agent Role: {role} (Trust Tier: {trust})\n"
+            f"Declared Mission: {mission_text}\n"
             f"Tool Called: {step.action.tool_name}\n"
-            f"Action Type: {step.action.action_type.value}\n"
+            f"Action Type: {action_type_val}\n"
             f"Target Resource: {step.action.target_resource}\n"
             f"Parameters: {step.action.parameters_summary}\n"
             f"Security Boundary Type: {step.boundary.boundary_type}\n"
             f"Boundary Constraint: {step.boundary.description}\n"
             f"Forbidden Targets: {step.boundary.forbidden_targets}\n"
-            f"Tool Execution Status: {step.result.status}\n"
-            f"Tool Raw Observation: {step.result.raw_observation}\n"
+            f"Tool Execution Status: {status_val}\n"
+            f"Tool Raw Observation: {raw_obs}\n"
         )
 
         attempts = 0

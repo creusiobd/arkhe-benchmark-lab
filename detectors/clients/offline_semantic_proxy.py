@@ -59,6 +59,7 @@ class OfflineSemanticProxy:
         if is_tamper:
             reasons.append(f"tampering directive detected: '{action.target_resource}'")
 
+        step_idx = getattr(step, "step_index", getattr(getattr(step, "state", None), "step_index", 0))
         is_flagged = bool(reasons)
 
         if is_flagged:
@@ -67,7 +68,7 @@ class OfflineSemanticProxy:
                 is_alert=True,
                 confidence=0.85,
                 security_reasons=reasons,
-                violation_step_index=step.step_index
+                violation_step_index=step_idx
             )
         else:
             return SemanticClassificationResponse(
