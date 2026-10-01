@@ -167,6 +167,33 @@ class TestProposalConsistency(unittest.TestCase):
         words_pt = match_pt.group(1).split()
         self.assertLessEqual(len(words_pt), 200, f"PT Problem Statement exceeded 200 words: {len(words_pt)}")
 
+    def test_11_researcher_access_program_files_exist_and_consistent(self):
+        rap_en_path = os.path.join(BASE_DIR, "proposal", "researcher_access_program_EN.md")
+        rap_pt_path = os.path.join(BASE_DIR, "proposal", "researcher_access_program_PT.md")
+
+        self.assertTrue(os.path.exists(rap_en_path), f"Missing {rap_en_path}")
+        self.assertTrue(os.path.exists(rap_pt_path), f"Missing {rap_pt_path}")
+
+        with open(rap_en_path, "r", encoding="utf-8") as f:
+            rap_en = f.read()
+        with open(rap_pt_path, "r", encoding="utf-8") as f:
+            rap_pt = f.read()
+
+        self.assertIn("1,000", rap_en)
+        self.assertIn("1.000", rap_pt)
+        self.assertIn("text-embedding-3-small", rap_en)
+        self.assertIn("text-embedding-3-small", rap_pt)
+        self.assertIn("gpt-4o-mini", rap_en)
+        self.assertIn("gpt-4o-mini", rap_pt)
+        self.assertIn("120", rap_en)
+        self.assertIn("120", rap_pt)
+        self.assertIn("268", rap_en)
+        self.assertIn("268", rap_pt)
+
+        # Prohibited check
+        self.assertNotIn("guaranteed peer review", rap_en.lower())
+        self.assertNotIn("revisão por pares garantida", rap_pt.lower())
+
 
 if __name__ == "__main__":
     unittest.main()
