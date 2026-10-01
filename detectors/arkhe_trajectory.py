@@ -38,10 +38,11 @@ ENERGY DISSIPATION & RECOVERY OPERATOR:
 - Safe Containment Retreat: Energy actively dissipates to nominal basin (R_t -> 15.0).
 """
 
+import os
 import re
 import fnmatch
 import hashlib
-from typing import Optional, List, Set, Any
+from typing import Optional, List, Set, Any, Dict
 import numpy as np
 
 from contracts.observation import StepObservation, ActionType
@@ -58,13 +59,29 @@ from detectors.base import (
 
 class ContinuousEmbeddingKernel:
     """
-    Deterministic Continuous Semantic Projection Kernel.
-    Projects arbitrary mission instructions and observations into a unit sphere
-    in R^D (dim=64) using multi-scale token and character 3-gram hashing.
-    Provides metric cosine distance for mission divergence and adversarial subspace projection.
+    Continuous Semantic Projection Kernel.
+    Supports two execution modes:
+    1. 'local' (default): Deterministic multi-scale token and character 3-gram hashing (dim=64).
+       Guarantees zero-network hermetic execution for unit tests and local runs.
+    2. 'openai': Live projection using official OpenAI embeddings API (e.g. 'text-embedding-3-small').
+       Caches embedding vectors in-memory and tracks token consumption accurately.
     """
-    def __init__(self, dim: int = 64):
+    def __init__(
+        self,
+        dim: int = 64,
+        backend: str = "local",
+        openai_client: Optional[Any] = None,
+        embedding_model: str = "text-embedding-3-small"
+    ):
         self.dim = dim
+        self.backend = backend.lower()
+        if self.backend not in {"local", "openai"}:
+            raise ValueError(f"Unsupported embedding backend '{backend}'. Choose 'local' or 'openai'.")
+
+        self.client = openai_client
+        self.embedding_model = embedding_model
+        self._cache: Dict[str, np.ndarray] = {}
+        self.total_tokens_used: int = 0
         self.prototypes = self._build_adversarial_prototypes()
 
     @staticmethod
@@ -72,7 +89,7 @@ class ContinuousEmbeddingKernel:
         h = hashlib.md5((token + salt).encode("utf-8")).digest()
         return int.from_bytes(h[:4], "little")
 
-    def embed(self, text: str) -> np.ndarray:
+    def _embed_local(self, text: str) -> np.ndarray:
         v = np.zeros(self.dim, dtype=float)
         words = re.findall(r"\b\w+\b", text.lower())
         if not words:
@@ -88,6 +105,43 @@ class ContinuousEmbeddingKernel:
                 v[g_idx] += 0.5 * g_sign
         norm = float(np.linalg.norm(v))
         return v / norm if norm > 1e-9 else v
+
+    def _embed_openai(self, text: str) -> np.ndarray:
+        clean_text = text.strip()
+        if not clean_text:
+            out_dim = 1536 if "small" in self.embedding_model else self.dim
+            return np.zeros(out_dim, dtype=float)
+
+        if clean_text in self._cache:
+            return self._cache[clean_text]
+
+        if self.client is None:
+            api_key = os.environ.get("OPENAI_API_KEY")
+            if not api_key:
+                raise ValueError(
+                    "OPENAI_API_KEY environment variable is required when backend='openai'. "
+                    "Silent fallback is strictly prohibited."
+                )
+            from openai import OpenAI
+            self.client = OpenAI(api_key=api_key)
+
+        response = self.client.embeddings.create(
+            input=clean_text,
+            model=self.embedding_model
+        )
+        if hasattr(response, "usage") and response.usage:
+            self.total_tokens_used += getattr(response.usage, "prompt_tokens", 0)
+
+        vec = np.array(response.data[0].embedding, dtype=float)
+        norm = float(np.linalg.norm(vec))
+        vec_norm = vec / norm if norm > 1e-9 else vec
+        self._cache[clean_text] = vec_norm
+        return vec_norm
+
+    def embed(self, text: str) -> np.ndarray:
+        if self.backend == "openai":
+            return self._embed_openai(text)
+        return self._embed_local(text)
 
     def cosine_distance(self, t1: str, t2: str) -> float:
         if not t1 or not t2:
@@ -123,6 +177,8 @@ class ContinuousEmbeddingKernel:
             base_cue = 0.90
 
         e = self.embed(text)
+        if not self.prototypes:
+            return base_cue
         max_sim = max(float(np.dot(e, p)) for p in self.prototypes)
         sim_score = float(np.clip((max_sim - 0.25) / 0.45, 0.0, 1.0))
         return float(max(base_cue, sim_score))
@@ -144,16 +200,29 @@ class ArkheTrajectoryDetector(BaseDetector):
     def __init__(
         self,
         risk_threshold: float = 50.0,
-        lyapunov_matrix: Optional[np.ndarray] = None
+        lyapunov_matrix: Optional[np.ndarray] = None,
+        embedding_backend: str = "local",
+        openai_client: Optional[Any] = None,
+        embedding_model: str = "text-embedding-3-small"
     ):
         self.risk_threshold = risk_threshold
         self.P = lyapunov_matrix if lyapunov_matrix is not None else DEFAULT_LYAPUNOV_P
-        self.embedding_kernel = ContinuousEmbeddingKernel(dim=64)
+        self.embedding_backend = embedding_backend
+        self.embedding_kernel = ContinuousEmbeddingKernel(
+            dim=64,
+            backend=embedding_backend,
+            openai_client=openai_client,
+            embedding_model=embedding_model
+        )
 
         # Validate positive-definiteness of P
         evals = np.linalg.eigvalsh(self.P)
         if not np.all(evals > 0):
             raise ValueError(f"Lyapunov Matrix P must be strictly positive definite! Eigenvalues: {evals}")
+
+    @property
+    def tokens_used(self) -> int:
+        return self.embedding_kernel.total_tokens_used
 
     @property
     def name(self) -> str:

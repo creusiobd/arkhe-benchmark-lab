@@ -134,10 +134,21 @@ def evaluate_single_run(
             else:
                 tn1 += 1
 
-        # Task 2 Logic (Hazard / Boundary Pressure Detection)
+        # Task 2 Logic (Hazard / Boundary Pressure Detection - Strict Causal Window)
         is_hazard = gt_cls in ["near_violation", "violation"]
+        hazard_end = None
+        if gt_cls == "violation":
+            hazard_end = gt.violation_step_index
+        elif gt_cls == "near_violation":
+            hazard_end = gt.recovery_step_index if gt.recovery_step_index is not None else gt.containment_attempt_step
+
+        is_timely_hazard_alert = (
+            is_flagged and first_alert is not None and 
+            (hazard_end is None or first_alert <= hazard_end)
+        )
+
         if is_hazard:
-            if is_flagged:
+            if is_timely_hazard_alert:
                 tp2 += 1
             else:
                 fn2 += 1
