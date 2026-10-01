@@ -2,6 +2,8 @@
 ## Applied Defensive Research & Open-Source Benchmark Proposal
 ### [WORKING DRAFT v0.2 — OPENAI CYBERSECURITY GRANT PROGRAM]
 
+> **Archived draft — superseded.** Do not submit or cite the budget, sample-size, reviewer-simulation, or performance claims in this v0.2 file as current evidence. The current proposal is `form_answers_EN.md`; the current prospective protocol is `docs/evaluation_protocol_v0.5.md`.
+
 > **Modality:** Applied Research Project & Open-Source Benchmark (Apache-2.0)  
 > **Principal Investigator:** Creúsio Adolfo Gaspar Kizua  
 > **Location:** São Paulo, SP — Brazil  

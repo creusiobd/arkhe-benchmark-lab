@@ -106,13 +106,13 @@ class TestProposalConsistency(unittest.TestCase):
         self.assertIn("10,000", self.en_text)
         self.assertIn("10.000", self.pt_text)
 
-        # Credits $1,500
-        self.assertIn("1,500", self.en_text)
-        self.assertIn("1.500", self.pt_text)
+        # Credits $20, reconciled to the stated token volumes and current model rates
+        self.assertIn("$20", self.en_text)
+        self.assertIn("US$ 20", self.pt_text)
 
-        # Research stipend $8,000
-        self.assertIn("8,000", self.en_text)
-        self.assertIn("8.000", self.pt_text)
+        # Research stipend $9,480 balances the fixed $10,000 request with $500 infra
+        self.assertIn("9,480", self.en_text)
+        self.assertIn("9.480", self.pt_text)
 
         # Infrastructure $500
         self.assertIn("500", self.en_text)
@@ -149,8 +149,8 @@ class TestProposalConsistency(unittest.TestCase):
         # Real verified pilot numbers from v0.4 live execution
         self.assertIn("268", self.en_text)
         self.assertIn("268", self.pt_text)
-        self.assertIn("0.0290", self.en_text)
-        self.assertIn("0,0290", self.pt_text)
+        self.assertIn("0.028966", self.en_text)
+        self.assertIn("0,028966", self.pt_text)
         self.assertIn("147,172", self.en_text)
         self.assertIn("147.172", self.pt_text)
 
@@ -166,6 +166,23 @@ class TestProposalConsistency(unittest.TestCase):
         self.assertIsNotNone(match_pt, "Could not extract Campo 3 in PT")
         words_pt = match_pt.group(1).split()
         self.assertLessEqual(len(words_pt), 200, f"PT Problem Statement exceeded 200 words: {len(words_pt)}")
+
+    def test_11_metric_denominators_and_outcome_claims_are_explicit(self):
+        self.assertIn("84 non-violation trajectories", self.en_text)
+        self.assertIn("84 trajetórias sem violação", self.pt_text)
+        self.assertIn("prospective", self.en_text.lower())
+        self.assertIn("prospectiva", self.pt_text.lower())
+        self.assertNotIn("Independent Evaluator", self.en_text)
+        self.assertNotIn("Avaliador Independente", self.pt_text)
+        self.assertNotIn("156 passing automated tests", self.en_text)
+        self.assertNotIn("156 testes automatizados aprovados", self.pt_text)
+
+    def test_12_current_pilot_is_disclosed_as_exploratory_all_split_baseline_run(self):
+        for text in (self.en_text.lower(), self.pt_text.lower()):
+            self.assertIn("v0.4_hard", text)
+            self.assertIn("147,172" if text == self.en_text.lower() else "147.172", text)
+        self.assertIn("exploratory", self.en_text.lower())
+        self.assertIn("exploratória", self.pt_text.lower())
 
 
 if __name__ == "__main__":

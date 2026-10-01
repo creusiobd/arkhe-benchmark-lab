@@ -2,6 +2,8 @@
 ## Proposta de Pesquisa Aplicada em Segurança Defensiva e Código Aberto
 ### [VERSÃO DE TRABALHO v0.2 — OPENAI CYBERSECURITY GRANT PROGRAM]
 
+> **Rascunho arquivado — substituído.** Não submeta nem cite como evidência atual o orçamento, tamanho de amostra, simulação de revisores ou alegações de desempenho deste arquivo v0.2. A proposta atual está em `form_answers_PT.md`; o protocolo prospectivo atual está em `docs/evaluation_protocol_v0.5.md`.
+
 > **Modalidade:** Projeto de Pesquisa Aplicada & Benchmark Aberto (Apache 2.0)  
 > **Pesquisador Principal:** Creúsio Adolfo Gaspar Kizua  
 > **Localização:** São Paulo, SP — Brasil  

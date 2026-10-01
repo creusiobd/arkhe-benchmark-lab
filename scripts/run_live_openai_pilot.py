@@ -162,6 +162,7 @@ class LiveOpenAIExecutor:
         attempt = 0
         backoff_delay = 1.0
         retry_reasons = []
+        attempt_latencies_ms: List[float] = []
 
         while attempt < self.max_retries:
             attempt += 1
@@ -182,6 +183,7 @@ class LiveOpenAIExecutor:
                     seed=self.seed
                 )
                 lat_ms = (time.perf_counter() - t0) * 1000.0
+                attempt_latencies_ms.append(round(lat_ms, 2))
                 end_utc = datetime.now(timezone.utc).isoformat()
 
                 model_returned = getattr(completion, "model", self.model_requested)
@@ -194,12 +196,12 @@ class LiveOpenAIExecutor:
 
                 self.total_prompt_tokens += p_tokens
                 self.total_completion_tokens += c_tokens
-                self.total_latency_ms += lat_ms
-                self.total_calls_succeeded += 1
 
                 parsed: Optional[SemanticClassificationResponse] = completion.choices[0].message.parsed
                 if parsed is None:
                     raise ValueError("Structured response returned null parsed object")
+                self.total_latency_ms += lat_ms
+                self.total_calls_succeeded += 1
 
                 # Record trace
                 trace_entry = {
@@ -227,7 +229,8 @@ class LiveOpenAIExecutor:
                     "error_code": None,
                     "error_message_sanitized": None,
                     "retry_count": attempt - 1,
-                    "retry_reasons": retry_reasons
+                    "retry_reasons": retry_reasons,
+                    "attempt_latencies_ms": attempt_latencies_ms
                 }
                 traces_file.write(json.dumps(trace_entry) + "\n")
                 traces_file.flush()
@@ -262,43 +265,46 @@ class LiveOpenAIExecutor:
 
             except (RateLimitError, APITimeoutError, APIConnectionError) as e:
                 lat_ms = (time.perf_counter() - t0) * 1000.0
+                attempt_latencies_ms.append(round(lat_ms, 2))
+                self.total_latency_ms += lat_ms
                 end_utc = datetime.now(timezone.utc).isoformat()
                 err_msg = sanitize_text(str(e), self.api_key)
                 retry_reasons.append(f"Attempt {attempt}: {type(e).__name__} - {err_msg}")
-                self.total_retries += 1
+                self.total_calls_failed += 1
+                terminal_failure = attempt >= self.max_retries
+                trace_entry = {
+                    "call_id": f"call_{trajectory_id}_{repetition}_{step_idx}_{attempt}",
+                    "trajectory_id": trajectory_id,
+                    "split": split,
+                    "repetition": repetition,
+                    "step_index": step_idx,
+                    "attempt": attempt,
+                    "detector": "Semantic-Event-Classifier-Baseline",
+                    "detector_version": "1.1.0",
+                    "model_requested": self.model_requested,
+                    "model_returned": None,
+                    "temperature": self.temperature,
+                    "seed": self.seed,
+                    "started_at_utc": start_utc,
+                    "ended_at_utc": end_utc,
+                    "latency_ms": round(lat_ms, 2),
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "response_id": None,
+                    "status": "ERROR" if terminal_failure else "RETRYABLE_ERROR",
+                    "parsed_result": None,
+                    "error_code": type(e).__name__,
+                    "error_message_sanitized": err_msg,
+                    "retry_count": attempt - 1,
+                    "retry_reasons": list(retry_reasons),
+                    "attempt_latencies_ms": list(attempt_latencies_ms)
+                }
+                # Persist every actual API attempt, including attempts followed by a retry.
+                traces_file.write(json.dumps(trace_entry) + "\n")
+                traces_file.flush()
 
-                if attempt >= self.max_retries:
-                    self.total_calls_failed += 1
-                    trace_entry = {
-                        "call_id": f"call_{trajectory_id}_{repetition}_{step_idx}_{attempt}",
-                        "trajectory_id": trajectory_id,
-                        "split": split,
-                        "repetition": repetition,
-                        "step_index": step_idx,
-                        "attempt": attempt,
-                        "detector": "Semantic-Event-Classifier-Baseline",
-                        "detector_version": "1.1.0",
-                        "model_requested": self.model_requested,
-                        "model_returned": None,
-                        "temperature": self.temperature,
-                        "seed": self.seed,
-                        "started_at_utc": start_utc,
-                        "ended_at_utc": end_utc,
-                        "latency_ms": round(lat_ms, 2),
-                        "prompt_tokens": 0,
-                        "completion_tokens": 0,
-                        "total_tokens": 0,
-                        "response_id": None,
-                        "status": "ERROR",
-                        "parsed_result": None,
-                        "error_code": type(e).__name__,
-                        "error_message_sanitized": err_msg,
-                        "retry_count": attempt - 1,
-                        "retry_reasons": retry_reasons
-                    }
-                    traces_file.write(json.dumps(trace_entry) + "\n")
-                    traces_file.flush()
-
+                if terminal_failure:
                     # Abstain on fatal failure
                     step_pred = StepPrediction(
                         step_index=step_idx,
@@ -311,11 +317,14 @@ class LiveOpenAIExecutor:
                     )
                     return step_pred, trace_entry
 
+                self.total_retries += 1
                 time.sleep(backoff_delay)
                 backoff_delay *= 2.0
 
             except Exception as e:
                 lat_ms = (time.perf_counter() - t0) * 1000.0
+                attempt_latencies_ms.append(round(lat_ms, 2))
+                self.total_latency_ms += lat_ms
                 end_utc = datetime.now(timezone.utc).isoformat()
                 err_msg = sanitize_text(str(e), self.api_key)
                 self.total_calls_failed += 1
@@ -345,7 +354,8 @@ class LiveOpenAIExecutor:
                     "error_code": type(e).__name__,
                     "error_message_sanitized": err_msg,
                     "retry_count": attempt - 1,
-                    "retry_reasons": retry_reasons
+                    "retry_reasons": retry_reasons,
+                    "attempt_latencies_ms": attempt_latencies_ms
                 }
                 traces_file.write(json.dumps(trace_entry) + "\n")
                 traces_file.flush()
@@ -375,11 +385,18 @@ class LiveOpenAIExecutor:
 
         is_flagged = False
         first_alert_step: Optional[int] = None
-        max_risk = 0.0
+        trajectory_latency_ms = 0.0
+        trajectory_tokens = 0
 
         for step in sanitized_traj.steps:
-            sp, _ = self.execute_step_call(step, sanitized_traj.trajectory_id, split, repetition, traces_file)
+            sp, call_trace = self.execute_step_call(
+                step, sanitized_traj.trajectory_id, split, repetition, traces_file
+            )
             step_preds.append(sp)
+            trajectory_latency_ms += sum(
+                call_trace.get("attempt_latencies_ms", [call_trace.get("latency_ms", 0.0)])
+            )
+            trajectory_tokens += int(call_trace.get("total_tokens", 0) or 0)
 
             if sp.is_alert:
                 if not is_flagged:
@@ -406,16 +423,18 @@ class LiveOpenAIExecutor:
         final_outcome = FinalOutcome.VIOLATION_CONSUMMATED.value if is_flagged else FinalOutcome.NOMINAL_EXECUTION.value
 
         return TrajectoryPrediction(
-            trajectory_id=traj.trajectory_id,
+            trajectory_id=sanitized_traj.trajectory_id,
             detector_name="Semantic-Event-Classifier-Baseline",
             detector_version="1.1.0",
             predicted_class=final_pred_class,
             first_alert_step=first_alert_step,
             is_flagged=is_flagged,
-            max_risk_score=max_risk,
+            max_risk_score=max(
+                (sp.accumulated_trajectory_risk for sp in step_preds), default=0.0
+            ),
             step_predictions=step_preds,
-            execution_time_ms=0.0,
-            tokens_used=0,
+            execution_time_ms=round(trajectory_latency_ms, 2),
+            tokens_used=trajectory_tokens,
             alerts=alerts,
             resolutions=[],
             containments=[],
@@ -450,7 +469,9 @@ class LiveOpenAIExecutor:
                         obs = TrajectoryObservation.model_validate_json(line)
                         all_trajectories.append((split_name, obs))
 
-        print(f"• Loaded {len(all_trajectories)} trajectories from v0.4_hard ({sum(len(t.steps) for _, t in all_trajectories)} steps)")
+        total_trajectories = len(all_trajectories)
+        total_steps = sum(len(t.steps) for _, t in all_trajectories)
+        print(f"• Loaded {total_trajectories} trajectories from v0.4_hard ({total_steps} steps)")
 
         # Repetition order randomization
         order_seed = int(self.config["execution"].get("order_seed", 20260930))
@@ -481,7 +502,7 @@ class LiveOpenAIExecutor:
                     rep_predictions.append(pred_dict)
 
                     status_char = "!" if traj_pred.is_flagged else "."
-                    print(f"[{rep}:{idx:02d}/50] Traj {traj.trajectory_id} ({split_name}, {len(traj.steps)} steps): flagged={traj_pred.is_flagged}")
+                    print(f"[{rep}:{idx:02d}/{len(rep_trajs)}] Traj {traj.trajectory_id} ({split_name}, {len(traj.steps)} steps): flagged={traj_pred.is_flagged}")
 
                     # Brief throttle to be respectful to rate limits
                     time.sleep(0.05)
@@ -525,11 +546,11 @@ class LiveOpenAIExecutor:
                 "total_actual_cost": round(total_cost_usd, 6),
                 "max_budget_limit": self.config["budget"]["max_allowed_budget"],
                 "remaining_budget": round(self.config["budget"]["max_allowed_budget"] - total_cost_usd, 6),
-                "cost_per_trajectory": round(total_cost_usd / 50.0, 6)
+                "cost_per_trajectory": round(total_cost_usd / max(1, total_trajectories), 6)
             },
             "latency": {
                 "total_latency_seconds": round(self.total_latency_ms / 1000.0, 2),
-                "avg_latency_per_call_ms": round(self.total_latency_ms / max(1, self.total_calls_succeeded), 2)
+                "avg_latency_per_call_ms": round(self.total_latency_ms / max(1, self.total_calls_attempted), 2)
             }
         }
 
@@ -552,7 +573,7 @@ class LiveOpenAIExecutor:
             },
             "dataset_provenance": {
                 "version": self.config["dataset"]["version"],
-                "total_trajectories": 50,
+                "total_trajectories": total_trajectories,
                 "dataset_file_hashes": file_hashes
             },
             "model_telemetry": {
@@ -567,7 +588,7 @@ class LiveOpenAIExecutor:
                 "total_calls_succeeded": self.total_calls_succeeded,
                 "total_calls_failed": self.total_calls_failed,
                 "total_retries": self.total_retries,
-                "avg_latency_ms": round(self.total_latency_ms / max(1, self.total_calls_succeeded), 2),
+                "avg_latency_ms": round(self.total_latency_ms / max(1, self.total_calls_attempted), 2),
                 "tokens": {
                     "prompt": self.total_prompt_tokens,
                     "completion": self.total_completion_tokens,
@@ -587,7 +608,7 @@ class LiveOpenAIExecutor:
         print(f"• Models Returned:       {sorted(list(self.models_returned))}")
         print(f"• Total Tokens Used:     {self.total_prompt_tokens + self.total_completion_tokens:,}")
         print(f"• Total Actual Cost:     ${total_cost_usd:.4f} USD (Budget: ${self.config['budget']['max_allowed_budget']:.2f})")
-        print(f"• Avg API Latency:       {self.total_latency_ms / max(1, self.total_calls_succeeded):.2f} ms")
+        print(f"• Avg API Latency:       {self.total_latency_ms / max(1, self.total_calls_attempted):.2f} ms")
         print(f"• Traces Saved:          {self.traces_path}")
         print(f"• Manifest Saved:        {self.manifest_path}")
         print(f"• Cost Report Saved:     {self.cost_report_path}\n")
