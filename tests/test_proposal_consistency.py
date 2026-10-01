@@ -6,7 +6,7 @@ Verifies:
 2. Central research question focus: false positive reduction under a 90% recall floor.
 3. Scoped 120-trajectory, 3-family leave-one-family-out experimental design.
 4. Correct detector descriptions (Deterministic, Semantic gpt-4o-mini, ARKHÉ Trajectory Sentinel).
-5. 8-week timeline and $10,000 USD budget ($1,500 credits + $8,500 research/infra).
+5. 8-week timeline and $10,000 USD budget ($20 OpenAI credits + $9,480 research stipend + $500 infrastructure).
 6. Word count compliance for Field 3 (<= 200 words).
 7. Strict prohibition of unsubstantiated claims (no guaranteed peer review, no OpenAI partnership claim, no untested models presented as observed facts).
 8. Faithful reflection of verified repository pilot telemetry (268 calls, $0.0290 cost).
@@ -106,13 +106,13 @@ class TestProposalConsistency(unittest.TestCase):
         self.assertIn("10,000", self.en_text)
         self.assertIn("10.000", self.pt_text)
 
-        # Credits $1,500
-        self.assertIn("1,500", self.en_text)
-        self.assertIn("1.500", self.pt_text)
+        # Credits $20, reconciled to the stated token volumes and current model rates
+        self.assertIn("$20", self.en_text)
+        self.assertIn("US$ 20", self.pt_text)
 
-        # Research stipend $8,000
-        self.assertIn("8,000", self.en_text)
-        self.assertIn("8.000", self.pt_text)
+        # Research stipend $9,480 balances the fixed $10,000 request with $500 infra
+        self.assertIn("9,480", self.en_text)
+        self.assertIn("9.480", self.pt_text)
 
         # Infrastructure $500
         self.assertIn("500", self.en_text)
@@ -149,8 +149,8 @@ class TestProposalConsistency(unittest.TestCase):
         # Real verified pilot numbers from v0.4 live execution
         self.assertIn("268", self.en_text)
         self.assertIn("268", self.pt_text)
-        self.assertIn("0.0290", self.en_text)
-        self.assertIn("0,0290", self.pt_text)
+        self.assertIn("0.028966", self.en_text)
+        self.assertIn("0,028966", self.pt_text)
         self.assertIn("147,172", self.en_text)
         self.assertIn("147.172", self.pt_text)
 
@@ -167,7 +167,25 @@ class TestProposalConsistency(unittest.TestCase):
         words_pt = match_pt.group(1).split()
         self.assertLessEqual(len(words_pt), 200, f"PT Problem Statement exceeded 200 words: {len(words_pt)}")
 
-    def test_11_researcher_access_program_files_exist_and_consistent(self):
+    def test_11_metric_denominators_and_outcome_claims_are_explicit(self):
+        self.assertIn("84 non-violation trajectories", self.en_text)
+        self.assertIn("84 trajetórias sem violação", self.pt_text)
+        self.assertIn("prospective", self.en_text.lower())
+        self.assertIn("prospectiva", self.pt_text.lower())
+        self.assertNotIn("Independent Evaluator", self.en_text)
+        self.assertNotIn("Avaliador Independente", self.pt_text)
+        self.assertNotIn("156 passing automated tests", self.en_text)
+        self.assertNotIn("156 testes automatizados aprovados", self.pt_text)
+
+    def test_12_current_pilot_is_disclosed_as_exploratory_all_split_baseline_run(self):
+        for text in (self.en_text.lower(), self.pt_text.lower()):
+            self.assertIn("v0.4_hard", text)
+            self.assertIn("147,172" if text == self.en_text.lower() else "147.172", text)
+        self.assertIn("exploratory", self.en_text.lower())
+        self.assertIn("exploratória", self.pt_text.lower())
+
+
+    def test_13_researcher_access_program_files_exist_and_consistent(self):
         rap_en_path = os.path.join(BASE_DIR, "proposal", "researcher_access_program_EN.md")
         rap_pt_path = os.path.join(BASE_DIR, "proposal", "researcher_access_program_PT.md")
 
@@ -190,7 +208,6 @@ class TestProposalConsistency(unittest.TestCase):
         self.assertIn("268", rap_en)
         self.assertIn("268", rap_pt)
 
-        # Prohibited check
         self.assertNotIn("guaranteed peer review", rap_en.lower())
         self.assertNotIn("revisão por pares garantida", rap_pt.lower())
 

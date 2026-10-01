@@ -99,7 +99,7 @@ In ARKHÉ, detectors are forbidden from reading pre-calculated divergence or ris
 - **Semantic Baselines** must classify active instructions against declared policies dynamically.
 - **ARKHÉ Sentinel** computes trajectory divergence $d_{\text{mission}}(t)$, contamination belief $I_{\text{contam}}(t)$, and boundary proximity directly from raw step telemetry.
 
-### Tier 5: Decoupled Independent Evaluator
+### Tier 5: Evaluation Pipeline Isolated from Detectors
 
 The execution pipeline consists of two isolated executables:
 1. `harness/agent_benchmark_runner.py`: Reads `datasets/observations/*.jsonl` $\to$ Emits `results/<run>/predictions.jsonl` and `execution_manifest.json`. Never touches ground truth.
