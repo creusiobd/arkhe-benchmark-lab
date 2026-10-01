@@ -1,0 +1,16 @@
+{
+  "trajectories_evaluated": 50,
+  "contingency_table": {
+    "both_flagged": 37,
+    "rep1_only": 0,
+    "rep2_only": 0,
+    "neither_flagged": 13
+  },
+  "observed_trajectory_agreement": 1.0,
+  "expected_chance_agreement": 0.6152,
+  "cohens_kappa": 1.0,
+  "step_level_agreement": 0.9925,
+  "total_steps_compared": 134,
+  "discrepancies_count": 0,
+  "discrepant_trajectories": []
+}

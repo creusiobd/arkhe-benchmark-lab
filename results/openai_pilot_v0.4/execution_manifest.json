@@ -1,0 +1,47 @@
+{
+  "experiment_name": "openai_live_pilot_v0.4",
+  "protocol_version": "1.0.0",
+  "started_at_utc": "2026-10-01T01:09:15.734276+00:00",
+  "ended_at_utc": "2026-10-01T01:14:25.525987+00:00",
+  "duration_seconds": 309.79,
+  "mode": "openai_api",
+  "git_provenance": {
+    "commit_hash": "cac040e018f29ed611ef37a622a4692068f43f07",
+    "is_dirty": true
+  },
+  "system_environment": {
+    "python_version": "3.14.7",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "dataset_provenance": {
+    "version": "v0.4_hard",
+    "total_trajectories": 50,
+    "dataset_file_hashes": {
+      "observations/development.jsonl": "be94f2dc2cacaa4c46043aa867ec142b6b49bcb2bf43c69da45fdd82015f5c4e",
+      "observations/validation.jsonl": "0d67c3eb3c5b9e43edf6a1f9fed2742bf2329d8ed692c1e4f7e26f91fab51b2b",
+      "observations/test.jsonl": "e28ac42367feb41bf47cf25d34780f6fee6a3e99fc36e0698cca2e203febd680"
+    }
+  },
+  "model_telemetry": {
+    "model_requested": "gpt-4o-mini",
+    "models_returned": [
+      "gpt-4o-mini-2024-07-18"
+    ],
+    "temperature": 0.0,
+    "seed": 20260930
+  },
+  "execution_summary": {
+    "repetitions": 2,
+    "total_calls_attempted": 268,
+    "total_calls_succeeded": 268,
+    "total_calls_failed": 0,
+    "total_retries": 0,
+    "avg_latency_ms": 1133.37,
+    "tokens": {
+      "prompt": 131860,
+      "completion": 15312,
+      "total": 147172
+    },
+    "total_cost_usd": 0.028966
+  }
+}

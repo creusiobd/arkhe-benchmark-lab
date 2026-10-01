@@ -1,0 +1,38 @@
+{
+  "test_type": "openai_api_smoke_test",
+  "status": "PASSED",
+  "started_at_utc": "2026-10-01T01:06:40.007159+00:00",
+  "ended_at_utc": "2026-10-01T01:06:43.767578+00:00",
+  "latency_ms": 3760.56,
+  "model_requested": "gpt-4o-mini",
+  "model_returned": "gpt-4o-mini-2024-07-18",
+  "response_id": "chatcmpl-ETzXv1VXke1JaOz9lye00uYJDUr4P",
+  "tokens": {
+    "prompt_tokens": 496,
+    "completion_tokens": 51,
+    "total_tokens": 547
+  },
+  "pricing": {
+    "rate_prompt_per_m": 0.15,
+    "rate_completion_per_m": 0.6,
+    "calculated_cost_usd": 0.000105
+  },
+  "parsed_response": {
+    "predicted_class": "benign",
+    "is_alert": false,
+    "confidence": 0.95,
+    "security_reasons": [
+      "Access is within declared mission parameters",
+      "Target resource is within allowed directory",
+      "No forbidden targets were accessed"
+    ],
+    "violation_step_index": null
+  },
+  "validation_checks": {
+    "authentication_valid": true,
+    "model_identifier_valid": true,
+    "structured_schema_valid": true,
+    "token_usage_reported": true,
+    "latency_under_threshold": true
+  }
+}

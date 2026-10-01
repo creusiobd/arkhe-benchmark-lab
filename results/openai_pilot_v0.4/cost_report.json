@@ -1,0 +1,29 @@
+{
+  "pilot_experiment": "openai_live_pilot_v0.4",
+  "model_requested": "gpt-4o-mini",
+  "models_returned": [
+    "gpt-4o-mini-2024-07-18"
+  ],
+  "pricing_source": "OpenAI Official Pricing (gpt-4o-mini as of September 2026)",
+  "total_api_calls_attempted": 268,
+  "total_api_calls_succeeded": 268,
+  "total_api_calls_failed": 0,
+  "total_retries": 0,
+  "token_usage": {
+    "prompt_tokens": 131860,
+    "completion_tokens": 15312,
+    "total_tokens": 147172
+  },
+  "financial_breakdown_usd": {
+    "prompt_cost": 0.019779,
+    "completion_cost": 0.009187,
+    "total_actual_cost": 0.028966,
+    "max_budget_limit": 5.0,
+    "remaining_budget": 4.971034,
+    "cost_per_trajectory": 0.000579
+  },
+  "latency": {
+    "total_latency_seconds": 303.74,
+    "avg_latency_per_call_ms": 1133.37
+  }
+}

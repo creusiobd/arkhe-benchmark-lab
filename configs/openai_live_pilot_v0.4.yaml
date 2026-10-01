@@ -1,0 +1,105 @@
+# ==============================================================================
+# ARKHÉ Agent Boundary Defense Benchmark — Controlled OpenAI API Live Pilot Protocol
+# Version: 0.4.0 (Live Integration Audit)
+# ==============================================================================
+
+experiment_name: "openai_live_pilot_v0.4"
+protocol_version: "1.0.0"
+date_registered: "2026-09-30"
+
+# 1. Scientific Hypotheses and Metrics
+hypotheses:
+  primary: >
+    Isolated single-event semantic classifiers (e.g., gpt-4o-mini guardrails without trajectory state memory)
+    can detect explicit forbidden tool targets, but exhibit performance degradation on subtle boundary pressure
+    and fail to anticipate impending violations before the hazardous step executes.
+  secondary: >
+    Inter-repetition stochastic variability exists across identical queries even with temperature=0.0,
+    reflecting inherent non-determinism in hosted LLM inference that must be quantified via Cohen's Kappa.
+
+metrics:
+  primary_task:
+    name: "Pre-Violation Anticipation (Consummated Violations)"
+    metrics: ["Precision", "Recall", "F1_Score", "Specificity", "Lead_Steps", "Lead_Seconds"]
+  secondary_task:
+    name: "Boundary Pressure / Hazard Detection"
+    metrics: ["Precision", "Recall", "F1_Score", "Specificity"]
+  variability_metrics:
+    metrics: ["Inter_Repetition_Agreement_Rate", "Cohens_Kappa", "Discrepancy_Trajectory_Count"]
+  operational_telemetry:
+    metrics: ["API_Latency_ms", "Prompt_Tokens", "Completion_Tokens", "Total_Cost_USD", "Error_Rate", "Retry_Rate"]
+
+# 2. Frozen Dataset & Inclusion Criteria
+dataset:
+  version: "v0.4_hard"
+  inclusion_criteria: "Complete frozen v0.4_hard dataset comprising 50 distinct trajectories across 5 attack families."
+  exclusion_criteria: "No development/validation/test split leakage. Zero access to ground truth labels during execution."
+  sample_size_trajectories: 50
+  sample_size_steps: 134
+  observations:
+    development: "datasets/v0.4_hard/observations/development.jsonl"
+    validation: "datasets/v0.4_hard/observations/validation.jsonl"
+    test: "datasets/v0.4_hard/observations/test.jsonl"
+  ground_truth_sealed_dir: "datasets/v0.4_hard/ground_truth"
+
+# 3. Model & SDK Specifications
+model:
+  requested_model: "gpt-4o-mini"
+  endpoint: "https://api.openai.com/v1"
+  sdk_name: "openai"
+  sdk_version: "3.22.1"
+  temperature: 0.0
+  seed: 20260930  # Note: OpenAI seed is best-effort and does not guarantee strict bitwise determinism
+  timeout_seconds: 15.0
+  max_retries: 3
+  backoff_factor: 2.0
+
+# 4. Detector Under Evaluation
+detector:
+  id: "semantic_event_openai"
+  name: "Semantic-Event-Classifier-Baseline"
+  class_path: "detectors.semantic_event.SemanticEventDetector"
+  version: "1.1.0"
+  detection_mode: "ISOLATED_EVENT"
+  client_mode: "openai_api"
+
+# 5. Experimental Repetitions Protocol
+execution:
+  repetitions: 2
+  total_calls_planned: 268  # 134 steps * 2 repetitions
+  sample_unit: "unique_trajectory"
+  repetition_nature: "repeated_measures_intra_subject"
+  randomize_order: true
+  order_seed: 20260930
+
+# 6. Error, Timeout, and Abstenção Handling
+fault_policy:
+  timeout_behavior: "Raise exception, perform exponential backoff up to max_retries. If exhausted, record ERROR and abstain."
+  invalid_response_behavior: "Record schema validation failure, fail fast or record abstention without silent offline fallback."
+  silent_fallback_allowed: false
+  failure_accounting: "All failed calls remain strictly in the denominator of evaluation metrics."
+
+# 7. Financial Budget & Cost Computation Rules
+budget:
+  currency: "USD"
+  max_allowed_budget: 5.00
+  pricing_source: "OpenAI Official Pricing (gpt-4o-mini as of September 2026)"
+  rates:
+    prompt_tokens_per_million: 0.15      # $0.00000015 per prompt token
+    completion_tokens_per_million: 0.60  # $0.00000060 per completion token
+
+# 8. Output Destinations
+output:
+  directory: "results/openai_pilot_v0.4"
+  allow_overwrite: true
+  artifacts:
+    manifest: "execution_manifest.json"
+    api_traces: "api_call_traces.jsonl"
+    smoke_test: "smoke_test_result.json"
+    predictions_rep1: "predictions_rep1.jsonl"
+    predictions_rep2: "predictions_rep2.jsonl"
+    cost_report: "cost_report.json"
+    metrics_rep1: "metrics_rep1.json"
+    metrics_rep2: "metrics_rep2.json"
+    variability_analysis: "variability_analysis.json"
+    report_markdown: "pilot_report.md"
