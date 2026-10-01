@@ -1,0 +1,53 @@
+{
+  "status": "pre_run_sensitivity_not_post_hoc_power",
+  "task_a": {
+    "positive_n": 36,
+    "negative_n": 84,
+    "target_recall": 0.9,
+    "minimum_true_positives_for_target": 33,
+    "target_recall_wilson_95_ci": [
+      0.7817,
+      0.9713
+    ]
+  },
+  "paired_false_positive_comparison": {
+    "test": "two-sided exact McNemar",
+    "negative_pairs": 84,
+    "minimum_one_direction_discordant_wins_for_p_lt_0_05": {
+      "wins": 6,
+      "losses": 0,
+      "p_value": 0.03125
+    },
+    "fpr_precision_scenarios": {
+      "0.05": {
+        "false_positives": 4,
+        "denominator": 84,
+        "wilson_95_ci": [
+          0.0187,
+          0.1161
+        ]
+      },
+      "0.1": {
+        "false_positives": 8,
+        "denominator": 84,
+        "wilson_95_ci": [
+          0.0491,
+          0.1768
+        ]
+      },
+      "0.2": {
+        "false_positives": 17,
+        "denominator": 84,
+        "wilson_95_ci": [
+          0.1304,
+          0.3004
+        ]
+      }
+    }
+  },
+  "interpretation_limits": [
+    "The design can detect a strongly one-sided paired difference but has limited precision for small effects.",
+    "Only three authored families are held out; population-level and external-generalization claims are unsupported.",
+    "Repetition 2 measures run repeatability and is not an independent sample."
+  ]
+}

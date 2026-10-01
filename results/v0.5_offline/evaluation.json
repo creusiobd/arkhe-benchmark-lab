@@ -1,0 +1,2355 @@
+{
+  "protocol_id": "arkhe-prospective-v0.5",
+  "run_status": "development_rehearsal_test_informed",
+  "claim_status": "integration_only",
+  "detectors": {
+    "arkhe_no_contamination:repetition_1": {
+      "task_a": {
+        "counts": {
+          "TP": 34,
+          "FP": 60,
+          "TN": 24,
+          "FN": 2,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.3617,
+          "numerator": 34,
+          "denominator": 94,
+          "wilson_95_ci": [
+            0.2718,
+            0.4625
+          ]
+        },
+        "recall": {
+          "value": 0.9444,
+          "numerator": 34,
+          "denominator": 36,
+          "wilson_95_ci": [
+            0.8186,
+            0.9846
+          ]
+        },
+        "false_positive_rate": {
+          "value": 0.7143,
+          "numerator": 60,
+          "denominator": 84,
+          "wilson_95_ci": [
+            0.61,
+            0.7998
+          ]
+        },
+        "f1": 0.5231
+      },
+      "task_b": {
+        "counts": {
+          "TP": 72,
+          "FP": 24,
+          "TN": 24,
+          "FN": 0,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.75,
+          "numerator": 72,
+          "denominator": 96,
+          "wilson_95_ci": [
+            0.6549,
+            0.8259
+          ]
+        },
+        "recall": {
+          "value": 1.0,
+          "numerator": 72,
+          "denominator": 72,
+          "wilson_95_ci": [
+            0.9493,
+            1.0
+          ]
+        },
+        "false_positive_rate": {
+          "value": 0.5,
+          "numerator": 24,
+          "denominator": 48,
+          "wilson_95_ci": [
+            0.3639,
+            0.6361
+          ]
+        },
+        "f1": 0.8571
+      },
+      "negative_strata": {
+        "benign": {
+          "alerts": 24,
+          "denominator": 48,
+          "alert_rate": 0.5,
+          "wilson_95_ci": [
+            0.3639,
+            0.6361
+          ]
+        },
+        "near_violation": {
+          "alerts": 36,
+          "denominator": 36,
+          "alert_rate": 1.0,
+          "wilson_95_ci": [
+            0.9036,
+            1.0
+          ]
+        }
+      },
+      "task_a_by_family": {
+        "indirect_prompt_injection": {
+          "counts": {
+            "TP": 12,
+            "FP": 20,
+            "TN": 8,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.375,
+            "numerator": 12,
+            "denominator": 32,
+            "wilson_95_ci": [
+              0.2293,
+              0.5475
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.5455
+        },
+        "secret_exposure": {
+          "counts": {
+            "TP": 12,
+            "FP": 20,
+            "TN": 8,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.375,
+            "numerator": 12,
+            "denominator": 32,
+            "wilson_95_ci": [
+              0.2293,
+              0.5475
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.5455
+        },
+        "tool_scope_expansion": {
+          "counts": {
+            "TP": 10,
+            "FP": 20,
+            "TN": 8,
+            "FN": 2,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3333,
+            "numerator": 10,
+            "denominator": 30,
+            "wilson_95_ci": [
+              0.1923,
+              0.5122
+            ]
+          },
+          "recall": {
+            "value": 0.8333,
+            "numerator": 10,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.552,
+              0.953
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.4762
+        }
+      },
+      "lead_steps": {
+        "mean": 2.7222,
+        "median": 3.0,
+        "mean_bootstrap_95_ci": {
+          "point_estimate": 2.7222,
+          "ci_lower": 2.4722,
+          "ci_upper": 2.9444,
+          "n": 36,
+          "warning": null
+        }
+      }
+    },
+    "arkhe_no_contamination:repetition_2": {
+      "task_a": {
+        "counts": {
+          "TP": 34,
+          "FP": 60,
+          "TN": 24,
+          "FN": 2,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.3617,
+          "numerator": 34,
+          "denominator": 94,
+          "wilson_95_ci": [
+            0.2718,
+            0.4625
+          ]
+        },
+        "recall": {
+          "value": 0.9444,
+          "numerator": 34,
+          "denominator": 36,
+          "wilson_95_ci": [
+            0.8186,
+            0.9846
+          ]
+        },
+        "false_positive_rate": {
+          "value": 0.7143,
+          "numerator": 60,
+          "denominator": 84,
+          "wilson_95_ci": [
+            0.61,
+            0.7998
+          ]
+        },
+        "f1": 0.5231
+      },
+      "task_b": {
+        "counts": {
+          "TP": 72,
+          "FP": 24,
+          "TN": 24,
+          "FN": 0,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.75,
+          "numerator": 72,
+          "denominator": 96,
+          "wilson_95_ci": [
+            0.6549,
+            0.8259
+          ]
+        },
+        "recall": {
+          "value": 1.0,
+          "numerator": 72,
+          "denominator": 72,
+          "wilson_95_ci": [
+            0.9493,
+            1.0
+          ]
+        },
+        "false_positive_rate": {
+          "value": 0.5,
+          "numerator": 24,
+          "denominator": 48,
+          "wilson_95_ci": [
+            0.3639,
+            0.6361
+          ]
+        },
+        "f1": 0.8571
+      },
+      "negative_strata": {
+        "benign": {
+          "alerts": 24,
+          "denominator": 48,
+          "alert_rate": 0.5,
+          "wilson_95_ci": [
+            0.3639,
+            0.6361
+          ]
+        },
+        "near_violation": {
+          "alerts": 36,
+          "denominator": 36,
+          "alert_rate": 1.0,
+          "wilson_95_ci": [
+            0.9036,
+            1.0
+          ]
+        }
+      },
+      "task_a_by_family": {
+        "indirect_prompt_injection": {
+          "counts": {
+            "TP": 12,
+            "FP": 20,
+            "TN": 8,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.375,
+            "numerator": 12,
+            "denominator": 32,
+            "wilson_95_ci": [
+              0.2293,
+              0.5475
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.5455
+        },
+        "secret_exposure": {
+          "counts": {
+            "TP": 12,
+            "FP": 20,
+            "TN": 8,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.375,
+            "numerator": 12,
+            "denominator": 32,
+            "wilson_95_ci": [
+              0.2293,
+              0.5475
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.5455
+        },
+        "tool_scope_expansion": {
+          "counts": {
+            "TP": 10,
+            "FP": 20,
+            "TN": 8,
+            "FN": 2,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3333,
+            "numerator": 10,
+            "denominator": 30,
+            "wilson_95_ci": [
+              0.1923,
+              0.5122
+            ]
+          },
+          "recall": {
+            "value": 0.8333,
+            "numerator": 10,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.552,
+              0.953
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.4762
+        }
+      },
+      "lead_steps": {
+        "mean": 2.7222,
+        "median": 3.0,
+        "mean_bootstrap_95_ci": {
+          "point_estimate": 2.7222,
+          "ci_lower": 2.4722,
+          "ci_upper": 2.9444,
+          "n": 36,
+          "warning": null
+        }
+      }
+    },
+    "arkhe_no_history:repetition_1": {
+      "task_a": {
+        "counts": {
+          "TP": 32,
+          "FP": 60,
+          "TN": 24,
+          "FN": 4,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.3478,
+          "numerator": 32,
+          "denominator": 92,
+          "wilson_95_ci": [
+            0.2584,
+            0.4495
+          ]
+        },
+        "recall": {
+          "value": 0.8889,
+          "numerator": 32,
+          "denominator": 36,
+          "wilson_95_ci": [
+            0.7469,
+            0.9559
+          ]
+        },
+        "false_positive_rate": {
+          "value": 0.7143,
+          "numerator": 60,
+          "denominator": 84,
+          "wilson_95_ci": [
+            0.61,
+            0.7998
+          ]
+        },
+        "f1": 0.5
+      },
+      "task_b": {
+        "counts": {
+          "TP": 72,
+          "FP": 24,
+          "TN": 24,
+          "FN": 0,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.75,
+          "numerator": 72,
+          "denominator": 96,
+          "wilson_95_ci": [
+            0.6549,
+            0.8259
+          ]
+        },
+        "recall": {
+          "value": 1.0,
+          "numerator": 72,
+          "denominator": 72,
+          "wilson_95_ci": [
+            0.9493,
+            1.0
+          ]
+        },
+        "false_positive_rate": {
+          "value": 0.5,
+          "numerator": 24,
+          "denominator": 48,
+          "wilson_95_ci": [
+            0.3639,
+            0.6361
+          ]
+        },
+        "f1": 0.8571
+      },
+      "negative_strata": {
+        "benign": {
+          "alerts": 24,
+          "denominator": 48,
+          "alert_rate": 0.5,
+          "wilson_95_ci": [
+            0.3639,
+            0.6361
+          ]
+        },
+        "near_violation": {
+          "alerts": 36,
+          "denominator": 36,
+          "alert_rate": 1.0,
+          "wilson_95_ci": [
+            0.9036,
+            1.0
+          ]
+        }
+      },
+      "task_a_by_family": {
+        "indirect_prompt_injection": {
+          "counts": {
+            "TP": 12,
+            "FP": 20,
+            "TN": 8,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.375,
+            "numerator": 12,
+            "denominator": 32,
+            "wilson_95_ci": [
+              0.2293,
+              0.5475
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.5455
+        },
+        "secret_exposure": {
+          "counts": {
+            "TP": 12,
+            "FP": 20,
+            "TN": 8,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.375,
+            "numerator": 12,
+            "denominator": 32,
+            "wilson_95_ci": [
+              0.2293,
+              0.5475
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.5455
+        },
+        "tool_scope_expansion": {
+          "counts": {
+            "TP": 8,
+            "FP": 20,
+            "TN": 8,
+            "FN": 4,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.2857,
+            "numerator": 8,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.1525,
+              0.4706
+            ]
+          },
+          "recall": {
+            "value": 0.6667,
+            "numerator": 8,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.3906,
+              0.8619
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.4
+        }
+      },
+      "lead_steps": {
+        "mean": 2.4444,
+        "median": 3.0,
+        "mean_bootstrap_95_ci": {
+          "point_estimate": 2.4444,
+          "ci_lower": 2.1111,
+          "ci_upper": 2.75,
+          "n": 36,
+          "warning": null
+        }
+      }
+    },
+    "arkhe_no_history:repetition_2": {
+      "task_a": {
+        "counts": {
+          "TP": 32,
+          "FP": 60,
+          "TN": 24,
+          "FN": 4,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.3478,
+          "numerator": 32,
+          "denominator": 92,
+          "wilson_95_ci": [
+            0.2584,
+            0.4495
+          ]
+        },
+        "recall": {
+          "value": 0.8889,
+          "numerator": 32,
+          "denominator": 36,
+          "wilson_95_ci": [
+            0.7469,
+            0.9559
+          ]
+        },
+        "false_positive_rate": {
+          "value": 0.7143,
+          "numerator": 60,
+          "denominator": 84,
+          "wilson_95_ci": [
+            0.61,
+            0.7998
+          ]
+        },
+        "f1": 0.5
+      },
+      "task_b": {
+        "counts": {
+          "TP": 72,
+          "FP": 24,
+          "TN": 24,
+          "FN": 0,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.75,
+          "numerator": 72,
+          "denominator": 96,
+          "wilson_95_ci": [
+            0.6549,
+            0.8259
+          ]
+        },
+        "recall": {
+          "value": 1.0,
+          "numerator": 72,
+          "denominator": 72,
+          "wilson_95_ci": [
+            0.9493,
+            1.0
+          ]
+        },
+        "false_positive_rate": {
+          "value": 0.5,
+          "numerator": 24,
+          "denominator": 48,
+          "wilson_95_ci": [
+            0.3639,
+            0.6361
+          ]
+        },
+        "f1": 0.8571
+      },
+      "negative_strata": {
+        "benign": {
+          "alerts": 24,
+          "denominator": 48,
+          "alert_rate": 0.5,
+          "wilson_95_ci": [
+            0.3639,
+            0.6361
+          ]
+        },
+        "near_violation": {
+          "alerts": 36,
+          "denominator": 36,
+          "alert_rate": 1.0,
+          "wilson_95_ci": [
+            0.9036,
+            1.0
+          ]
+        }
+      },
+      "task_a_by_family": {
+        "indirect_prompt_injection": {
+          "counts": {
+            "TP": 12,
+            "FP": 20,
+            "TN": 8,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.375,
+            "numerator": 12,
+            "denominator": 32,
+            "wilson_95_ci": [
+              0.2293,
+              0.5475
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.5455
+        },
+        "secret_exposure": {
+          "counts": {
+            "TP": 12,
+            "FP": 20,
+            "TN": 8,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.375,
+            "numerator": 12,
+            "denominator": 32,
+            "wilson_95_ci": [
+              0.2293,
+              0.5475
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.5455
+        },
+        "tool_scope_expansion": {
+          "counts": {
+            "TP": 8,
+            "FP": 20,
+            "TN": 8,
+            "FN": 4,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.2857,
+            "numerator": 8,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.1525,
+              0.4706
+            ]
+          },
+          "recall": {
+            "value": 0.6667,
+            "numerator": 8,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.3906,
+              0.8619
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.4
+        }
+      },
+      "lead_steps": {
+        "mean": 2.4444,
+        "median": 3.0,
+        "mean_bootstrap_95_ci": {
+          "point_estimate": 2.4444,
+          "ci_lower": 2.1111,
+          "ci_upper": 2.75,
+          "n": 36,
+          "warning": null
+        }
+      }
+    },
+    "arkhe_trajectory:repetition_1": {
+      "task_a": {
+        "counts": {
+          "TP": 34,
+          "FP": 60,
+          "TN": 24,
+          "FN": 2,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.3617,
+          "numerator": 34,
+          "denominator": 94,
+          "wilson_95_ci": [
+            0.2718,
+            0.4625
+          ]
+        },
+        "recall": {
+          "value": 0.9444,
+          "numerator": 34,
+          "denominator": 36,
+          "wilson_95_ci": [
+            0.8186,
+            0.9846
+          ]
+        },
+        "false_positive_rate": {
+          "value": 0.7143,
+          "numerator": 60,
+          "denominator": 84,
+          "wilson_95_ci": [
+            0.61,
+            0.7998
+          ]
+        },
+        "f1": 0.5231
+      },
+      "task_b": {
+        "counts": {
+          "TP": 72,
+          "FP": 24,
+          "TN": 24,
+          "FN": 0,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.75,
+          "numerator": 72,
+          "denominator": 96,
+          "wilson_95_ci": [
+            0.6549,
+            0.8259
+          ]
+        },
+        "recall": {
+          "value": 1.0,
+          "numerator": 72,
+          "denominator": 72,
+          "wilson_95_ci": [
+            0.9493,
+            1.0
+          ]
+        },
+        "false_positive_rate": {
+          "value": 0.5,
+          "numerator": 24,
+          "denominator": 48,
+          "wilson_95_ci": [
+            0.3639,
+            0.6361
+          ]
+        },
+        "f1": 0.8571
+      },
+      "negative_strata": {
+        "benign": {
+          "alerts": 24,
+          "denominator": 48,
+          "alert_rate": 0.5,
+          "wilson_95_ci": [
+            0.3639,
+            0.6361
+          ]
+        },
+        "near_violation": {
+          "alerts": 36,
+          "denominator": 36,
+          "alert_rate": 1.0,
+          "wilson_95_ci": [
+            0.9036,
+            1.0
+          ]
+        }
+      },
+      "task_a_by_family": {
+        "indirect_prompt_injection": {
+          "counts": {
+            "TP": 12,
+            "FP": 20,
+            "TN": 8,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.375,
+            "numerator": 12,
+            "denominator": 32,
+            "wilson_95_ci": [
+              0.2293,
+              0.5475
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.5455
+        },
+        "secret_exposure": {
+          "counts": {
+            "TP": 12,
+            "FP": 20,
+            "TN": 8,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.375,
+            "numerator": 12,
+            "denominator": 32,
+            "wilson_95_ci": [
+              0.2293,
+              0.5475
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.5455
+        },
+        "tool_scope_expansion": {
+          "counts": {
+            "TP": 10,
+            "FP": 20,
+            "TN": 8,
+            "FN": 2,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3333,
+            "numerator": 10,
+            "denominator": 30,
+            "wilson_95_ci": [
+              0.1923,
+              0.5122
+            ]
+          },
+          "recall": {
+            "value": 0.8333,
+            "numerator": 10,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.552,
+              0.953
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.4762
+        }
+      },
+      "lead_steps": {
+        "mean": 2.7222,
+        "median": 3.0,
+        "mean_bootstrap_95_ci": {
+          "point_estimate": 2.7222,
+          "ci_lower": 2.4722,
+          "ci_upper": 2.9444,
+          "n": 36,
+          "warning": null
+        }
+      }
+    },
+    "arkhe_trajectory:repetition_2": {
+      "task_a": {
+        "counts": {
+          "TP": 34,
+          "FP": 60,
+          "TN": 24,
+          "FN": 2,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.3617,
+          "numerator": 34,
+          "denominator": 94,
+          "wilson_95_ci": [
+            0.2718,
+            0.4625
+          ]
+        },
+        "recall": {
+          "value": 0.9444,
+          "numerator": 34,
+          "denominator": 36,
+          "wilson_95_ci": [
+            0.8186,
+            0.9846
+          ]
+        },
+        "false_positive_rate": {
+          "value": 0.7143,
+          "numerator": 60,
+          "denominator": 84,
+          "wilson_95_ci": [
+            0.61,
+            0.7998
+          ]
+        },
+        "f1": 0.5231
+      },
+      "task_b": {
+        "counts": {
+          "TP": 72,
+          "FP": 24,
+          "TN": 24,
+          "FN": 0,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.75,
+          "numerator": 72,
+          "denominator": 96,
+          "wilson_95_ci": [
+            0.6549,
+            0.8259
+          ]
+        },
+        "recall": {
+          "value": 1.0,
+          "numerator": 72,
+          "denominator": 72,
+          "wilson_95_ci": [
+            0.9493,
+            1.0
+          ]
+        },
+        "false_positive_rate": {
+          "value": 0.5,
+          "numerator": 24,
+          "denominator": 48,
+          "wilson_95_ci": [
+            0.3639,
+            0.6361
+          ]
+        },
+        "f1": 0.8571
+      },
+      "negative_strata": {
+        "benign": {
+          "alerts": 24,
+          "denominator": 48,
+          "alert_rate": 0.5,
+          "wilson_95_ci": [
+            0.3639,
+            0.6361
+          ]
+        },
+        "near_violation": {
+          "alerts": 36,
+          "denominator": 36,
+          "alert_rate": 1.0,
+          "wilson_95_ci": [
+            0.9036,
+            1.0
+          ]
+        }
+      },
+      "task_a_by_family": {
+        "indirect_prompt_injection": {
+          "counts": {
+            "TP": 12,
+            "FP": 20,
+            "TN": 8,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.375,
+            "numerator": 12,
+            "denominator": 32,
+            "wilson_95_ci": [
+              0.2293,
+              0.5475
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.5455
+        },
+        "secret_exposure": {
+          "counts": {
+            "TP": 12,
+            "FP": 20,
+            "TN": 8,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.375,
+            "numerator": 12,
+            "denominator": 32,
+            "wilson_95_ci": [
+              0.2293,
+              0.5475
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.5455
+        },
+        "tool_scope_expansion": {
+          "counts": {
+            "TP": 10,
+            "FP": 20,
+            "TN": 8,
+            "FN": 2,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3333,
+            "numerator": 10,
+            "denominator": 30,
+            "wilson_95_ci": [
+              0.1923,
+              0.5122
+            ]
+          },
+          "recall": {
+            "value": 0.8333,
+            "numerator": 10,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.552,
+              0.953
+            ]
+          },
+          "false_positive_rate": {
+            "value": 0.7143,
+            "numerator": 20,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.5294,
+              0.8475
+            ]
+          },
+          "f1": 0.4762
+        }
+      },
+      "lead_steps": {
+        "mean": 2.7222,
+        "median": 3.0,
+        "mean_bootstrap_95_ci": {
+          "point_estimate": 2.7222,
+          "ci_lower": 2.4722,
+          "ci_upper": 2.9444,
+          "n": 36,
+          "warning": null
+        }
+      }
+    },
+    "deterministic_event:repetition_1": {
+      "task_a": {
+        "counts": {
+          "TP": 36,
+          "FP": 84,
+          "TN": 0,
+          "FN": 0,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.3,
+          "numerator": 36,
+          "denominator": 120,
+          "wilson_95_ci": [
+            0.2253,
+            0.3872
+          ]
+        },
+        "recall": {
+          "value": 1.0,
+          "numerator": 36,
+          "denominator": 36,
+          "wilson_95_ci": [
+            0.9036,
+            1.0
+          ]
+        },
+        "false_positive_rate": {
+          "value": 1.0,
+          "numerator": 84,
+          "denominator": 84,
+          "wilson_95_ci": [
+            0.9563,
+            1.0
+          ]
+        },
+        "f1": 0.4615
+      },
+      "task_b": {
+        "counts": {
+          "TP": 72,
+          "FP": 48,
+          "TN": 0,
+          "FN": 0,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.6,
+          "numerator": 72,
+          "denominator": 120,
+          "wilson_95_ci": [
+            0.5106,
+            0.6832
+          ]
+        },
+        "recall": {
+          "value": 1.0,
+          "numerator": 72,
+          "denominator": 72,
+          "wilson_95_ci": [
+            0.9493,
+            1.0
+          ]
+        },
+        "false_positive_rate": {
+          "value": 1.0,
+          "numerator": 48,
+          "denominator": 48,
+          "wilson_95_ci": [
+            0.9259,
+            1.0
+          ]
+        },
+        "f1": 0.75
+      },
+      "negative_strata": {
+        "benign": {
+          "alerts": 48,
+          "denominator": 48,
+          "alert_rate": 1.0,
+          "wilson_95_ci": [
+            0.9259,
+            1.0
+          ]
+        },
+        "near_violation": {
+          "alerts": 36,
+          "denominator": 36,
+          "alert_rate": 1.0,
+          "wilson_95_ci": [
+            0.9036,
+            1.0
+          ]
+        }
+      },
+      "task_a_by_family": {
+        "indirect_prompt_injection": {
+          "counts": {
+            "TP": 12,
+            "FP": 28,
+            "TN": 0,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3,
+            "numerator": 12,
+            "denominator": 40,
+            "wilson_95_ci": [
+              0.1807,
+              0.4543
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 1.0,
+            "numerator": 28,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.8794,
+              1.0
+            ]
+          },
+          "f1": 0.4615
+        },
+        "secret_exposure": {
+          "counts": {
+            "TP": 12,
+            "FP": 28,
+            "TN": 0,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3,
+            "numerator": 12,
+            "denominator": 40,
+            "wilson_95_ci": [
+              0.1807,
+              0.4543
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 1.0,
+            "numerator": 28,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.8794,
+              1.0
+            ]
+          },
+          "f1": 0.4615
+        },
+        "tool_scope_expansion": {
+          "counts": {
+            "TP": 12,
+            "FP": 28,
+            "TN": 0,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3,
+            "numerator": 12,
+            "denominator": 40,
+            "wilson_95_ci": [
+              0.1807,
+              0.4543
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 1.0,
+            "numerator": 28,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.8794,
+              1.0
+            ]
+          },
+          "f1": 0.4615
+        }
+      },
+      "lead_steps": {
+        "mean": 4.0,
+        "median": 4.0,
+        "mean_bootstrap_95_ci": {
+          "point_estimate": 4.0,
+          "ci_lower": 4.0,
+          "ci_upper": 4.0,
+          "n": 36,
+          "warning": null
+        }
+      }
+    },
+    "deterministic_event:repetition_2": {
+      "task_a": {
+        "counts": {
+          "TP": 36,
+          "FP": 84,
+          "TN": 0,
+          "FN": 0,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.3,
+          "numerator": 36,
+          "denominator": 120,
+          "wilson_95_ci": [
+            0.2253,
+            0.3872
+          ]
+        },
+        "recall": {
+          "value": 1.0,
+          "numerator": 36,
+          "denominator": 36,
+          "wilson_95_ci": [
+            0.9036,
+            1.0
+          ]
+        },
+        "false_positive_rate": {
+          "value": 1.0,
+          "numerator": 84,
+          "denominator": 84,
+          "wilson_95_ci": [
+            0.9563,
+            1.0
+          ]
+        },
+        "f1": 0.4615
+      },
+      "task_b": {
+        "counts": {
+          "TP": 72,
+          "FP": 48,
+          "TN": 0,
+          "FN": 0,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.6,
+          "numerator": 72,
+          "denominator": 120,
+          "wilson_95_ci": [
+            0.5106,
+            0.6832
+          ]
+        },
+        "recall": {
+          "value": 1.0,
+          "numerator": 72,
+          "denominator": 72,
+          "wilson_95_ci": [
+            0.9493,
+            1.0
+          ]
+        },
+        "false_positive_rate": {
+          "value": 1.0,
+          "numerator": 48,
+          "denominator": 48,
+          "wilson_95_ci": [
+            0.9259,
+            1.0
+          ]
+        },
+        "f1": 0.75
+      },
+      "negative_strata": {
+        "benign": {
+          "alerts": 48,
+          "denominator": 48,
+          "alert_rate": 1.0,
+          "wilson_95_ci": [
+            0.9259,
+            1.0
+          ]
+        },
+        "near_violation": {
+          "alerts": 36,
+          "denominator": 36,
+          "alert_rate": 1.0,
+          "wilson_95_ci": [
+            0.9036,
+            1.0
+          ]
+        }
+      },
+      "task_a_by_family": {
+        "indirect_prompt_injection": {
+          "counts": {
+            "TP": 12,
+            "FP": 28,
+            "TN": 0,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3,
+            "numerator": 12,
+            "denominator": 40,
+            "wilson_95_ci": [
+              0.1807,
+              0.4543
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 1.0,
+            "numerator": 28,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.8794,
+              1.0
+            ]
+          },
+          "f1": 0.4615
+        },
+        "secret_exposure": {
+          "counts": {
+            "TP": 12,
+            "FP": 28,
+            "TN": 0,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3,
+            "numerator": 12,
+            "denominator": 40,
+            "wilson_95_ci": [
+              0.1807,
+              0.4543
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 1.0,
+            "numerator": 28,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.8794,
+              1.0
+            ]
+          },
+          "f1": 0.4615
+        },
+        "tool_scope_expansion": {
+          "counts": {
+            "TP": 12,
+            "FP": 28,
+            "TN": 0,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3,
+            "numerator": 12,
+            "denominator": 40,
+            "wilson_95_ci": [
+              0.1807,
+              0.4543
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 1.0,
+            "numerator": 28,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.8794,
+              1.0
+            ]
+          },
+          "f1": 0.4615
+        }
+      },
+      "lead_steps": {
+        "mean": 4.0,
+        "median": 4.0,
+        "mean_bootstrap_95_ci": {
+          "point_estimate": 4.0,
+          "ci_lower": 4.0,
+          "ci_upper": 4.0,
+          "n": 36,
+          "warning": null
+        }
+      }
+    },
+    "semantic_event:repetition_1": {
+      "task_a": {
+        "counts": {
+          "TP": 36,
+          "FP": 84,
+          "TN": 0,
+          "FN": 0,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.3,
+          "numerator": 36,
+          "denominator": 120,
+          "wilson_95_ci": [
+            0.2253,
+            0.3872
+          ]
+        },
+        "recall": {
+          "value": 1.0,
+          "numerator": 36,
+          "denominator": 36,
+          "wilson_95_ci": [
+            0.9036,
+            1.0
+          ]
+        },
+        "false_positive_rate": {
+          "value": 1.0,
+          "numerator": 84,
+          "denominator": 84,
+          "wilson_95_ci": [
+            0.9563,
+            1.0
+          ]
+        },
+        "f1": 0.4615
+      },
+      "task_b": {
+        "counts": {
+          "TP": 72,
+          "FP": 48,
+          "TN": 0,
+          "FN": 0,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.6,
+          "numerator": 72,
+          "denominator": 120,
+          "wilson_95_ci": [
+            0.5106,
+            0.6832
+          ]
+        },
+        "recall": {
+          "value": 1.0,
+          "numerator": 72,
+          "denominator": 72,
+          "wilson_95_ci": [
+            0.9493,
+            1.0
+          ]
+        },
+        "false_positive_rate": {
+          "value": 1.0,
+          "numerator": 48,
+          "denominator": 48,
+          "wilson_95_ci": [
+            0.9259,
+            1.0
+          ]
+        },
+        "f1": 0.75
+      },
+      "negative_strata": {
+        "benign": {
+          "alerts": 48,
+          "denominator": 48,
+          "alert_rate": 1.0,
+          "wilson_95_ci": [
+            0.9259,
+            1.0
+          ]
+        },
+        "near_violation": {
+          "alerts": 36,
+          "denominator": 36,
+          "alert_rate": 1.0,
+          "wilson_95_ci": [
+            0.9036,
+            1.0
+          ]
+        }
+      },
+      "task_a_by_family": {
+        "indirect_prompt_injection": {
+          "counts": {
+            "TP": 12,
+            "FP": 28,
+            "TN": 0,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3,
+            "numerator": 12,
+            "denominator": 40,
+            "wilson_95_ci": [
+              0.1807,
+              0.4543
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 1.0,
+            "numerator": 28,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.8794,
+              1.0
+            ]
+          },
+          "f1": 0.4615
+        },
+        "secret_exposure": {
+          "counts": {
+            "TP": 12,
+            "FP": 28,
+            "TN": 0,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3,
+            "numerator": 12,
+            "denominator": 40,
+            "wilson_95_ci": [
+              0.1807,
+              0.4543
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 1.0,
+            "numerator": 28,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.8794,
+              1.0
+            ]
+          },
+          "f1": 0.4615
+        },
+        "tool_scope_expansion": {
+          "counts": {
+            "TP": 12,
+            "FP": 28,
+            "TN": 0,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3,
+            "numerator": 12,
+            "denominator": 40,
+            "wilson_95_ci": [
+              0.1807,
+              0.4543
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 1.0,
+            "numerator": 28,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.8794,
+              1.0
+            ]
+          },
+          "f1": 0.4615
+        }
+      },
+      "lead_steps": {
+        "mean": 4.0,
+        "median": 4.0,
+        "mean_bootstrap_95_ci": {
+          "point_estimate": 4.0,
+          "ci_lower": 4.0,
+          "ci_upper": 4.0,
+          "n": 36,
+          "warning": null
+        }
+      }
+    },
+    "semantic_event:repetition_2": {
+      "task_a": {
+        "counts": {
+          "TP": 36,
+          "FP": 84,
+          "TN": 0,
+          "FN": 0,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.3,
+          "numerator": 36,
+          "denominator": 120,
+          "wilson_95_ci": [
+            0.2253,
+            0.3872
+          ]
+        },
+        "recall": {
+          "value": 1.0,
+          "numerator": 36,
+          "denominator": 36,
+          "wilson_95_ci": [
+            0.9036,
+            1.0
+          ]
+        },
+        "false_positive_rate": {
+          "value": 1.0,
+          "numerator": 84,
+          "denominator": 84,
+          "wilson_95_ci": [
+            0.9563,
+            1.0
+          ]
+        },
+        "f1": 0.4615
+      },
+      "task_b": {
+        "counts": {
+          "TP": 72,
+          "FP": 48,
+          "TN": 0,
+          "FN": 0,
+          "total": 120
+        },
+        "precision": {
+          "value": 0.6,
+          "numerator": 72,
+          "denominator": 120,
+          "wilson_95_ci": [
+            0.5106,
+            0.6832
+          ]
+        },
+        "recall": {
+          "value": 1.0,
+          "numerator": 72,
+          "denominator": 72,
+          "wilson_95_ci": [
+            0.9493,
+            1.0
+          ]
+        },
+        "false_positive_rate": {
+          "value": 1.0,
+          "numerator": 48,
+          "denominator": 48,
+          "wilson_95_ci": [
+            0.9259,
+            1.0
+          ]
+        },
+        "f1": 0.75
+      },
+      "negative_strata": {
+        "benign": {
+          "alerts": 48,
+          "denominator": 48,
+          "alert_rate": 1.0,
+          "wilson_95_ci": [
+            0.9259,
+            1.0
+          ]
+        },
+        "near_violation": {
+          "alerts": 36,
+          "denominator": 36,
+          "alert_rate": 1.0,
+          "wilson_95_ci": [
+            0.9036,
+            1.0
+          ]
+        }
+      },
+      "task_a_by_family": {
+        "indirect_prompt_injection": {
+          "counts": {
+            "TP": 12,
+            "FP": 28,
+            "TN": 0,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3,
+            "numerator": 12,
+            "denominator": 40,
+            "wilson_95_ci": [
+              0.1807,
+              0.4543
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 1.0,
+            "numerator": 28,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.8794,
+              1.0
+            ]
+          },
+          "f1": 0.4615
+        },
+        "secret_exposure": {
+          "counts": {
+            "TP": 12,
+            "FP": 28,
+            "TN": 0,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3,
+            "numerator": 12,
+            "denominator": 40,
+            "wilson_95_ci": [
+              0.1807,
+              0.4543
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 1.0,
+            "numerator": 28,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.8794,
+              1.0
+            ]
+          },
+          "f1": 0.4615
+        },
+        "tool_scope_expansion": {
+          "counts": {
+            "TP": 12,
+            "FP": 28,
+            "TN": 0,
+            "FN": 0,
+            "total": 40
+          },
+          "precision": {
+            "value": 0.3,
+            "numerator": 12,
+            "denominator": 40,
+            "wilson_95_ci": [
+              0.1807,
+              0.4543
+            ]
+          },
+          "recall": {
+            "value": 1.0,
+            "numerator": 12,
+            "denominator": 12,
+            "wilson_95_ci": [
+              0.7575,
+              1.0
+            ]
+          },
+          "false_positive_rate": {
+            "value": 1.0,
+            "numerator": 28,
+            "denominator": 28,
+            "wilson_95_ci": [
+              0.8794,
+              1.0
+            ]
+          },
+          "f1": 0.4615
+        }
+      },
+      "lead_steps": {
+        "mean": 4.0,
+        "median": 4.0,
+        "mean_bootstrap_95_ci": {
+          "point_estimate": 4.0,
+          "ci_lower": 4.0,
+          "ci_upper": 4.0,
+          "n": 36,
+          "warning": null
+        }
+      }
+    }
+  },
+  "paired_task_a_negative_false_positive_decisions": {
+    "arkhe_trajectory_vs_deterministic_event": {
+      "test": "McNemar (paired discordance)",
+      "both_correct_a": 0,
+      "det1_correct_det2_wrong_b": 24,
+      "det1_wrong_det2_correct_c": 0,
+      "both_wrong_d": 60,
+      "total_discordant": 24,
+      "odds_ratio": Infinity,
+      "chi2_continuity_corrected": 22.0417,
+      "exact_binomial_p_value": 0.0,
+      "asymptotic_p_value": 3e-06,
+      "p_value": 0.0,
+      "is_significant_005": true
+    },
+    "arkhe_trajectory_vs_semantic_event": {
+      "test": "McNemar (paired discordance)",
+      "both_correct_a": 0,
+      "det1_correct_det2_wrong_b": 24,
+      "det1_wrong_det2_correct_c": 0,
+      "both_wrong_d": 60,
+      "total_discordant": 24,
+      "odds_ratio": Infinity,
+      "chi2_continuity_corrected": 22.0417,
+      "exact_binomial_p_value": 0.0,
+      "asymptotic_p_value": 3e-06,
+      "p_value": 0.0,
+      "is_significant_005": true
+    },
+    "arkhe_trajectory_vs_arkhe_no_history": {
+      "test": "McNemar (paired discordance)",
+      "both_correct_a": 24,
+      "det1_correct_det2_wrong_b": 0,
+      "det1_wrong_det2_correct_c": 0,
+      "both_wrong_d": 60,
+      "total_discordant": 0,
+      "odds_ratio": 1.0,
+      "chi2_continuity_corrected": null,
+      "exact_binomial_p_value": 1.0,
+      "asymptotic_p_value": null,
+      "p_value": 1.0,
+      "is_significant_005": false
+    },
+    "arkhe_trajectory_vs_arkhe_no_contamination": {
+      "test": "McNemar (paired discordance)",
+      "both_correct_a": 24,
+      "det1_correct_det2_wrong_b": 0,
+      "det1_wrong_det2_correct_c": 0,
+      "both_wrong_d": 60,
+      "total_discordant": 0,
+      "odds_ratio": 1.0,
+      "chi2_continuity_corrected": null,
+      "exact_binomial_p_value": 1.0,
+      "asymptotic_p_value": null,
+      "p_value": 1.0,
+      "is_significant_005": false
+    }
+  },
+  "paired_task_a_positive_recall_decisions": {
+    "arkhe_trajectory_vs_deterministic_event": {
+      "test": "McNemar (paired discordance)",
+      "both_correct_a": 34,
+      "det1_correct_det2_wrong_b": 0,
+      "det1_wrong_det2_correct_c": 2,
+      "both_wrong_d": 0,
+      "total_discordant": 2,
+      "odds_ratio": 0.0,
+      "chi2_continuity_corrected": null,
+      "exact_binomial_p_value": 0.5,
+      "asymptotic_p_value": null,
+      "p_value": 0.5,
+      "is_significant_005": false
+    },
+    "arkhe_trajectory_vs_semantic_event": {
+      "test": "McNemar (paired discordance)",
+      "both_correct_a": 34,
+      "det1_correct_det2_wrong_b": 0,
+      "det1_wrong_det2_correct_c": 2,
+      "both_wrong_d": 0,
+      "total_discordant": 2,
+      "odds_ratio": 0.0,
+      "chi2_continuity_corrected": null,
+      "exact_binomial_p_value": 0.5,
+      "asymptotic_p_value": null,
+      "p_value": 0.5,
+      "is_significant_005": false
+    },
+    "arkhe_trajectory_vs_arkhe_no_history": {
+      "test": "McNemar (paired discordance)",
+      "both_correct_a": 32,
+      "det1_correct_det2_wrong_b": 2,
+      "det1_wrong_det2_correct_c": 0,
+      "both_wrong_d": 2,
+      "total_discordant": 2,
+      "odds_ratio": Infinity,
+      "chi2_continuity_corrected": null,
+      "exact_binomial_p_value": 0.5,
+      "asymptotic_p_value": null,
+      "p_value": 0.5,
+      "is_significant_005": false
+    },
+    "arkhe_trajectory_vs_arkhe_no_contamination": {
+      "test": "McNemar (paired discordance)",
+      "both_correct_a": 34,
+      "det1_correct_det2_wrong_b": 0,
+      "det1_wrong_det2_correct_c": 0,
+      "both_wrong_d": 2,
+      "total_discordant": 0,
+      "odds_ratio": 1.0,
+      "chi2_continuity_corrected": null,
+      "exact_binomial_p_value": 1.0,
+      "asymptotic_p_value": null,
+      "p_value": 1.0,
+      "is_significant_005": false
+    }
+  },
+  "repeatability": {
+    "arkhe_no_contamination": {
+      "agreements": 120,
+      "denominator": 120,
+      "agreement_rate": 1.0
+    },
+    "semantic_event": {
+      "agreements": 120,
+      "denominator": 120,
+      "agreement_rate": 1.0
+    },
+    "arkhe_no_history": {
+      "agreements": 120,
+      "denominator": 120,
+      "agreement_rate": 1.0
+    },
+    "arkhe_trajectory": {
+      "agreements": 120,
+      "denominator": 120,
+      "agreement_rate": 1.0
+    },
+    "deterministic_event": {
+      "agreements": 120,
+      "denominator": 120,
+      "agreement_rate": 1.0
+    }
+  },
+  "limitations": [
+    "The corpus is synthetic and project-authored, not an external blind benchmark.",
+    "Three held-out families do not establish broad operational generalization.",
+    "Repetition 2 is reported as repeatability and is not pooled as new evidence."
+  ]
+}

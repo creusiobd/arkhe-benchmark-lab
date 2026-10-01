@@ -1,0 +1,34 @@
+{
+  "freeze_id": "freeze_951a80b3e6c472e39612",
+  "protocol_id": "arkhe-prospective-v0.5",
+  "claim_eligibility": "reproducibility_only",
+  "eligibility_reason": "v0.5 test-family outputs were inspected during development before this freeze",
+  "source_commit": "711d5335742ed9151e1124b2f358e61fc4d3a23e",
+  "worktree_dirty": false,
+  "dirty_paths": [],
+  "files": {
+    "configs/evaluation_protocol_v0.5.yaml": "33209be6d1bfb1fe960e831e6c518bfba8f7ceb48f103e6987a9705ef1a41878",
+    "contracts/evaluation_protocol.py": "d7631da86a8824dee6d5c0f8d00a07ed74f08f20ca7db3d425b9628f6b7fcd4c",
+    "contracts/observation.py": "a1cd57476c42ac508dc3266149be5de66ae52df4f9e2bbad6b03aff2c6785089",
+    "contracts/ground_truth.py": "265b7517ab3592b694adb426eb95d79bd62f61f98fa8631d78c53a570d3c7385",
+    "calibration/select_threshold.py": "680e3b12dc6076f67ace161b014adae2d3b3324fd62be1568ba8d701a2b69592",
+    "detectors/base.py": "e0d1bb2fa6a4e08c8bfc3868c4d7b2c2e01eb93416c5596dc7f2ce4b4f7deedb",
+    "detectors/deterministic_event.py": "5ece660b80441e2843105e6ff9fee43ef01e923311d91ff109fc8c1fb4788cab",
+    "detectors/semantic_event.py": "94a9077518ba566a55c9158479f62b4148664d716c74d33a34cbe1da78c7daf3",
+    "detectors/arkhe_trajectory.py": "2eb14dc1039b446fa1510f526bc734cfa80314def61c4516c46744fdb929adfe",
+    "detectors/clients/openai_semantic_client.py": "166fa7ba450df7d30f1e3dfc7e047b227d566bb1063ae7d99d8757d396b6b3f0",
+    "harness/run_v05_folds.py": "b48fec12b9bae530089dfd34e3657e6d7e3c1e34409c305395c05b128481dc6d",
+    "evaluator/evaluate_v05.py": "d3ec5f513e6f9881bae22cc66de1718831f989df07e88009e1db4f677d6c99a1",
+    "datasets/v0.5_hard/observations.jsonl": "9530237661d4678cf8f37ebdb22ec9e53b16f2a1ec5ba2d3f51951afa4b80820",
+    "datasets/v0.5_hard/ground_truth/v0.5_labels.jsonl": "3c19858b207dde4a145fbd3ba86d002a529f3a0715371cf259495b45510a6405",
+    "datasets/v0.5_hard/split_manifest.json": "4d914af50061a3f21dbb415b6510949046c94409583528cf0d88c7d4799f8d55",
+    "datasets/v0.5_hard/generation_manifest.json": "1c740139b26ee3e3fac3c6b4842b41c3c79a7c24c89d65fcc7e4f5a2ca08268b"
+  },
+  "rules": {
+    "threshold_source": "validation_only",
+    "test_unit": "held_out_family",
+    "repetition_1": "primary",
+    "repetition_2": "repeatability_only",
+    "confirmatory_claims_allowed": false
+  }
+}
