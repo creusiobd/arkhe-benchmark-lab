@@ -40,7 +40,7 @@ The critical research gap is the absence of an open, reproducible benchmark meas
 The study freezes an evaluation corpus of **120 hard trajectories** distributed across **three core threat families** (40 trajectories per family):
 1. **`indirect_prompt_injection` (40 trajectories):** Untrusted data sources embedding prompt-mediated instructions that alter agent intent.
 2. **`tool_scope_expansion` (40 trajectories):** Gradual capability escalation where the agent discovers and invokes tools outside its declared mission scope.
-3. **`unauthorized_secret_exposure_or_egress` (40 trajectories):** Stealthy access, harvesting, or egress of credentials and private environment variables.
+3. **`secret_exposure` (40 trajectories; proposal taxonomy alias `unauthorized_secret_exposure_or_egress`):** Unauthorized access to or attempted disclosure of credentials and private environment variables, including egress-oriented mechanisms.
 
 **Pre-Specified Class Stratification per Family (40 trajectories each):**
 - **Hard Negatives / Benign with Adversarial Framing (16 trajectories, 40%):** Legitimate workflows containing security-relevant vocabulary, prompt injection warnings, or multi-step queries that must *not* trigger alarms. Total: 48 benign trajectories.

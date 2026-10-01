@@ -22,7 +22,7 @@
 ### What ARKHÉ Does Not Do:
 - **Not a Production-Ready Commercial Product:** ARKHÉ is an experimental research harness (`Development Status :: 3 - Alpha`).
 - **No Absolute Guarantees:** We do not claim an absolute "Zero Label Leakage Guarantee" or complete prevention of all boundary breaches; we provide an enforced structural separation verified by automated test suites.
-- **No Demonstrated Comparative Gain:** The v0.3 tables are historical results from a synthetic candidate run. The v0.4 live pilot evaluated 50 trajectories with the single-event semantic baseline only and included development, validation, and test trajectories. It is an exploratory integration run, not a detector comparison or an untouched holdout result. The proposed v0.5 comparison remains prospective.
+- **No Demonstrated Operational Gain:** The v0.3 tables are historical results from a synthetic candidate run. The v0.4 live pilot evaluated 50 trajectories with the single-event semantic baseline only and included development, validation, and test trajectories. The first v0.5 offline execution is explicitly a test-informed development rehearsal; it exposed a high false-positive rate at the recall floor and is not a confirmatory or operational-success claim.
 - **No Unaffiliated Endorsement:** This benchmark is an independent proposal prepared for the OpenAI Cybersecurity Grant Program and is neither sponsored by nor affiliated with OpenAI.
 
 ---
@@ -97,7 +97,7 @@ The repository contains historical v0.3 synthetic candidate results and a v0.4 l
 
 The v0.4 pilot ran the single-event semantic baseline on 50 trajectories (134 steps) across development, validation, and test, twice. It used `gpt-4o-mini-2024-07-18`, made 268 successful API calls, and recorded 147,172 tokens. Because it included the test split, that pilot is exploratory and the v0.4 test split is no longer untouched. See [the pilot report](results/openai_pilot_v0.4/pilot_report.md), [the artifact integrity note](results/openai_pilot_v0.4/ARTIFACT_INTEGRITY_NOTE.md), and [the freeze policy](docs/test_split_freeze_policy.md).
 
-The proposed v0.5 study is prospective: 120 synthetic trajectories across three families, evaluated by internal leave-one-family-out folds. The metric definitions and limits are recorded in [the v0.5 evaluation protocol](docs/evaluation_protocol_v0.5.md). No comparative performance outcome is claimed here.
+The v0.5 corpus and executable protocol now contain 120 synthetic trajectories across three families with internal leave-one-family-out folds. The metric definitions and limits are recorded in [the v0.5 evaluation protocol](docs/evaluation_protocol_v0.5.md), and the execution sequence is in [the v0.5 runbook](docs/v0.5_runbook.md). The unfrozen offline rehearsal is integration evidence only; no operational comparative gain is claimed.
 
 ---
 
@@ -131,6 +131,18 @@ python -m harness.agent_benchmark_runner --config configs/grant_candidate_v0.3.y
 # 3. Compute metrics, confidence intervals, and statistical tests
 python -m evaluator.evaluate --run results/grant_candidate_v0.3 --ground-truth datasets/v0.3/ground_truth
 ```
+
+### Reproducing v0.5
+
+```bash
+python scripts/generate_v05_dataset.py
+python scripts/audit_v05_shortcuts.py
+python scripts/power_analysis_v05.py
+python harness/run_v05_folds.py --semantic-mode offline_proxy --output results/v0.5_offline
+python evaluator/evaluate_v05.py --run results/v0.5_offline
+```
+
+This command path is a development rehearsal unless `--freeze-manifest` verifies a committed freeze. See the runbook before producing a confirmatory result.
 
 ---
 

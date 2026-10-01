@@ -1,0 +1,31 @@
+{
+  "protocol_id": "arkhe-prospective-v0.5",
+  "status": "development_rehearsal_test_informed",
+  "freeze_id": null,
+  "semantic_mode": "offline_proxy",
+  "semantic_model": "gpt-4o-mini-2024-07-18",
+  "repetitions": 2,
+  "detectors": [
+    "deterministic_event",
+    "semantic_event",
+    "arkhe_trajectory",
+    "arkhe_no_history",
+    "arkhe_no_contamination"
+  ],
+  "prediction_count": 1200,
+  "git_commit": "83b3dcc45e36babe5689cf63151c1afe461e7aaf",
+  "python_version": "3.12.14",
+  "duration_seconds": 2.6065,
+  "input_hashes": {
+    "protocol": "33209be6d1bfb1fe960e831e6c518bfba8f7ceb48f103e6987a9705ef1a41878",
+    "observations": "9530237661d4678cf8f37ebdb22ec9e53b16f2a1ec5ba2d3f51951afa4b80820",
+    "ground_truth": "3c19858b207dde4a145fbd3ba86d002a529f3a0715371cf259495b45510a6405",
+    "split_manifest": "4d914af50061a3f21dbb415b6510949046c94409583528cf0d88c7d4799f8d55"
+  },
+  "output_hashes": {
+    "predictions": "d36ad545eb3a2f235a20f1403b3a90a779d1c8652ab46117bb24d301060dc530",
+    "calibration": "81aaac5d445d873ae8a835e9386d3176c87168e04397ec6732b6c60b469d074b"
+  },
+  "telemetry": {},
+  "cost_report": null
+}

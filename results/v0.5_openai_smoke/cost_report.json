@@ -1,0 +1,11 @@
+{
+  "model": "gpt-4o-mini-2024-07-18",
+  "successful_calls": 50,
+  "trace_records_including_retries": 50,
+  "prompt_tokens": 25339,
+  "completion_tokens": 2901,
+  "input_price_usd_per_million_tokens": 0.15,
+  "output_price_usd_per_million_tokens": 0.6,
+  "estimated_cost_usd": 0.00554145,
+  "pricing_source": "operator_supplied_cli_values; verify against official pricing at execution time"
+}
