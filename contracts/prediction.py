@@ -31,7 +31,11 @@ class AlertSeverity(str, Enum):
 
 
 class FinalOutcome(str, Enum):
-    """Final trajectory lifecycle outcome."""
+    """Detector-predicted final trajectory lifecycle outcome.
+
+    Observed outcomes belong to ground truth and must never be copied into a
+    detector prediction or passed to a detector as an input.
+    """
     NOMINAL_EXECUTION = "nominal_execution"
     RECOVERED_AFTER_ALERT = "recovered_after_alert"
     UNRESOLVED_ALERT = "unresolved_alert"
@@ -178,6 +182,24 @@ class TrajectoryPrediction(BaseModel):
     alerts: List[AlertEmitted] = Field(default_factory=list, description="Immutable append-only alerts emitted during trajectory")
     resolutions: List[AlertResolved] = Field(default_factory=list, description="Resolution events recorded")
     containments: List[ContainmentAttempted] = Field(default_factory=list, description="Containment events recorded")
-    final_outcome: Optional[str] = Field(None, description="Final trajectory outcome (FinalOutcome enum value)")
+    final_outcome: Optional[str] = Field(
+        None,
+        description=(
+            "Detector-predicted lifecycle outcome (legacy field name). This is not "
+            "the observed ground-truth outcome; ground truth remains in its separate contract."
+        ),
+    )
     total_alerts_emitted: int = Field(0, ge=0, description="Total count of alert events emitted")
     total_alerts_resolved: int = Field(0, ge=0, description="Total count of resolution events recorded")
+
+    @model_validator(mode="after")
+    def validate_event_trajectory_references(self) -> "TrajectoryPrediction":
+        """Keep every lifecycle event attached to the trajectory that owns it."""
+        for collection_name in ("alerts", "resolutions", "containments"):
+            for event in getattr(self, collection_name):
+                if event.trajectory_id != self.trajectory_id:
+                    raise ValueError(
+                        f"{collection_name} event trajectory_id must match "
+                        "TrajectoryPrediction.trajectory_id"
+                    )
+        return self

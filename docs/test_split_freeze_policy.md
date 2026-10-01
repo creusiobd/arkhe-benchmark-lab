@@ -1,47 +1,39 @@
-# ARKHÉ Benchmark — Test Split Freezing Rule & Scientific Integrity Protocol
+# ARKHÉ Benchmark — Freeze Policy and Dataset Integrity
 
-## 1. Context and Motivation
+## Status of v0.4
 
-In benchmark science for AI systems and cybersecurity defenses, a major threat to validity is **test set leakage and detector calibration**. When a defense system's hyperparameters (such as risk thresholds $\theta$, embedding weights $W$, decay factors $\lambda$, or lexical heuristics) are adjusted after observing failure cases on the test split, the resulting metrics cease to be a measure of genuine out-of-distribution generalization. Instead, they reflect adaptive overfitting to specific test observations.
+The `v0.4_hard` files below are preserved as a legacy dataset snapshot. A live integration pilot evaluated all 50 trajectories across development, validation, and test, using only observations as model input. Because test-split predictions were produced and published, this split is **observed and exploratory**; it must not be described as an untouched, blind, or confirmatory test set. Interpretation defects in its archived aggregate prediction fields are documented in the [artifact integrity note](../results/openai_pilot_v0.4/ARTIFACT_INTEGRITY_NOTE.md); those files remain preserved unchanged.
 
-To ensure that the ARKHÉ Agent Boundary Defense Benchmark meets the audit standards of the **OpenAI Cybersecurity Grant Program**, this document establishes the binding **Test Split Freezing Protocol**.
+The pilot evaluated only the single-event semantic baseline. It did not compare that baseline with the ARKHÉ trajectory detector and does not establish a reduction in false positives or generalization.
 
----
+## Freeze and versioning rules
 
-## 2. The Freezing Rule (Regra de Congelamento do Test Split)
+1. Do not overwrite the v0.4 dataset or its historical pilot outputs. Any correction to v0.4 requires a new dataset version and new hashes.
+2. Use development for exploration and validation for model or threshold selection. Do not use a test fold to tune prompts, thresholds, detector logic, or dataset generation.
+3. The planned v0.5 study uses leave-one-family-out folds. In each fold, keep the entire held-out family, including its templates and paraphrases, outside development and validation. Calibrate that fold using only its remaining families.
+4. Record the dataset version, configuration hash, source commit, dirty-worktree state, model identifiers, and artifact hashes with every run.
+5. After test predictions have been inspected, any test-informed change requires a new version and a newly generated evaluation sample. Never present that rerun as confirmation on an unseen test.
+6. The repository is public. Family-held-out evaluation is internal and reproducible; it is not an independent external or blind audit.
 
-1. **Permanent Freeze of Test Partition:**
-   The test split (`datasets/v0.4_hard/observations/test.jsonl` and `datasets/v0.4_hard/ground_truth/test_labels.jsonl`) is cryptographically sealed and permanently frozen as of commit date September 30, 2026.
+## Verified SHA-256 hashes for v0.4_hard
 
-2. **Permissible Use of Partitions:**
-   - **`development` split:** May be used freely for exploratory prompt engineering, exploratory error analysis, and detector prototype development.
-   - **`validation` split:** Reserved exclusively for model selection and hyperparameter tuning (e.g., establishing optimal threshold $\theta$ on ROC/PR curves).
-   - **`test` split:** Must be executed **only once** as a terminal evaluation run. It must NEVER be used to back-tune detectors, modify embedding kernels, or adjust rules.
+Hashes below were recomputed from the checked-out files. The previous values in this document were stale; the dataset files were not changed by this correction.
 
-3. **Mandatory Version Bumping upon Test-Driven Modifications:**
-   If a detector, feature extraction logic, or baseline implementation is modified in response to observations or errors identified on the test split:
-   - The test run cannot be claimed as an "unseen holdout evaluation" or "zero-shot generalization".
-   - A new version of the benchmark must be formally created (`v0.5+`), and new distinct test families/scenarios must be generated under a new random seed.
+| Dataset partition | File | SHA-256 | Trajectories | Status |
+| :--- | :--- | :--- | :---: | :--- |
+| Development observations | `datasets/v0.4_hard/observations/development.jsonl` | `be94f2dc2cacaa4c46043aa867ec142b6b49bcb2bf43c69da45fdd82015f5c4e` | 20 | Legacy snapshot |
+| Development ground truth | `datasets/v0.4_hard/ground_truth/development_labels.jsonl` | `8982d44d19f6fad4cf529f87158701550c8c1af39e6dc237ef87e25ff6eec5c4` | 20 | Legacy snapshot |
+| Validation observations | `datasets/v0.4_hard/observations/validation.jsonl` | `0d67c3eb3c5b9e43edf6a1f9fed2742bf2329d8ed692c1e4f7e26f91fab51b2b` | 10 | Legacy snapshot |
+| Validation ground truth | `datasets/v0.4_hard/ground_truth/validation_labels.jsonl` | `13d6090b1e8e1e20747fd2ef4ca68fc01cb657260653a7d41b2a971961173b24` | 10 | Legacy snapshot |
+| Test observations | `datasets/v0.4_hard/observations/test.jsonl` | `e28ac42367feb41bf47cf25d34780f6fee6a3e99fc36e0698cca2e203febd680` | 20 | Observed; exploratory |
+| Test ground truth | `datasets/v0.4_hard/ground_truth/test_labels.jsonl` | `357047acd534ee1ac0b6c22c68a15ccf690ffcbcd6e748849be366ea770a1435` | 20 | Observed; exploratory |
 
-4. **Internal Held-Out Scope vs External Evaluation:**
-   Because this repository is open source under the Apache-2.0 license, all files reside in the same public git tree. Therefore, we explicitly and scientifically delimit our claims:
-   > **Scientific Boundary:** The test split represents an **internal family-held-out evaluation set** (conjunto de teste interno retido por família inteira). It is strictly disjoint in threat families and operational mechanisms from the development and validation splits. However, because the repository is open source, local retention does not constitute an external, air-gapped, third-party blind audit. Future independent evaluations will be performed on an unreleased external benchmark corpus ($N=5,000+$).
+## Verification
 
----
+`tests/test_grant_readiness_integrity.py` compares these hashes with both the files and the diversity report. Run it with:
 
-## 3. Cryptographic Hashes of Sealed Datasets
+```bash
+python -m unittest discover -s tests -p 'test_grant_readiness_integrity.py' -v
+```
 
-| Dataset Partition | File Path | SHA-256 Checksum | Trajectories | Status |
-| :--- | :--- | :--- | :---: | :---: |
-| **v0.4_hard Development Obs** | `datasets/v0.4_hard/observations/development.jsonl` | `acd0d2917ddd847a89337d1e7aa10bf9d88dd088d4214b5afd710a9f29f0a85a` | 20 | FROZEN |
-| **v0.4_hard Development GT** | `datasets/v0.4_hard/ground_truth/development_labels.jsonl` | `4e96da999145a499dcd9f803496570d6d7501371628d0eaca4428cf6a2adb939` | 20 | FROZEN |
-| **v0.4_hard Validation Obs** | `datasets/v0.4_hard/observations/validation.jsonl` | `3c9e50310a8a028e4c8c1f78a2671bfff5a56129886f052a864299c7e7aa4876` | 10 | FROZEN |
-| **v0.4_hard Validation GT** | `datasets/v0.4_hard/ground_truth/validation_labels.jsonl` | `4f34c4a8f6f6f05e963fc9264640bfbf7474edde8c5857d3a46484bd677d8e36` | 10 | FROZEN |
-| **v0.4_hard Test Obs** | `datasets/v0.4_hard/observations/test.jsonl` | `9ee500f89c2fb89ebb4db2d63bacb31006e6693b124bbb34d6a955beb331c7cc` | 20 | **PERMANENTLY SEALED** |
-| **v0.4_hard Test GT** | `datasets/v0.4_hard/ground_truth/test_labels.jsonl` | `f766abbc704a21205fce6cf80f0b4287d8fa755fce86fc2055243152322b42ce` | 20 | **PERMANENTLY SEALED** |
-
----
-
-## 4. Verification
-
-Integrity of the frozen partitions is automatically verified in continuous integration by [`tests/test_hard_dataset_integrity.py`](../tests/test_hard_dataset_integrity.py). Any unauthorized mutation of frozen records will immediately fail CI.
+Any change to a listed file must update its dataset version, manifest, report, and this table together.

@@ -2,6 +2,8 @@
 
 This guide provides exhaustive instructions for reproducing all benchmark results, statistical tests, and artifacts published in version **v0.3**.
 
+> **Legacy guide:** These commands reproduce the v0.3 candidate pipeline only. They do not reproduce the v0.4 live pilot or the planned v0.5 leave-one-family-out study. The v0.4 test split was included in an exploratory live baseline run and is not an untouched test set. Use [`evaluation_protocol_v0.5.md`](evaluation_protocol_v0.5.md) for the proposed study.
+
 ---
 
 ## 1. System Requirements
@@ -20,8 +22,6 @@ Clone the repository and install dependencies in an isolated virtual environment
 ```bash
 git clone https://github.com/creusiobd/arkhe-benchmark-lab.git
 cd arkhe-benchmark-lab
-git checkout feat/openai-grant-readiness-v0.3
-
 # Create and activate virtual environment
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\Activate.ps1
@@ -48,10 +48,10 @@ powershell -ExecutionPolicy Bypass -File scripts/reproduce_grant_pilot.ps1
 ```
 
 Both scripts automatically:
-1. Run all 100 unit tests and anti-leakage contract validations.
+1. Run the current unit tests and anti-leakage contract validations.
 2. Verify the v0.3 dataset (generating it deterministically if absent).
-3. Run the blind execution harness using `configs/grant_candidate_v0.3.yaml`.
-4. Run the independent evaluator with sealed ground truth (`datasets/v0.3/ground_truth`).
+3. Run the observation-only execution harness using `configs/grant_candidate_v0.3.yaml`.
+4. Run the evaluator, isolated from detectors, with the v0.3 ground truth (`datasets/v0.3/ground_truth`).
 5. Validate the completeness of all output JSON/Markdown artifacts.
 
 ---
@@ -64,7 +64,7 @@ If you prefer to run each step manually:
 ```bash
 python -m unittest discover -s tests -v
 ```
-*Expected Result:* `Ran 100 tests ... OK (skipped=1)`. (The 1 skipped test is the live OpenAI API test that requires an active key).
+*Expected Result:* The installed test suite passes. Any live OpenAI API test may require a key and incur usage; skip it unless explicitly configured.
 
 ### Step 2: (Optional) Re-generate Dataset v0.3 Deterministically
 ```bash
@@ -72,14 +72,14 @@ python scripts/generate_v03_dataset.py
 ```
 *Standard Seed:* `20260930`. All trajectory observations and ground truth labels are generated identically across runs.
 
-### Step 3: Execute Blind Benchmark Harness
+### Step 3: Execute Historical v0.3 Benchmark Harness
 ```bash
 python -m harness.agent_benchmark_runner --config configs/grant_candidate_v0.3.yaml
 ```
 *Output Directory:* `results/grant_candidate_v0.3/`
 *Key File Produced:* `predictions.jsonl` and `execution_manifest.json`.
 
-### Step 4: Run Independent Statistical Evaluator
+### Step 4: Run the Ground-Truth-Isolated Statistical Evaluator
 ```bash
 python -m evaluator.evaluate \
     --run results/grant_candidate_v0.3 \
@@ -97,7 +97,7 @@ python -m evaluator.evaluate \
 
 ## 5. Live OpenAI API Evaluation (Optional)
 
-To evaluate against live OpenAI API models (`gpt-4o-mini`, `gpt-4o`, `o1`):
+To evaluate the historical v0.3 semantic baseline using a live OpenAI API model, use the exact model snapshot recorded in that run's configuration and manifest. Do not infer that other model IDs, including `o1`, were tested by this guide.
 
 1. Export your API key:
    ```bash

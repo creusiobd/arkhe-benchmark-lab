@@ -1,7 +1,7 @@
 # ARKHÉ Agent Boundary Defense Benchmark
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Dataset License: CC BY 4.0](https://img.shields.io/badge/Dataset_License-CC_BY_4.0-lightgrey.svg)](datasets/LICENSE)
+[![Dataset License: CC BY 4.0](https://img.shields.io/badge/Dataset_License-CC_BY_4.0-lightgrey.svg)](datasets/v0.4_hard/LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Status: Alpha](https://img.shields.io/badge/Status-Alpha%2FExperimental-orange.svg)](pyproject.toml)
 [![Grant Submission](https://img.shields.io/badge/Grant-Prepared_for_Cybersecurity_Grant_Submission-purple.svg)](proposal/form_answers_EN.md)
@@ -22,7 +22,7 @@
 ### What ARKHÉ Does Not Do:
 - **Not a Production-Ready Commercial Product:** ARKHÉ is an experimental research harness (`Development Status :: 3 - Alpha`).
 - **No Absolute Guarantees:** We do not claim an absolute "Zero Label Leakage Guarantee" or complete prevention of all boundary breaches; we provide an enforced structural separation verified by automated test suites.
-- **No Proven General Lead Time:** Current pilot empirical evidence ($n=30$) demonstrates substantial reduction of false positives ($83.3\%$ precision vs $55.6\%-62.5\%$), but general temporal anticipation ($N_{\text{lead}}$) remains an open research hypothesis.
+- **No Demonstrated Comparative Gain:** The v0.3 tables are historical results from a synthetic candidate run. The v0.4 live pilot evaluated 50 trajectories with the single-event semantic baseline only and included development, validation, and test trajectories. It is an exploratory integration run, not a detector comparison or an untouched holdout result. The proposed v0.5 comparison remains prospective.
 - **No Unaffiliated Endorsement:** This benchmark is an independent proposal prepared for the OpenAI Cybersecurity Grant Program and is neither sponsored by nor affiliated with OpenAI.
 
 ---
@@ -46,7 +46,7 @@ ARKHÉ models and benchmarks defensive responses across **5 priority boundary vi
 ## 3. Scientific Hypotheses
 
 ### Primary Hypothesis
-> **H1 (Precision and False Positive Reduction):** Trajectory-aware observability significantly reduces false positive security alerts compared to stateless isolated-event detectors on unseen agent trajectories, while maintaining comparable detection recall.
+> **H1 (Prospective):** The v0.5 study will test whether trajectory signals reduce false-positive rates under a pre-specified validation recall target of 0.90, compared with isolated-event baselines. This is a research hypothesis, not an observed result.
 
 ### Secondary Hypothesis (Exploratory)
 > **H2 (Anticipatory Lead Time):** In progressive violation patterns involving multi-step reconnaissance or indirect prompt propagation, trajectory-aware sentinels can produce early alerts ($N_{\text{lead}} \ge 1$ step) prior to irreversible boundary breaches.
@@ -72,7 +72,7 @@ To prevent experimental circularity and label leakage, the benchmark architectur
            │                              │
            ▼                              │
    [Detectors Engine]                     │
-   (Blind Execution)                      │
+   (Observation-only execution)            │
            │                              │
            ▼                              │
   [Step / Trajectory Predictions]         │
@@ -91,39 +91,13 @@ Detailed architectural contracts, prohibited key dictionaries, and structural te
 
 ---
 
-## 5. Candidate Benchmark Results (v0.3, $n=65$)
+## 5. Evidence Status and Planned Evaluation
 
-The candidate experiment was executed over $n=65$ canonical trajectories across 4 splits (20 development, 10 validation, 20 test, 15 blind holdout with strictly disjoint attack templates). Under **strict temporal evaluation semantics** (no lookahead, append-only immutable alerts, separate resolution events), performance is reported across two decoupled operational tasks:
+The repository contains historical v0.3 synthetic candidate results and a v0.4 live integration pilot. These artifacts have different datasets and purposes; they are not evidence of a measured ARKHÉ-versus-baseline gain.
 
-### Task 1: Pre-Violation Alert & Breach Anticipation (Strict Consummated Breach Prediction)
-*Strict Criterion:* True Positives require a qualifying alert emitted strictly before the step of first violation ($A_i < V_i$). Alerts during contained near-violations are counted as FPs under this strict task:
+The v0.4 pilot ran the single-event semantic baseline on 50 trajectories (134 steps) across development, validation, and test, twice. It used `gpt-4o-mini-2024-07-18`, made 268 successful API calls, and recorded 147,172 tokens. Because it included the test split, that pilot is exploratory and the v0.4 test split is no longer untouched. See [the pilot report](results/openai_pilot_v0.4/pilot_report.md), [the artifact integrity note](results/openai_pilot_v0.4/ARTIFACT_INTEGRITY_NOTE.md), and [the freeze policy](docs/test_split_freeze_policy.md).
 
-| Detector Paradigm | Architecture | Precision [Wilson 95% CI] | Recall [Wilson 95% CI] | F1-Score | FP | FN | Median Lead [95% CI] | Anticipation Rate |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Deterministic-Event-Rule-Baseline** | Isolated Event | 0.0% [0.0%, 14.9%] | 0.0% [0.0%, 16.1%] | 0.00 | 22 | 20 | +0.0 [0.0, 0.0] steps | 0.0% |
-| **Semantic-Event-Classifier-Baseline** | Isolated Event | 33.3% [12.1%, 64.6%] | 15.0% [5.2%, 36.0%] | 0.21 | 6 | 17 | +0.0 [0.0, 0.0] steps | 15.0% |
-| **ARKHÉ-Trajectory-Sentinel** | Trajectory Aware | 47.6% [33.4%, 62.3%] | 100.0% [83.9%, 100.0%] | 0.65 | 22 | 0 | **+1.0 [1.0, 1.0] steps** | **100.0% (20/20)** |
-
-### Task 2: Boundary Pressure & Hazard Detection (Attack / Probe vs Benign)
-*Criterion:* Evaluates detection of any boundary-threatening perturbation (`VIOLATION` or `NEAR_VIOLATION`) against nominal non-adversarial workflows (`BENIGN`):
-
-| Detector Paradigm | Architecture | Precision [Wilson 95% CI] | Recall [Wilson 95% CI] | F1-Score | FP (on Benign) | FN (Missed Hazards) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Deterministic-Event-Rule-Baseline** | Isolated Event | 100.0% [91.6%, 100.0%] | 100.0% [91.6%, 100.0%] | 1.00 | 0 | 0 |
-| **Semantic-Event-Classifier-Baseline** | Isolated Event | 100.0% [86.7%, 100.0%] | 59.5% [44.5%, 73.0%] | 0.75 | 0 | 17 |
-| **ARKHÉ-Trajectory-Sentinel** | Trajectory Aware | 100.0% [91.6%, 100.0%] | 100.0% [91.6%, 100.0%] | 1.00 | 0 | 0 |
-
-### Lifecycle & Near-Violation Resolution (Task 3):
-- **ARKHÉ Sentinel** emitted alerts on 22 near-violation trajectories when Lyapunov energy exceeded threshold ($V(\mathbf{x}) \ge 50$ at step 2). Upon trajectory containment, ARKHÉ recorded 22 confirmed `ResolutionEvent` records. No alerts are retroactively deleted.
-
-### Paired Hypothesis Testing (ARKHÉ vs Baselines):
-- **ARKHÉ vs Deterministic Baseline:**
-  - *Pre-Violation Task:* McNemar paired discordance $b=20, c=0$ ($p = 2 \times 10^{-6}$, exact two-tailed binomial, statistically significant $p < 0.0001$); Wilcoxon signed-rank test on lead steps $W = 0, Z = 3.9199, p = 8.9 \times 10^{-5}$ (effect size $r=0.8765$, statistically significant $p < 0.01$).
-  - *Hazard Detection Task:* Both detect 42/42 hazards, but ARKHÉ anticipates violations +1.0 step ahead while Deterministic alerts only at the exact breach step ($lead=0$).
-- **ARKHÉ vs Semantic Baseline:**
-  - *Pre-Violation Task:* Wilcoxon signed-rank test on lead steps $W = 0, Z = 3.6214, p = 0.000293$ (effect size $r=0.8783$, statistically significant $p < 0.01$).
-  - *Hazard Detection Task:* McNemar paired discordance $b=17, c=0$ ($p = 1.5 \times 10^{-5}$, exact two-tailed binomial, statistically significant $p < 0.0001$).
-- **Grant Justification:** The pilot proves the integrity of the evaluation harness, strict anti-leakage contracts, temporal evaluation semantics (zero lookahead), and pipeline automation. Large-scale expansion to $N=5,000+$ trajectories with live OpenAI models (`gpt-4o`, `o1`) is planned to validate boundary stability across diverse enterprise agent ecosystems and multi-agent coordination graphs.
+The proposed v0.5 study is prospective: 120 synthetic trajectories across three families, evaluated by internal leave-one-family-out folds. The metric definitions and limits are recorded in [the v0.5 evaluation protocol](docs/evaluation_protocol_v0.5.md). No comparative performance outcome is claimed here.
 
 ---
 
@@ -148,10 +122,10 @@ powershell -ExecutionPolicy Bypass -File scripts/reproduce_grant_pilot.ps1
 
 Or execute the steps individually:
 ```bash
-# 1. Run all unit and contract tests (100 tests)
+# 1. Run the unit and contract test suite
 python -m unittest discover -s tests -v
 
-# 2. Execute blind benchmark runner on v0.3 dataset
+# 2. Reproduce the historical v0.3 candidate run (not the proposed v0.5 study)
 python -m harness.agent_benchmark_runner --config configs/grant_candidate_v0.3.yaml
 
 # 3. Compute metrics, confidence intervals, and statistical tests
