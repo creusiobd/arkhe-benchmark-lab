@@ -63,10 +63,38 @@ jobs:
             tests/test_contract_separation.py \
             tests/test_dataset_isolation.py -v
 
+  deterministic-generation-and-reproducibility:
+    name: Deterministic Dataset Generation & Hash Reproducibility
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verify Dual-Run Deterministic Generation & Tracked Dataset Sync
+        run: |
+          python scripts/verify_deterministic_dataset_generation.py \
+            --config configs/hard_candidate_v0.4.yaml \
+            --check-tracked
+
+      - name: Execute Deterministic Reproduction Unit Tests
+        run: |
+          python -m unittest tests/test_deterministic_reproduction.py -v
+
   reproducible-grant-benchmark:
     name: Reproducible Benchmark & Statistical Evaluation
     runs-on: ubuntu-latest
-    needs: [code-quality-and-unit-tests, anti-leakage-contract-verification]
+    needs: [code-quality-and-unit-tests, anti-leakage-contract-verification, deterministic-generation-and-reproducibility]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4

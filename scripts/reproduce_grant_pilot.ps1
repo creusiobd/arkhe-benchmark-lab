@@ -5,7 +5,7 @@
 $ErrorActionPreference = "Stop"
 
 Write-Host "================================================================================" -ForegroundColor Cyan
-Write-Host "    ARKHÉ BENCHMARK — DETERMINISTIC REPRODUCTION PIPELINE (v0.3)" -ForegroundColor Cyan
+Write-Host "    ARKHE BENCHMARK -- DETERMINISTIC REPRODUCTION PIPELINE (v0.3)" -ForegroundColor Cyan
 Write-Host "================================================================================" -ForegroundColor Cyan
 
 # Locate Python
@@ -18,7 +18,7 @@ try {
 }
 
 # Step 1: Run complete test suite and anti-leakage contract checks
-Write-Host "`n--- [1/4] Running Unit Tests & Anti-Leakage Contract Verification ---" -ForegroundColor Yellow
+Write-Host "`n--- [1/4] Running Unit Tests and Anti-Leakage Contract Verification ---" -ForegroundColor Yellow
 & $PythonBin -m unittest discover -s tests -v
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Unit tests failed with exit code $LASTEXITCODE"
@@ -43,9 +43,7 @@ if ($LASTEXITCODE -ne 0) {
 
 # Step 4: Run independent evaluator
 Write-Host "`n--- [4/4] Running Independent Statistical Evaluator ---" -ForegroundColor Yellow
-& $PythonBin -m evaluator.evaluate `
-    --run results/grant_candidate_v0.3 `
-    --ground-truth datasets/v0.3/ground_truth
+& $PythonBin -m evaluator.evaluate --run results/grant_candidate_v0.3 --ground-truth datasets/v0.3/ground_truth
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Evaluator failed with exit code $LASTEXITCODE"
 }

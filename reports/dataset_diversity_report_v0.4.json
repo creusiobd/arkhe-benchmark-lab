@@ -1,0 +1,197 @@
+{
+  "dataset_version": "v0.4_hard",
+  "random_seed": 20260930,
+  "total_trajectories": 50,
+  "total_steps": 134,
+  "vocabulary_metrics": {
+    "total_vocabulary_size": 893,
+    "jaccard_similarity": {
+      "development_vs_validation": 0.132,
+      "development_vs_test": 0.1677,
+      "validation_vs_test": 0.1154
+    }
+  },
+  "whole_family_disjointness_audit": {
+    "family_overlap_dev_val": [],
+    "family_overlap_dev_test": [],
+    "family_overlap_val_test": [],
+    "mechanism_overlap_dev_val": [],
+    "mechanism_overlap_dev_test": [],
+    "mechanism_overlap_val_test": [],
+    "is_strictly_disjoint": true
+  },
+  "hard_scenarios_coverage_audit": {
+    "contains_benign_with_external_note": true,
+    "contains_benign_with_adversarial_vocab": true,
+    "contains_hard_negatives_env_access": true,
+    "contains_hard_negatives_local_net_access": true,
+    "contains_near_violations_without_warned": true,
+    "contains_structural_violations_without_keywords": true,
+    "contains_late_containment": true,
+    "contains_partial_containment": true,
+    "contains_failed_containment": true
+  },
+  "dataset_file_hashes": {
+    "observations/development.jsonl": "be94f2dc2cacaa4c46043aa867ec142b6b49bcb2bf43c69da45fdd82015f5c4e",
+    "observations/validation.jsonl": "0d67c3eb3c5b9e43edf6a1f9fed2742bf2329d8ed692c1e4f7e26f91fab51b2b",
+    "observations/test.jsonl": "e28ac42367feb41bf47cf25d34780f6fee6a3e99fc36e0698cca2e203febd680",
+    "ground_truth/development_labels.jsonl": "8982d44d19f6fad4cf529f87158701550c8c1af39e6dc237ef87e25ff6eec5c4",
+    "ground_truth/validation_labels.jsonl": "13d6090b1e8e1e20747fd2ef4ca68fc01cb657260653a7d41b2a971961173b24",
+    "ground_truth/test_labels.jsonl": "357047acd534ee1ac0b6c22c68a15ccf690ffcbcd6e748849be366ea770a1435",
+    "templates/templates_catalog.json": "d16eba79d0cd7a61ff8bbdc2092bc4b9f16e29b819a75cbad8d4287d9b559681",
+    "dataset_card.md": "d7c41b958c56300f0553e338e3973885a92f50eebea43fc5e5cd2268834d1b66",
+    "LICENSE": "f3ed4e434b54bdf87e56b32916a59ee45b559cd0402471f8b33c006dbdc17155"
+  },
+  "splits": {
+    "development": {
+      "total_trajectories": 20,
+      "total_steps": 59,
+      "step_lengths": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        4,
+        3,
+        3,
+        3,
+        2,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        2,
+        3
+      ],
+      "families": [
+        "indirect_prompt_injection",
+        "tool_scope_expansion"
+      ],
+      "mechanisms": [
+        "dynamic_execution_privilege_escalation",
+        "prompt_mediated_control_hijacking"
+      ],
+      "classes_distribution": {
+        "benign": 8,
+        "near_violation": 6,
+        "violation": 6
+      },
+      "containment_distribution": {
+        "NONE": 10,
+        "SUCCEEDED": 4,
+        "PARTIAL": 2,
+        "FAILED": 2,
+        "LATE": 2
+      },
+      "final_outcome_distribution": {
+        "CLEAN": 8,
+        "PREVENTED_NEAR_VIOLATION": 4,
+        "PARTIALLY_CONTAINED_HAZARD": 2,
+        "UNCONTAINED_VIOLATION": 6
+      },
+      "sha256_observations": "be94f2dc2cacaa4c46043aa867ec142b6b49bcb2bf43c69da45fdd82015f5c4e",
+      "sha256_ground_truth": "8982d44d19f6fad4cf529f87158701550c8c1af39e6dc237ef87e25ff6eec5c4"
+    },
+    "validation": {
+      "total_trajectories": 10,
+      "total_steps": 26,
+      "step_lengths": [
+        3,
+        3,
+        3,
+        2,
+        3,
+        3,
+        3,
+        2,
+        2,
+        2
+      ],
+      "families": [
+        "secret_exposure"
+      ],
+      "mechanisms": [
+        "unauthorized_credential_harvesting"
+      ],
+      "classes_distribution": {
+        "benign": 4,
+        "near_violation": 3,
+        "violation": 3
+      },
+      "containment_distribution": {
+        "NONE": 5,
+        "SUCCEEDED": 2,
+        "PARTIAL": 1,
+        "FAILED": 1,
+        "LATE": 1
+      },
+      "final_outcome_distribution": {
+        "CLEAN": 4,
+        "PREVENTED_NEAR_VIOLATION": 2,
+        "PARTIALLY_CONTAINED_HAZARD": 1,
+        "UNCONTAINED_VIOLATION": 3
+      },
+      "sha256_observations": "0d67c3eb3c5b9e43edf6a1f9fed2742bf2329d8ed692c1e4f7e26f91fab51b2b",
+      "sha256_ground_truth": "13d6090b1e8e1e20747fd2ef4ca68fc01cb657260653a7d41b2a971961173b24"
+    },
+    "test": {
+      "total_trajectories": 20,
+      "total_steps": 49,
+      "step_lengths": [
+        3,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+        2,
+        2,
+        2,
+        3,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+        3,
+        2,
+        2
+      ],
+      "families": [
+        "human_intervention_bypass_or_concealment",
+        "unauthorized_external_communication"
+      ],
+      "mechanisms": [
+        "audit_trail_tampering_and_approval_bypass",
+        "covert_network_channel_exfiltration"
+      ],
+      "classes_distribution": {
+        "benign": 8,
+        "near_violation": 6,
+        "violation": 6
+      },
+      "containment_distribution": {
+        "NONE": 10,
+        "SUCCEEDED": 4,
+        "PARTIAL": 2,
+        "FAILED": 2,
+        "LATE": 2
+      },
+      "final_outcome_distribution": {
+        "CLEAN": 8,
+        "PREVENTED_NEAR_VIOLATION": 4,
+        "PARTIALLY_CONTAINED_HAZARD": 2,
+        "UNCONTAINED_VIOLATION": 6
+      },
+      "sha256_observations": "e28ac42367feb41bf47cf25d34780f6fee6a3e99fc36e0698cca2e203febd680",
+      "sha256_ground_truth": "357047acd534ee1ac0b6c22c68a15ccf690ffcbcd6e748849be366ea770a1435"
+    }
+  }
+}

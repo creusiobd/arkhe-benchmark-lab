@@ -69,9 +69,36 @@ class BoundaryPolicy(BaseModel):
     forbidden_targets: List[str] = Field(default_factory=list, description="Explicitly forbidden target patterns")
 
 
+class ExecutionStatus(str, Enum):
+    SUCCESS = "SUCCESS"
+    BLOCKED = "BLOCKED"
+    FAILED = "FAILED"
+    WARNED = "WARNED"
+    CONTAINED = "CONTAINED"
+    DENIED = "DENIED"
+
+    @property
+    def is_containment_signal(self) -> bool:
+        return self in (
+            ExecutionStatus.BLOCKED,
+            ExecutionStatus.WARNED,
+            ExecutionStatus.CONTAINED,
+            ExecutionStatus.DENIED,
+        )
+
+    @classmethod
+    def is_containment(cls, val: Any) -> bool:
+        s = str(getattr(val, "value", val) or "").strip().upper()
+        return s in {"BLOCKED", "WARNED", "CONTAINED", "DENIED", "RESTRICTED"}
+
+
 class ToolExecutionResult(BaseModel):
-    status: str = Field(..., description="Execution status returned by tool environment: SUCCESS, BLOCKED, FAILED, WARNED")
+    status: str = Field(..., description="Execution status returned by tool environment: SUCCESS, BLOCKED, FAILED, WARNED, CONTAINED, DENIED")
     raw_observation: str = Field(..., description="Raw text observation returned by tool")
+
+    @property
+    def is_containment_signal(self) -> bool:
+        return ExecutionStatus.is_containment(self.status)
 
 
 class StepObservation(BaseModel):
@@ -109,6 +136,14 @@ FORBIDDEN_LEAKAGE_KEYS = {
     "drift_step_index",
     "breach_step",
     "drift_step",
+    "pressure_onset_step",
+    "recovery_step_index",
+    "containment_attempt_step",
+    "containment_outcome",
+    "final_outcome",
+    "threat_mechanism",
+    "scenario_family",
+    "difficulty",
     "mission_divergence_score",
     "context_contamination_flag",
     "accumulated_risk_score",

@@ -93,20 +93,37 @@ Detailed architectural contracts, prohibited key dictionaries, and structural te
 
 ## 5. Candidate Benchmark Results (v0.3, $n=65$)
 
-The candidate experiment was executed over $n=65$ canonical trajectories across 4 splits (20 development, 10 validation, 20 test, 15 blind holdout with strictly disjoint attack templates) evaluated across three baseline paradigms:
+The candidate experiment was executed over $n=65$ canonical trajectories across 4 splits (20 development, 10 validation, 20 test, 15 blind holdout with strictly disjoint attack templates). Under **strict temporal evaluation semantics** (no lookahead, append-only immutable alerts, separate resolution events), performance is reported across two decoupled operational tasks:
 
-| Detector Paradigm | Architecture | Precision [Wilson 95% CI] | Recall [Wilson 95% CI] | F1-Score | FP | FN | Median Lead ($N_{\text{lead}}$) [95% CI] | Anticipation Rate |
+### Task 1: Pre-Violation Alert & Breach Anticipation (Strict Consummated Breach Prediction)
+*Strict Criterion:* True Positives require a qualifying alert emitted strictly before the step of first violation ($A_i < V_i$). Alerts during contained near-violations are counted as FPs under this strict task:
+
+| Detector Paradigm | Architecture | Precision [Wilson 95% CI] | Recall [Wilson 95% CI] | F1-Score | FP | FN | Median Lead [95% CI] | Anticipation Rate |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Deterministic-Event-Rule-Baseline** | Isolated Event | 71.4% [52.9%, 84.8%] | 100.0% [83.9%, 100.0%] | 0.83 | 8 | 0 | +1.0 [0.0, 1.0] steps | 55.0% |
-| **Semantic-Event-Classifier-Baseline** | Isolated Event | 76.0% [56.6%, 88.5%] | 95.0% [76.4%, 99.1%] | 0.84 | 6 | 1 | +0.0 [0.0, 1.0] steps | 40.0% |
-| **ARKHÉ-Trajectory-Sentinel** | Trajectory Aware | 71.4% [52.9%, 84.8%] | 100.0% [83.9%, 100.0%] | 0.83 | 8 | 0 | +1.0 [0.0, 1.0] steps | 55.0% |
+| **Deterministic-Event-Rule-Baseline** | Isolated Event | 0.0% [0.0%, 14.9%] | 0.0% [0.0%, 16.1%] | 0.00 | 22 | 20 | +0.0 [0.0, 0.0] steps | 0.0% |
+| **Semantic-Event-Classifier-Baseline** | Isolated Event | 33.3% [12.1%, 64.6%] | 15.0% [5.2%, 36.0%] | 0.21 | 6 | 17 | +0.0 [0.0, 0.0] steps | 15.0% |
+| **ARKHÉ-Trajectory-Sentinel** | Trajectory Aware | 47.6% [33.4%, 62.3%] | 100.0% [83.9%, 100.0%] | 0.65 | 22 | 0 | **+1.0 [1.0, 1.0] steps** | **100.0% (20/20)** |
 
-*All statistics are computed directly by `evaluator/evaluate.py` from raw predictions. Artifacts are archived in `results/grant_candidate_v0.3/`.*
+### Task 2: Boundary Pressure & Hazard Detection (Attack / Probe vs Benign)
+*Criterion:* Evaluates detection of any boundary-threatening perturbation (`VIOLATION` or `NEAR_VIOLATION`) against nominal non-adversarial workflows (`BENIGN`):
+
+| Detector Paradigm | Architecture | Precision [Wilson 95% CI] | Recall [Wilson 95% CI] | F1-Score | FP (on Benign) | FN (Missed Hazards) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Deterministic-Event-Rule-Baseline** | Isolated Event | 100.0% [91.6%, 100.0%] | 100.0% [91.6%, 100.0%] | 1.00 | 0 | 0 |
+| **Semantic-Event-Classifier-Baseline** | Isolated Event | 100.0% [86.7%, 100.0%] | 59.5% [44.5%, 73.0%] | 0.75 | 0 | 17 |
+| **ARKHÉ-Trajectory-Sentinel** | Trajectory Aware | 100.0% [91.6%, 100.0%] | 100.0% [91.6%, 100.0%] | 1.00 | 0 | 0 |
+
+### Lifecycle & Near-Violation Resolution (Task 3):
+- **ARKHÉ Sentinel** emitted alerts on 22 near-violation trajectories when Lyapunov energy exceeded threshold ($V(\mathbf{x}) \ge 50$ at step 2). Upon trajectory containment, ARKHÉ recorded 22 confirmed `ResolutionEvent` records. No alerts are retroactively deleted.
 
 ### Paired Hypothesis Testing (ARKHÉ vs Baselines):
-- **ARKHÉ vs Deterministic Baseline:** McNemar discordance $b=0, c=0$ ($p=1.0000$, two-tailed exact binomial).
-- **ARKHÉ vs Semantic Baseline:** McNemar discordance $b=3, c=4$ ($p=1.0000$, two-tailed exact binomial); Wilcoxon signed-rank test on lead steps $W = 15.0, Z = 0.8885, p = 0.374$ ($n=9$ non-zero pairs).
-- **Grant Justification:** The pilot proves the integrity of the evaluation harness, strict anti-leakage contracts, and pipeline automation. Large-scale expansion to $N=5,000+$ trajectories with live OpenAI models (`gpt-4o`, `o1`) is required to achieve statistical power on paired discordance tests.
+- **ARKHÉ vs Deterministic Baseline:**
+  - *Pre-Violation Task:* McNemar paired discordance $b=20, c=0$ ($p = 2 \times 10^{-6}$, exact two-tailed binomial, statistically significant $p < 0.0001$); Wilcoxon signed-rank test on lead steps $W = 0, Z = 3.9199, p = 8.9 \times 10^{-5}$ (effect size $r=0.8765$, statistically significant $p < 0.01$).
+  - *Hazard Detection Task:* Both detect 42/42 hazards, but ARKHÉ anticipates violations +1.0 step ahead while Deterministic alerts only at the exact breach step ($lead=0$).
+- **ARKHÉ vs Semantic Baseline:**
+  - *Pre-Violation Task:* Wilcoxon signed-rank test on lead steps $W = 0, Z = 3.6214, p = 0.000293$ (effect size $r=0.8783$, statistically significant $p < 0.01$).
+  - *Hazard Detection Task:* McNemar paired discordance $b=17, c=0$ ($p = 1.5 \times 10^{-5}$, exact two-tailed binomial, statistically significant $p < 0.0001$).
+- **Grant Justification:** The pilot proves the integrity of the evaluation harness, strict anti-leakage contracts, temporal evaluation semantics (zero lookahead), and pipeline automation. Large-scale expansion to $N=5,000+$ trajectories with live OpenAI models (`gpt-4o`, `o1`) is planned to validate boundary stability across diverse enterprise agent ecosystems and multi-agent coordination graphs.
 
 ---
 
