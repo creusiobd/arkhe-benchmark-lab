@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arkhe-defense-sdk"
+version = "0.2.0"
+description = "Local defensive evaluation of agent trajectories with versioned policies and host authority"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+dependencies = ["pydantic>=2.7,<3"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Topic :: Security",
+]
+
+[project.scripts]
+arkhe-defense = "arkhe_defense.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["arkhe_defense*"]

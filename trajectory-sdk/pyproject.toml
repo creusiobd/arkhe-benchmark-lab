@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arkhe-trajectory-sdk"
+version = "0.2.0"
+description = "Configurable observational journey intelligence with temporal evidence"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+classifiers = ["Development Status :: 3 - Alpha", "Topic :: System :: Monitoring"]
+
+[project.scripts]
+arkhe-trajectory = "arkhe_trajectory.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["arkhe_trajectory*"]
+
+[tool.setuptools.package-data]
+arkhe_trajectory = ["presets/*.json"]

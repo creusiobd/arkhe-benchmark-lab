@@ -1,0 +1,81 @@
+{
+  "tenant_id": "example-platform",
+  "journey_id": "request-serving",
+  "version": "1",
+  "steps": [
+    {
+      "step_id": "received",
+      "expected_next": [
+        "processed"
+      ],
+      "max_delay_seconds": 5
+    },
+    {
+      "step_id": "processed",
+      "expected_next": [
+        "responded"
+      ],
+      "max_delay_seconds": 5
+    },
+    {
+      "step_id": "responded",
+      "expected_next": [],
+      "max_delay_seconds": null
+    },
+    {
+      "step_id": "service_window",
+      "expected_next": [],
+      "max_delay_seconds": null
+    }
+  ],
+  "window_seconds": 300,
+  "baseline": {
+    "p95_latency_ms": 100,
+    "error_rate": 0.001,
+    "queue_depth": 5
+  },
+  "rules": [
+    {
+      "rule_id": "latency",
+      "metric": "p95_latency_ms",
+      "operator": "gt",
+      "threshold": 500,
+      "severity": "warning",
+      "aggregation": "latest",
+      "step_id": "service_window",
+      "min_samples": 1,
+      "persistence": 1,
+      "reference": "absolute"
+    },
+    {
+      "rule_id": "errors",
+      "metric": "error_rate",
+      "operator": "gt",
+      "threshold": 0.02,
+      "severity": "critical",
+      "aggregation": "latest",
+      "step_id": "service_window",
+      "min_samples": 1,
+      "persistence": 1,
+      "reference": "absolute"
+    },
+    {
+      "rule_id": "queue-rising",
+      "metric": "queue_depth",
+      "operator": "gt",
+      "threshold": 0.25,
+      "severity": "warning",
+      "aggregation": "slope",
+      "step_id": "service_window",
+      "min_samples": 3,
+      "persistence": 1,
+      "reference": "absolute"
+    }
+  ],
+  "ttl_seconds": 7200,
+  "max_events": 500,
+  "max_trajectories": 1000,
+  "max_lateness_seconds": 5,
+  "max_payload_bytes": 65536,
+  "schema_version": "1"
+}

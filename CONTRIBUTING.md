@@ -4,7 +4,7 @@ Thank you for your interest in contributing to the ARKHÉ Agent Boundary Defense
 
 ## Core Defensive Principles
 
-1. **Zero Label Leakage Guarantee:**
+1. **Enforced Observation/Label Separation:**
    - Detectors must strictly consume `StepObservation` objects.
    - Detectors must **never** import or consume `contracts.ground_truth` or precalculated risk/drift scores.
    - Automated tests (`tests/test_no_label_leakage.py` and `tests/test_contract_separation.py`) will automatically fail any PR violating this separation.
@@ -46,3 +46,9 @@ Thank you for your interest in contributing to the ARKHÉ Agent Boundary Defense
    - Explain the defensive contribution.
    - Include test logs and ensure all anti-leakage checks pass.
    - Target the `feat/*` branch or open a draft PR against `main`. Do not push directly to `main`.
+
+## Independent SDK contributions
+
+Build and validate the SDKs independently: `python -m pytest tests/defense tests/trajectory tests/audit -q`, `python sdk/build.py`, `python trajectory-sdk/build.py`. CI defines Windows/Linux with Python3.10–3.12; local evidence is Python3.12, and remote CI remains to be executed.
+
+Keep defensive agent evaluation separate from operational/card journeys. For changes to authority, tenant isolation, timing or recovery, include a meaningful synthetic reproduction. Treat labels as evaluator data, not SDK input. Preserve baseline policies and configuration bindings during replay. The first external pilot is prospective; ARKHÉ is currently an independent initiative led by Creúsio, with no partner claimed.
