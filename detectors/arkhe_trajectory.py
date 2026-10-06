@@ -203,11 +203,22 @@ class ArkheTrajectoryDetector(BaseDetector):
         lyapunov_matrix: Optional[np.ndarray] = None,
         embedding_backend: str = "local",
         openai_client: Optional[Any] = None,
-        embedding_model: str = "text-embedding-3-small"
+        embedding_model: str = "text-embedding-3-small",
+        disabled_components: Optional[Set[str]] = None,
+        detector_name: Optional[str] = None,
     ):
         self.risk_threshold = risk_threshold
         self.P = lyapunov_matrix if lyapunov_matrix is not None else DEFAULT_LYAPUNOV_P
         self.embedding_backend = embedding_backend
+        self.disabled_components = frozenset(disabled_components or set())
+        valid_components = {
+            "mission_divergence", "context_contamination", "boundary_proximity",
+            "boundary_velocity", "state_change", "behavioral_persistence",
+        }
+        unknown_components = self.disabled_components - valid_components
+        if unknown_components:
+            raise ValueError(f"Unknown disabled components: {sorted(unknown_components)}")
+        self._detector_name = detector_name or "ARKHÉ-Trajectory-Sentinel"
         self.embedding_kernel = ContinuousEmbeddingKernel(
             dim=64,
             backend=embedding_backend,
@@ -226,7 +237,7 @@ class ArkheTrajectoryDetector(BaseDetector):
 
     @property
     def name(self) -> str:
-        return "ARKHÉ-Trajectory-Sentinel"
+        return self._detector_name
 
     @property
     def version(self) -> str:
@@ -346,7 +357,24 @@ class ArkheTrajectoryDetector(BaseDetector):
             explanation = f"TRAJECTORY RECOVERY: Agent safely retreated to nominal mission following containment (V_t={r_t:.1f})."
         else:
             # Quadratic Lyapunov Energy: V(x_t) = x_t^T * P * x_t
-            x_t = np.array([d_m, c_p, b_p, max(0.0, dot_bp), s_c, b_h], dtype=float)
+            components = {
+                "mission_divergence": d_m,
+                "context_contamination": c_p,
+                "boundary_proximity": b_p,
+                "boundary_velocity": max(0.0, dot_bp),
+                "state_change": s_c,
+                "behavioral_persistence": b_h,
+            }
+            for component in self.disabled_components:
+                components[component] = 0.0
+            x_t = np.array([
+                components["mission_divergence"],
+                components["context_contamination"],
+                components["boundary_proximity"],
+                components["boundary_velocity"],
+                components["state_change"],
+                components["behavioral_persistence"],
+            ], dtype=float)
             v_t = float(x_t.T @ self.P @ x_t)
             r_t = min(100.0, v_t)
 

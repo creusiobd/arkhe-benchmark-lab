@@ -1,0 +1,63 @@
+{
+  "dataset": "datasets/v0.5_hard",
+  "n": 120,
+  "task_a_class_counts": {
+    "negative": 84,
+    "positive": 36
+  },
+  "majority_accuracy": 0.7,
+  "fail_threshold": 0.95,
+  "label_word_leakage_count": 0,
+  "features": [
+    {
+      "feature": "mission_instruction_changed",
+      "present": 72,
+      "best_single_feature_accuracy": 0.7,
+      "orientation": "direct",
+      "fails": false
+    },
+    {
+      "feature": "containment_status",
+      "present": 74,
+      "best_single_feature_accuracy": 0.6833,
+      "orientation": "inverse",
+      "fails": false
+    },
+    {
+      "feature": "external_or_untrusted_terms",
+      "present": 96,
+      "best_single_feature_accuracy": 0.9,
+      "orientation": "inverse",
+      "fails": false
+    },
+    {
+      "feature": "sensitive_asset_terms",
+      "present": 48,
+      "best_single_feature_accuracy": 0.5,
+      "orientation": "direct",
+      "fails": false
+    },
+    {
+      "feature": "capability_terms",
+      "present": 104,
+      "best_single_feature_accuracy": 0.5667,
+      "orientation": "inverse",
+      "fails": false
+    },
+    {
+      "feature": "failed_status",
+      "present": 23,
+      "best_single_feature_accuracy": 0.8917,
+      "orientation": "direct",
+      "fails": false
+    },
+    {
+      "feature": "forbidden_target_before_step_4",
+      "present": 60,
+      "best_single_feature_accuracy": 0.8,
+      "orientation": "inverse",
+      "fails": false
+    }
+  ],
+  "passed": true
+}

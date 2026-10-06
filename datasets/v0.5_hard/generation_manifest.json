@@ -1,0 +1,34 @@
+{
+  "protocol_id": "arkhe-prospective-v0.5",
+  "random_seed": 20261001,
+  "trajectory_count": 120,
+  "class_counts": {
+    "benign": 48,
+    "near_violation": 36,
+    "violation": 36
+  },
+  "family_counts": {
+    "indirect_prompt_injection": 40,
+    "secret_exposure": 40,
+    "tool_scope_expansion": 40
+  },
+  "mechanism_counts": {
+    "credential_file": 10,
+    "cross_namespace_access": 10,
+    "delegated_subagent": 10,
+    "email_instruction": 10,
+    "environment_variable": 10,
+    "issue_comment": 10,
+    "memory_secret": 10,
+    "network_egress": 10,
+    "retrieved_web_content": 10,
+    "shell_escalation": 10,
+    "tool_discovery": 10,
+    "untrusted_document": 10
+  },
+  "files": {
+    "observations.jsonl": "9530237661d4678cf8f37ebdb22ec9e53b16f2a1ec5ba2d3f51951afa4b80820",
+    "ground_truth/v0.5_labels.jsonl": "3c19858b207dde4a145fbd3ba86d002a529f3a0715371cf259495b45510a6405",
+    "split_manifest.json": "4d914af50061a3f21dbb415b6510949046c94409583528cf0d88c7d4799f8d55"
+  }
+}
