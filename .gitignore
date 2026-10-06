@@ -70,3 +70,7 @@ scratch_*.py
 # Angular Cache
 .angular/
 dashboard-angular/.angular/
+
+# Local SDK packaging and evidence
+.review-build/
+results/local-pilot-demo/

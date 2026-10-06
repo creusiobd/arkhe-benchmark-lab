@@ -37,3 +37,9 @@ The ARKHÉ research team takes the security of agent evaluation environments ser
 The following items are intentional research features and **not** considered reportable vulnerabilities:
 - **Synthetic Attack Datasets:** Files within `datasets/` intentionally simulate prompt injection, privilege escalation, and tool misuse using harmless synthetic payloads and fake tokens (`ARKHE_FAKE_TOKEN_DO_NOT_USE_*`).
 - **Simulated Tool Sandboxes:** Mock network endpoints (such as `http://localhost:8080/mock-sink`) that record requests without executing real-world commands.
+
+## SDK alpha scope
+
+The independent SDKs0.2.0 are experimental. The benchmark version-support table above does not describe SDK version support. SDK recovery uses plaintext SQLite under a trusted host, a protected directory and one owner per journal. Hashes detect accidental corruption, not malicious storage edits. Host authentication, tool isolation, retention and historical policies remain integration responsibilities.
+
+A monitored private reporting channel and any response commitment for the SDKs require confirmation by the maintainer before their release. No SDK response SLA or production support commitment is established here. Report only sanitized reproductions; never include real credentials or customer data in public issues.

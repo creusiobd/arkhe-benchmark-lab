@@ -1,0 +1,2 @@
+# Frozen benchmark files must retain exact committed bytes for SHA-256 validation.
+datasets/v0.4_hard/** -text

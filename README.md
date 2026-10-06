@@ -182,3 +182,16 @@ To cite this repository in academic or technical work:
   version = {0.3.0}
 }
 ```
+
+## 11. Independent alpha SDKs and controlled pilot
+
+The repository also contains two separately packaged SDKs, both0.2.0 alpha:
+
+- [Defensive agent evaluation](README_DEFENSIVE_SDK.md): host-provided authority, versioned policies and local durable observation sessions.
+- [Operational trajectory intelligence](README_TRAJECTORY_SDK.md): configurable journeys, bounded evidence and local replay. Cards remain a distinct operational use case.
+
+The benchmark distribution stays0.3.0. SDK versions and packages are independent; installing an SDK does not require the benchmark's scientific, web or model dependencies. Build with `python sdk/build.py` or `python trajectory-sdk/build.py`, then install the generated wheel with pip. Neither SDK is published on PyPI by this change.
+
+For a synthetic, scripted-agent demonstration using actual MCP STDIO, see [demo instructions](examples/defense/README.md). The host enforces the decision; the SDK observes. No LLM resistance, comparative advantage or external customer validation is established by this demo. [Pilot kit](docs/pilot/README.md) describes a prospective first partner pilot.
+
+For a fresh virtual environment, follow [SDK quickstart](SDK_QUICKSTART.md), which installs build prerequisites before running the build scripts. The demo is a repository example; the SDK wheels remain independent packages.

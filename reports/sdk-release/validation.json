@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-06",
+  "base_commit": "83b3dcc45e36babe5689cf63151c1afe461e7aaf",
+  "python": "3.12.14",
+  "platform": "Windows",
+  "regression": {
+    "passed": 318,
+    "subtests_passed": 38,
+    "errors": 0,
+    "failures": 0,
+    "skipped": [
+      {
+        "test": "tests.test_openai_semantic_client.TestOpenAILiveIntegration.test_live_openai_semantic_classification",
+        "reason": "Live OpenAI integration test skipped. Set RUN_OPENAI_INTEGRATION=1 and OPENAI_API_KEY to execute."
+      }
+    ],
+    "seconds": 40.486,
+    "warning": "Legacy Starlette/httpx deprecation"
+  },
+  "packages": [
+    {
+      "distribution": "arkhe-defense-sdk",
+      "version": "0.2.0",
+      "source_count": 10,
+      "artifacts": {
+        "arkhe_defense_sdk-0.2.0-py3-none-any.whl": "4b164f813a6c68a6cc3fe4f7b4e4a620da94ec64fa5f3148495797fe395c1c4a",
+        "arkhe_defense_sdk-0.2.0.tar.gz": "0f720ab2ad81cc8467aad055937c60d74032dd5d4cc63a2c8c0118501101108d"
+      },
+      "license_verified": true,
+      "archive_paths_safe": true,
+      "sdist_rebuild": {
+        "wheel": "arkhe_defense_sdk-0.2.0-py3-none-any.whl",
+        "sources_match": true
+      },
+      "fresh_install_verified": true,
+      "journal_imported": true,
+      "cli_verified": [
+        "doctor",
+        "validate-config"
+      ]
+    },
+    {
+      "distribution": "arkhe-trajectory-sdk",
+      "version": "0.2.0",
+      "source_count": 12,
+      "artifacts": {
+        "arkhe_trajectory_sdk-0.2.0-py3-none-any.whl": "8594bb15ebdd10d6f455fb1f88ee442fc040b400354e8efa799620453a099039",
+        "arkhe_trajectory_sdk-0.2.0.tar.gz": "e8d8ae309c6229e3a509bd7c2bfbd24b9b77c40f8f68f3b42b79fa53ae2e1a06"
+      },
+      "license_verified": true,
+      "archive_paths_safe": true,
+      "sdist_rebuild": {
+        "wheel": "arkhe_trajectory_sdk-0.2.0-py3-none-any.whl",
+        "sources_match": true
+      },
+      "fresh_install_verified": true,
+      "journal_imported": true,
+      "cli_verified": [
+        "doctor",
+        "validate-config"
+      ]
+    }
+  ],
+  "pip_check": "No broken requirements found.",
+  "demo": {
+    "executed": 2,
+    "blocked": 1,
+    "private_resource_dispatched": 0,
+    "agent": "scripted_without_llm",
+    "transport": "real_local_stdio"
+  },
+  "frozen_dataset": {
+    "canonical_blobs_match_existing_hashes": true,
+    "exact_git_bytes_restored": true,
+    "file_count": 9
+  },
+  "limitations": [
+    "Local validation only; remote CI matrix pending",
+    "No external partner or customer validation",
+    "No LLM efficacy or comparative gain demonstrated",
+    "No PyPI publication or production deployment"
+  ]
+}

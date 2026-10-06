@@ -1,0 +1,80 @@
+{
+  "tenant_id": "example-commerce",
+  "journey_id": "order-fulfillment",
+  "version": "1",
+  "steps": [
+    {
+      "step_id": "accepted",
+      "expected_next": [
+        "packed"
+      ],
+      "max_delay_seconds": 1800
+    },
+    {
+      "step_id": "packed",
+      "expected_next": [
+        "shipped"
+      ],
+      "max_delay_seconds": 3600
+    },
+    {
+      "step_id": "shipped",
+      "expected_next": [],
+      "max_delay_seconds": null
+    },
+    {
+      "step_id": "operations_window",
+      "expected_next": [],
+      "max_delay_seconds": null
+    }
+  ],
+  "window_seconds": 3600,
+  "baseline": {
+    "pending_orders": 10,
+    "failure_rate": 0.001
+  },
+  "rules": [
+    {
+      "rule_id": "backlog",
+      "metric": "pending_orders",
+      "operator": "gt",
+      "threshold": 30,
+      "severity": "warning",
+      "aggregation": "mean",
+      "step_id": "operations_window",
+      "min_samples": 3,
+      "persistence": 1,
+      "reference": "absolute"
+    },
+    {
+      "rule_id": "backlog-rising",
+      "metric": "pending_orders",
+      "operator": "gt",
+      "threshold": 0.05,
+      "severity": "warning",
+      "aggregation": "slope",
+      "step_id": "operations_window",
+      "min_samples": 3,
+      "persistence": 1,
+      "reference": "absolute"
+    },
+    {
+      "rule_id": "failures",
+      "metric": "failure_rate",
+      "operator": "gt",
+      "threshold": 0.01,
+      "severity": "warning",
+      "aggregation": "latest",
+      "step_id": "operations_window",
+      "min_samples": 1,
+      "persistence": 1,
+      "reference": "absolute"
+    }
+  ],
+  "ttl_seconds": 7200,
+  "max_events": 500,
+  "max_trajectories": 1000,
+  "max_lateness_seconds": 5,
+  "max_payload_bytes": 65536,
+  "schema_version": "1"
+}

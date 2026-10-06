@@ -1,0 +1,140 @@
+{
+  "tenant_id": "example-bank",
+  "journey_id": "card-authorization",
+  "version": "1",
+  "steps": [
+    {
+      "step_id": "receipt",
+      "expected_next": [
+        "validation"
+      ],
+      "max_delay_seconds": 1
+    },
+    {
+      "step_id": "validation",
+      "expected_next": [
+        "fraud_check"
+      ],
+      "max_delay_seconds": 1
+    },
+    {
+      "step_id": "fraud_check",
+      "expected_next": [
+        "limit_lookup"
+      ],
+      "max_delay_seconds": 1
+    },
+    {
+      "step_id": "limit_lookup",
+      "expected_next": [
+        "authorization"
+      ],
+      "max_delay_seconds": 2
+    },
+    {
+      "step_id": "authorization",
+      "expected_next": [
+        "response"
+      ],
+      "max_delay_seconds": 1
+    },
+    {
+      "step_id": "response",
+      "expected_next": [],
+      "max_delay_seconds": null
+    },
+    {
+      "step_id": "channel_window",
+      "expected_next": [],
+      "max_delay_seconds": null
+    }
+  ],
+  "window_seconds": 300,
+  "baseline": {
+    "p95_latency_ms": 300,
+    "timeout_rate": 0.005,
+    "retry_rate": 0.01,
+    "queue_lag": 10,
+    "technical_decline_rate": 0.005
+  },
+  "rules": [
+    {
+      "rule_id": "latency-slo",
+      "metric": "p95_latency_ms",
+      "operator": "gt",
+      "threshold": 1500,
+      "severity": "critical",
+      "aggregation": "latest",
+      "step_id": "channel_window",
+      "min_samples": 1,
+      "persistence": 1,
+      "reference": "absolute"
+    },
+    {
+      "rule_id": "latency-drift",
+      "metric": "p95_latency_ms",
+      "operator": "gt",
+      "threshold": 1,
+      "severity": "warning",
+      "aggregation": "latest",
+      "step_id": "channel_window",
+      "min_samples": 1,
+      "persistence": 2,
+      "reference": "relative"
+    },
+    {
+      "rule_id": "queue-rising",
+      "metric": "queue_lag",
+      "operator": "gt",
+      "threshold": 0.5,
+      "severity": "warning",
+      "aggregation": "slope",
+      "step_id": "channel_window",
+      "min_samples": 3,
+      "persistence": 2,
+      "reference": "absolute"
+    },
+    {
+      "rule_id": "retry-budget",
+      "metric": "retry_rate",
+      "operator": "gt",
+      "threshold": 0.03,
+      "severity": "warning",
+      "aggregation": "mean",
+      "step_id": "channel_window",
+      "min_samples": 3,
+      "persistence": 1,
+      "reference": "absolute"
+    },
+    {
+      "rule_id": "timeouts",
+      "metric": "timeout_rate",
+      "operator": "gt",
+      "threshold": 0.03,
+      "severity": "critical",
+      "aggregation": "latest",
+      "step_id": "channel_window",
+      "min_samples": 1,
+      "persistence": 1,
+      "reference": "absolute"
+    },
+    {
+      "rule_id": "technical-declines",
+      "metric": "technical_decline_rate",
+      "operator": "gt",
+      "threshold": 0.02,
+      "severity": "warning",
+      "aggregation": "latest",
+      "step_id": "channel_window",
+      "min_samples": 1,
+      "persistence": 1,
+      "reference": "absolute"
+    }
+  ],
+  "ttl_seconds": 7200,
+  "max_events": 500,
+  "max_trajectories": 1000,
+  "max_lateness_seconds": 5,
+  "max_payload_bytes": 65536,
+  "schema_version": "1"
+}
