@@ -34,6 +34,14 @@ class BoundedStateStore:
             # Never represent an unremembered eviction as a clean new trajectory.
             self.loss_registry_overflow = True
 
+    def peek(self, key, now=None):
+        """The state get() would return for an existing live key, without expiring, touching or creating."""
+        now = now or self.clock()
+        state = self.trajectories.get(key)
+        if state is None or (now - state.touched_at).total_seconds() >= self.limits.ttl_seconds:
+            return None
+        return state
+
     def get(self, key, now=None):
         now = now or self.clock()
         for stored_key, state in list(self.trajectories.items()):

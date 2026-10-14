@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from .config import SDKConfig
 from .contracts import RuntimeContext, parse_event, utc_datetime
-from .errors import DefenseError
+from .errors import DefenseError, EventRejectedError
 from .evaluator import DefenseEvaluator
 
 
@@ -166,6 +166,13 @@ class DurableDefenseSession:
             self._tail = tail
             self.engine.policy_provider = self.provider
             return decision
+        except EventRejectedError:
+            # Refused before any evaluator state changed and before any row was
+            # written: nothing to replay, so the session stays usable.
+            if self._db:
+                self._db.rollback()
+            self.engine.policy_provider = self.provider
+            raise
         except Exception as exc:
             self.tainted = True
             if self._db:

@@ -4,7 +4,7 @@ import hashlib
 import json
 
 from .contracts import Decision, parse_event, RuntimeContext, utc_datetime
-from .errors import DefenseError, EventConflictError, PolicyError
+from .errors import DefenseError, EventConflictError, EventRejectedError, PolicyError
 from .config import SDKConfig
 from .policy import hash_action
 from .state import BoundedStateStore
@@ -118,12 +118,19 @@ class DefenseEvaluator:
         context = RuntimeContext.model_validate(context).model_copy(deep=True)
         encoded = json.dumps(event.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
         if len(encoded.encode()) > self.config.max_payload_bytes:
-            raise DefenseError("event exceeds maximum payload bytes")
+            raise EventRejectedError("event exceeds maximum payload bytes")
         if not self._trusted(event, context):
             return self._publish(self._decision(event, "insufficient_evidence", missing=("trusted_context",)))
         now = self._now()
         if event.occurred_at > now or event.ingested_at > now:
             return self._publish(self._decision(event, "insufficient_evidence", missing=("future_event_time",)))
+        key = (event.tenant_id, event.trajectory_id)
+        fingerprint = hashlib.sha256(encoded.encode()).hexdigest()
+        # A conflicting event_id is refused before the trajectory is touched, so
+        # the refusal leaves no trace that a durable replay would have to repeat.
+        known = self.state.peek(key, now)
+        if known is not None and known.fingerprints.get(event.event_id, fingerprint) != fingerprint:
+            raise EventConflictError("event_id reused with conflicting payload")
         # Graph limits describe untrustworthy lineage, not malformed input: the
         # event gets a conservative decision and never enters the graph. Raising
         # here would let a producer (including the observed agent) close a
@@ -131,11 +138,12 @@ class DefenseEvaluator:
         # before the trajectory is created, touched or allowed to evict another.
         if len(event.parent_event_ids) > self.config.state_limits.max_parent_ids:
             return self._publish(self._decision(event, "insufficient_evidence", missing=("parent_count",)))
-        state = self.state.get((event.tenant_id, event.trajectory_id), now)
-        fingerprint = hashlib.sha256(encoded.encode()).hexdigest()
+        state = self.state.get(key, now)
         if event.event_id in state.fingerprints:
             if state.fingerprints[event.event_id] != fingerprint:
-                raise EventConflictError("event_id reused with conflicting payload")
+                # Unreachable while peek() matches get(); state was touched, so
+                # this must not be reported as a side-effect-free rejection.
+                raise DefenseError("event_id conflict found after state access")
             return state.decisions[event.event_id]
         if self._cycle(event, state):
             return self._publish(self._decision(event, "insufficient_evidence", state, missing=("event_graph_cycle",)))

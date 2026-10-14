@@ -6,6 +6,7 @@ from pathlib import Path
 from datetime import timedelta
 from arkhe_defense.journal import DurableDefenseSession, JournalError
 from arkhe_defense.config import SDKConfig
+from arkhe_defense.errors import EventConflictError, EventRejectedError
 from tests.defense import test_security
 
 
@@ -77,6 +78,22 @@ class JournalTests(unittest.TestCase):
         restored = self.open()
         self.assertEqual(restored._db.execute('SELECT COUNT(*) FROM ledger').fetchone()[0],4)
         self.assertEqual(restored.ingest(f.propose('p9',action_id='a9'),f.agent),later)
+
+    def test_rejected_input_does_not_close_session(self):
+        f = self.fixture
+        session = self.open()
+        original = session.ingest(f.propose(),f.agent)
+        with self.assertRaises(EventConflictError):
+            session.ingest(f.propose(target_resource='/ledger/forbidden'),f.agent)
+        with self.assertRaises(EventRejectedError):
+            session.ingest(f.propose('big',parameters_summary={'blob':'x'*70000}),f.agent)
+        self.assertFalse(session.closed or session.tainted)
+        later = session.ingest(f.propose('p2',action_id='a2'),f.agent)
+        session.close()
+        restored = self.open()
+        self.assertEqual(restored._db.execute('SELECT COUNT(*) FROM ledger').fetchone()[0],2)
+        self.assertEqual(restored.ingest(f.propose(),f.agent),original)
+        self.assertEqual(restored.ingest(f.propose('p2',action_id='a2'),f.agent),later)
 
     def test_capacity_failclosed(self):
         f = self.fixture

@@ -6,7 +6,7 @@ from arkhe_defense.contracts import ActionProposed,ActionCompleted,ApprovalRecor
 from arkhe_defense.policy import PolicySnapshot,PolicyRule,ResourcePattern,InMemoryPolicyProvider,hash_action
 from arkhe_defense.config import SDKConfig,StateLimits
 from arkhe_defense.evaluator import DefenseEvaluator
-from arkhe_defense.errors import DefenseError
+from arkhe_defense.errors import DefenseError,EventConflictError,EventRejectedError
 
 class DefenseSecurityTests(unittest.TestCase):
  def setUp(self):
@@ -242,6 +242,17 @@ class DefenseSecurityTests(unittest.TestCase):
   self.assertNotIn('right',self.sdk.state.trajectories[('t1','run1')].events)
   after=self.sdk.ingest(self.propose('after',parent_event_ids=('right',)),self.agent)
   self.assertEqual(after.missing_fields,('parent:right',))
+
+ def test_rejected_input_leaves_state_untouched(self):
+  sdk=DefenseEvaluator(self.provider,config=SDKConfig(state_limits=StateLimits(ttl_seconds=60)),clock=lambda:self.now)
+  start=self.now;sdk.ingest(self.propose(),self.agent)
+  self.now=start+timedelta(seconds=50)
+  with self.assertRaises(EventConflictError):sdk.ingest(self.propose(target_resource='/ledger/forbidden'),self.agent)
+  with self.assertRaises(EventRejectedError):sdk.ingest(self.propose('big',parameters_summary={'blob':'x'*70000}),self.agent)
+  self.assertEqual(list(sdk.state.trajectories),[('t1','run1')])
+  self.assertEqual(sdk.state.trajectories[('t1','run1')].touched_at,start)
+  self.now=start+timedelta(seconds=61) # refusals did not extend the TTL
+  self.assertEqual(sdk.ingest(self.propose('p2',action_id='a2'),self.agent).context_loss_reason,'ttl_expired')
 
  def test_rejected_parent_count_does_not_create_or_evict_state(self):
   sdk=DefenseEvaluator(self.provider,config=SDKConfig(state_limits=StateLimits(max_active_trajectories=1,max_parent_ids=2)),clock=lambda:self.now)

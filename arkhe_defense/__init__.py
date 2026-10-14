@@ -5,7 +5,7 @@ from .contracts import (ActionProposed, ActionCompleted, ApprovalRecorded,
 from .config import SDKConfig, StateLimits
 from .policy import (PolicySnapshot, PolicyRule, ResourcePattern,
     PolicyProvider, InMemoryPolicyProvider, hash_action)
-from .errors import DefenseError, AuthorityError, PolicyError, EventConflictError
+from .errors import DefenseError, AuthorityError, PolicyError, EventConflictError, EventRejectedError
 from .evaluator import DefenseEvaluator, DefenseSDK, Evaluator
 from .state import BoundedStateStore
 from .exporters import JSONLExporter
@@ -16,7 +16,7 @@ __all__ = ['ActionProposed', 'ActionCompleted', 'ApprovalRecorded', 'PolicyChang
     'Decision', 'DecisionStatus', 'Event', 'parse_event', 'SDKConfig', 'StateLimits',
     'PolicySnapshot', 'PolicyRule', 'ResourcePattern', 'PolicyProvider',
     'InMemoryPolicyProvider', 'hash_action', 'DefenseError', 'AuthorityError',
-    'PolicyError', 'EventConflictError', 'DefenseEvaluator', 'DefenseSDK',
+    'PolicyError', 'EventConflictError', 'EventRejectedError', 'DefenseEvaluator', 'DefenseSDK',
     'BoundedStateStore', 'JSONLExporter', 'Evaluator', 'DurableDefenseSession', 'JournalError']
 
 __version__ = '0.2.0'
