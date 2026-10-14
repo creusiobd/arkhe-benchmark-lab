@@ -6,6 +6,7 @@ from datetime import timedelta
 from pathlib import Path
 from tests.trajectory import test_invariants
 from arkhe_trajectory.journal import DurableJourneySession,JournalError
+from arkhe_trajectory.errors import DuplicateEventError,EventRejectedError
 
 class JourneyJournalTests(unittest.TestCase):
     def setUp(self):
@@ -59,9 +60,38 @@ class JourneyJournalTests(unittest.TestCase):
         with self.assertRaises(JournalError):s.ingest(self.f.event(1))
         self.assertTrue(s.tainted)
         self.assertEqual(self.open()._count,0)
-    def test_wrong_tenant_failclosed(self):
+    def test_wrong_tenant_refused_without_closing(self):
         s=self.open()
-        with self.assertRaises(JournalError):s.ingest(self.f.event(1,tenant_id='other'))
+        with self.assertRaises(EventRejectedError):s.ingest(self.f.event(1,tenant_id='other'))
+        self.assertFalse(s.closed or s.tainted)
+        self.assertEqual(s.ingest(self.f.event(1)).status,'normal')
+        self.assertEqual(s._count,1)
+    def test_invalid_input_refused_without_closing_and_replays(self):
+        s=self.open(self.f.config(max_payload_bytes=4096))
+        first=s.ingest(self.f.event(1))
+        refused=[lambda:s.ingest(self.f.event(9,journey_version='2')),
+                 lambda:s.ingest(self.f.event(9,step_id='nope')),
+                 lambda:s.ingest(self.f.event(9,event_time=self.f.now+timedelta(seconds=5),ingested_at=self.f.now+timedelta(seconds=5))),
+                 lambda:s.ingest(self.f.event(9,dimensions={f'd{i}':'x'*1000 for i in range(30)})),
+                 lambda:s.check('other','r'),
+                 lambda:s.check('t','r',as_of=self.f.now+timedelta(seconds=5))]
+        for attempt in refused:
+            with self.assertRaises(EventRejectedError):attempt()
+        with self.assertRaises(DuplicateEventError):s.ingest(self.f.event(1,555))
+        self.assertFalse(s.closed or s.tainted)
+        current=s.check('t','r')
+        s.close()
+        restored=self.open(self.f.config(max_payload_bytes=4096))
+        self.assertEqual(restored._count,2)
+        self.assertEqual(restored.ingest(self.f.event(1)),first)
+        self.assertEqual(restored.check('t','r'),current)
+    def test_clock_regression_after_refusal_still_closes(self):
+        s=self.open()
+        start=self.f.now
+        self.f.now=start+timedelta(seconds=30)
+        with self.assertRaises(EventRejectedError):s.ingest(self.f.event(1,step_id='nope'))
+        self.f.now=start
+        with self.assertRaises(JournalError):s.ingest(self.f.event(1))
         self.assertTrue(s.closed)
     def test_historical_check_replay_and_clock_regression(self):
         s=self.open()

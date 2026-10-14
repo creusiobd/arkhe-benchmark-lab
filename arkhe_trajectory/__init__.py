@@ -4,10 +4,10 @@ from .config import JourneyConfig, JourneyStep, ThresholdRule
 from .engine import JourneyEngine, TrajectoryEngine
 from .state import BoundedTrajectoryState, BoundedStateStore
 from .adapters import MappingAdapter
-from .errors import TrajectoryError, ConfigurationError, EventValidationError, DuplicateEventError
+from .errors import TrajectoryError, ConfigurationError, EventValidationError, EventRejectedError, DuplicateEventError
 from .journal import DurableJourneySession, JournalError
 __version__ = '0.2.0'
 __all__ = ['TrajectoryEvent', 'Event', 'TrajectoryAssessment', 'RuleFinding', 'JourneyConfig',
     'JourneyStep', 'ThresholdRule', 'JourneyEngine', 'TrajectoryEngine', 'BoundedTrajectoryState',
     'BoundedStateStore', 'MappingAdapter', 'TrajectoryError', 'ConfigurationError',
-    'EventValidationError', 'DuplicateEventError', 'DurableJourneySession', 'JournalError']
+    'EventValidationError', 'EventRejectedError', 'DuplicateEventError', 'DurableJourneySession', 'JournalError']

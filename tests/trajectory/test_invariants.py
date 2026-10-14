@@ -71,6 +71,14 @@ class TemporalInvariants(unittest.TestCase):
   adapted=MappingAdapter(mapping,{'metric':'signals.latency'}).adapt(payload)
   self.assertEqual(adapted.metrics['metric'],100)
   with self.assertRaises(ValueError):MappingAdapter(mapping,{'metric':'signals.absent'}).adapt(payload)
+ def test_conflicting_resend_leaves_state_untouched(self):
+  from arkhe_trajectory.errors import DuplicateEventError
+  e=self.engine();start=self.now;e.ingest(self.event(1))
+  self.now=start+timedelta(seconds=100)
+  with self.assertRaises(DuplicateEventError):e.ingest(self.event(1,555,event_time=start,ingested_at=start))
+  self.assertEqual(next(iter(e.state.trajectories.values())).touched_at,start)
+  self.now=start+timedelta(seconds=121) # the refusal did not extend the TTL
+  self.assertEqual(e.check('t','r').context_loss_reason,'ttl_expired')
  def test_payload_bound(self):
   engine=self.engine(self.config(max_payload_bytes=20))
   with self.assertRaises(ValueError):engine.ingest(self.event(1))

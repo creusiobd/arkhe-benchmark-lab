@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from .config import JourneyConfig
 from .contracts import TrajectoryEvent, aware
 from .engine import JourneyEngine
-from .errors import TrajectoryError
+from .errors import TrajectoryError, EventRejectedError
 
 
 class JournalError(TrajectoryError):
@@ -102,6 +102,9 @@ class DurableJourneySession:
             self._receipt=aware(self.clock(),'clock')
             if self._last_receipt and self._receipt<self._last_receipt:
                 raise JournalError('host clock regression')
+            # Every observed receipt advances the floor, recorded or refused, so a
+            # regression is caught here rather than by the engine mid-transaction.
+            self._last_receipt=self._receipt
             if self._count>=self.max_rows:raise JournalError('journal capacity exhausted')
             self._db.execute('BEGIN IMMEDIATE')
             assessment=self._apply(kind,payload)
@@ -112,8 +115,12 @@ class DurableJourneySession:
             self._db.commit()
             self._count+=1
             self._tail=digest
-            self._last_receipt=self._receipt
             return assessment
+        except EventRejectedError:
+            # Refused before trajectory state changed and before any row was
+            # written: nothing to replay, so the session stays usable.
+            if self._db:self._db.rollback()
+            raise
         except Exception as exc:
             self.tainted=True
             if self._db:self._db.rollback()
