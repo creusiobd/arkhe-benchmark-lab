@@ -36,7 +36,7 @@ Eventos tipados: `ActionProposed`, `ActionCompleted`, `ApprovalRecorded`, `Polic
 
 ## Estado e limites
 
-Estado particionado por `(tenant_id, trajectory_id)`. IDs duplicados com conteúdo diferente geram conflito. TTL, capacidade, pais ausentes, ciclos e profundidade excessiva produzem evidência insuficiente. Violações observadas permanecem sinalizadas durante a retenção; fechamento não as apaga. Eventos atrasados não revisam automaticamente decisões anteriores. A perda do registro limitado de evicções é conservadora.
+Estado particionado por `(tenant_id, trajectory_id)`. IDs duplicados com conteúdo diferente geram conflito. TTL, capacidade, pais ausentes, excesso de pais, ciclos e profundidade excessiva produzem evidência insuficiente (`missing_fields` indica `parent_count`, `event_graph_cycle` ou `event_graph_depth`); o evento recusado não entra no grafo, e descendentes que o citem ficam com pai ausente. Autorreferência continua inválida no contrato. Violações observadas permanecem sinalizadas durante a retenção; fechamento não as apaga. Eventos atrasados não revisam automaticamente decisões anteriores. A perda do registro limitado de evicções é conservadora.
 
 Esta versão é alpha, serial e em memória. Reinício perde contexto: o host deve exigir nova trajetória ou restaurar evidência confiável. Não há persistência, autenticação de transporte, assinatura de políticas, avaliação distribuída, fila durável ou certificação de isolamento de processo. Um processo por cliente pode ser exigido pelo modelo de ameaça. A exportação JSONL é síncrona e registra decisões; falha de exportação fica em `last_export_error` e não muda a avaliação.
 

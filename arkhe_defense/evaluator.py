@@ -124,6 +124,13 @@ class DefenseEvaluator:
         now = self._now()
         if event.occurred_at > now or event.ingested_at > now:
             return self._publish(self._decision(event, "insufficient_evidence", missing=("future_event_time",)))
+        # Graph limits describe untrustworthy lineage, not malformed input: the
+        # event gets a conservative decision and never enters the graph. Raising
+        # here would let a producer (including the observed agent) close a
+        # durable session. The parent count needs no state, so it is decided
+        # before the trajectory is created, touched or allowed to evict another.
+        if len(event.parent_event_ids) > self.config.state_limits.max_parent_ids:
+            return self._publish(self._decision(event, "insufficient_evidence", missing=("parent_count",)))
         state = self.state.get((event.tenant_id, event.trajectory_id), now)
         fingerprint = hashlib.sha256(encoded.encode()).hexdigest()
         if event.event_id in state.fingerprints:
@@ -131,15 +138,13 @@ class DefenseEvaluator:
                 raise EventConflictError("event_id reused with conflicting payload")
             return state.decisions[event.event_id]
         if self._cycle(event, state):
-            raise DefenseError("event graph contains a cycle")
-        if len(event.parent_event_ids) > self.config.state_limits.max_parent_ids:
-            raise DefenseError("parent count exceeds configured maximum")
+            return self._publish(self._decision(event, "insufficient_evidence", state, missing=("event_graph_cycle",)))
         if len(state.events) >= self.config.state_limits.max_events_per_trajectory:
             self.state.mark_event_capacity(state)
             return self._publish(self._decision(event, "insufficient_evidence", state, missing=("event_capacity",)))
         depth = 1 + max((state.depths.get(p, 0) for p in event.parent_event_ids), default=0)
         if depth > self.config.state_limits.max_depth:
-            raise DefenseError("event graph depth exceeds configured maximum")
+            return self._publish(self._decision(event, "insufficient_evidence", state, missing=("event_graph_depth",)))
         missing_parents = tuple(p for p in event.parent_event_ids if p not in state.events
                                 or state.events[p].occurred_at > event.occurred_at
                                 or any(field.startswith("parent:") for field in state.decisions[p].missing_fields))

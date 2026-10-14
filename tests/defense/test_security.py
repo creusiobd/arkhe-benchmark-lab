@@ -224,13 +224,31 @@ class DefenseSecurityTests(unittest.TestCase):
   returned=sdk.ingest(self.propose('returned',trajectory_id='run0'),self.agent)
   self.assertEqual(self.status(returned),'insufficient_evidence');self.assertTrue(returned.context_loss_reason)
 
- def test_cycles_and_depth_are_rejected(self):
-  sdk=DefenseEvaluator(self.provider,config=SDKConfig(state_limits=StateLimits(max_depth=1)),clock=lambda:self.now)
+ def test_cycles_depth_and_parent_count_are_insufficient_and_never_enter_graph(self):
+  sdk=DefenseEvaluator(self.provider,config=SDKConfig(state_limits=StateLimits(max_depth=1,max_parent_ids=2)),clock=lambda:self.now)
   sdk.ingest(self.propose(),self.agent)
-  with self.assertRaises(ValueError):sdk.ingest(self.propose('child',parent_event_ids=('p1',)),self.agent)
+  deep=sdk.ingest(self.propose('child',parent_event_ids=('p1',)),self.agent)
+  self.assertEqual((self.status(deep),deep.missing_fields),('insufficient_evidence',('event_graph_depth',)))
+  wide=sdk.ingest(self.propose('wide',parent_event_ids=('a','b','c')),self.agent)
+  self.assertEqual((self.status(wide),wide.missing_fields),('insufficient_evidence',('parent_count',)))
+  # A self-reference is malformed input and is still rejected by the contract.
   with self.assertRaises(ValueError):self.sdk.ingest(self.propose('selfcycle',parent_event_ids=('selfcycle',)),self.agent)
   self.sdk.ingest(self.propose('left',parent_event_ids=('right',)),self.agent)
-  with self.assertRaises(ValueError):self.sdk.ingest(self.propose('right',parent_event_ids=('left',)),self.agent)
+  cycle=self.sdk.ingest(self.propose('right',parent_event_ids=('left',)),self.agent)
+  self.assertEqual((self.status(cycle),cycle.missing_fields),('insufficient_evidence',('event_graph_cycle',)))
+  self.assertEqual(self.sdk.ingest(self.propose('right',parent_event_ids=('left',)),self.agent),cycle)
+  # Rejected events are not admitted, so descendants see a missing parent.
+  for rejected in ('child','wide'):self.assertNotIn(rejected,sdk.state.trajectories[('t1','run1')].events)
+  self.assertNotIn('right',self.sdk.state.trajectories[('t1','run1')].events)
+  after=self.sdk.ingest(self.propose('after',parent_event_ids=('right',)),self.agent)
+  self.assertEqual(after.missing_fields,('parent:right',))
+
+ def test_rejected_parent_count_does_not_create_or_evict_state(self):
+  sdk=DefenseEvaluator(self.provider,config=SDKConfig(state_limits=StateLimits(max_active_trajectories=1,max_parent_ids=2)),clock=lambda:self.now)
+  sdk.ingest(self.propose(),self.agent)
+  sdk.ingest(self.propose('other-run',trajectory_id='run2',parent_event_ids=('x','y','z')),self.agent)
+  self.assertEqual(list(sdk.state.trajectories),[('t1','run1')])
+  self.assertEqual(len(sdk.state.tombstones),0)
 
  def test_export_failure_does_not_change_decision_or_duplicate(self):
   class FailingExporter:

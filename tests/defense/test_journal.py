@@ -63,6 +63,21 @@ class JournalTests(unittest.TestCase):
         f.now = start + timedelta(seconds=31)
         self.assertEqual(f.status(session.ingest(f.propose(),f.agent)),'approval_required')
 
+    def test_agent_graph_abuse_cannot_close_session_and_replays(self):
+        f = self.fixture
+        session = self.open()
+        session.ingest(f.propose('left',parent_event_ids=('right',)),f.agent)
+        cycle = session.ingest(f.propose('right',action_id='a2',parent_event_ids=('left',)),f.agent)
+        wide = session.ingest(f.propose('wide',action_id='a3',parent_event_ids=tuple(f'x{i}' for i in range(17))),f.agent)
+        self.assertEqual(cycle.missing_fields,('event_graph_cycle',))
+        self.assertEqual(wide.missing_fields,('parent_count',))
+        self.assertFalse(session.closed or session.tainted)
+        later = session.ingest(f.propose('p9',action_id='a9'),f.agent)
+        session.close()
+        restored = self.open()
+        self.assertEqual(restored._db.execute('SELECT COUNT(*) FROM ledger').fetchone()[0],4)
+        self.assertEqual(restored.ingest(f.propose('p9',action_id='a9'),f.agent),later)
+
     def test_capacity_failclosed(self):
         f = self.fixture
         session = self.open(max_rows=1)
