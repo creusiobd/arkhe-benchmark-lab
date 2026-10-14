@@ -1,3 +1,8 @@
+# SDKs — não publicado
+
+- Defesa: o avaliador recusa relógio do host que retroceda (`DefenseError`). Antes, uma regressão de relógio permitia que aprovação expirada autorizasse conclusão retroativa.
+- Sessão durável de defesa: todo recebimento observado, persistido ou não, passa a ser o piso para detectar regressão de relógio.
+
 # SDKs — 0.2.0 alpha local
 
 - Limites explícitos de evidências e achados nas avaliações de jornadas, preservando contagem completa e indicação de truncamento.

@@ -50,6 +50,19 @@ class JournalTests(unittest.TestCase):
         self.assertEqual(session._db.execute('SELECT COUNT(*) FROM ledger').fetchone()[0],0)
         self.assertEqual(f.status(session.ingest(f.propose(),f.agent)),'approval_required')
 
+    def test_receipt_regression_after_unpersisted_observation_does_not_taint(self):
+        f = self.fixture
+        session = self.open()
+        start = f.now
+        f.now = start + timedelta(seconds=30)
+        session.ingest(f.propose('future',occurred_at=f.now+timedelta(seconds=1)),f.agent)
+        f.now = start
+        with self.assertRaises(JournalError):
+            session.ingest(f.propose(),f.agent)
+        self.assertFalse(session.tainted)
+        f.now = start + timedelta(seconds=31)
+        self.assertEqual(f.status(session.ingest(f.propose(),f.agent)),'approval_required')
+
     def test_capacity_failclosed(self):
         f = self.fixture
         session = self.open(max_rows=1)

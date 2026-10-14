@@ -22,6 +22,16 @@ class DefenseEvaluator:
         self.state = state or BoundedStateStore(self.config.state_limits, self.clock)
         self.exporter = exporter
         self.last_export_error = None
+        self._last_now = None
+
+    def _now(self):
+        # A regressing host clock could re-validate expired approvals for
+        # backdated actions, so time observed by the evaluator never moves back.
+        now = utc_datetime(self.clock())
+        if self._last_now is not None and now < self._last_now:
+            raise DefenseError("host clock moved backwards")
+        self._last_now = now
+        return now
 
     def _decision(self, event, status, state=None, policy=None, rules=(), evidence=(), missing=()):
         identity = f"{event.tenant_id}\0{event.trajectory_id}\0{event.event_id}"
@@ -111,7 +121,7 @@ class DefenseEvaluator:
             raise DefenseError("event exceeds maximum payload bytes")
         if not self._trusted(event, context):
             return self._publish(self._decision(event, "insufficient_evidence", missing=("trusted_context",)))
-        now = utc_datetime(self.clock())
+        now = self._now()
         if event.occurred_at > now or event.ingested_at > now:
             return self._publish(self._decision(event, "insufficient_evidence", missing=("future_event_time",)))
         state = self.state.get((event.tenant_id, event.trajectory_id), now)

@@ -6,6 +6,7 @@ from arkhe_defense.contracts import ActionProposed,ActionCompleted,ApprovalRecor
 from arkhe_defense.policy import PolicySnapshot,PolicyRule,ResourcePattern,InMemoryPolicyProvider,hash_action
 from arkhe_defense.config import SDKConfig,StateLimits
 from arkhe_defense.evaluator import DefenseEvaluator
+from arkhe_defense.errors import DefenseError
 
 class DefenseSecurityTests(unittest.TestCase):
  def setUp(self):
@@ -173,6 +174,15 @@ class DefenseSecurityTests(unittest.TestCase):
   self.now+=timedelta(minutes=6)
   d=self.sdk.ingest(self.completed(p),self.executor)
   self.assertTrue(d.has_observed_violation)
+
+ def test_clock_regression_cannot_resurrect_expired_approval(self):
+  start=self.now;p=self.propose();self.sdk.ingest(p,self.agent);self.sdk.ingest(self.approval(p),self.approver)
+  self.now=start+timedelta(minutes=20);self.sdk.ingest(self.propose('p2',action_id='a2'),self.agent)
+  self.now=start+timedelta(minutes=2) # host clock steps back (NTP, VM snapshot)
+  backdated=self.completed(p).model_copy(update={'occurred_at':start+timedelta(minutes=1),'ingested_at':start+timedelta(minutes=1)})
+  with self.assertRaises(DefenseError):self.sdk.ingest(backdated,self.executor)
+  self.now=start+timedelta(minutes=21)
+  self.assertEqual(self.status(self.sdk.ingest(backdated,self.executor)),'policy_violation')
 
  def test_future_event_does_not_mutate_state(self):
   p=self.propose(occurred_at=self.now+timedelta(days=1),ingested_at=self.now+timedelta(days=1))

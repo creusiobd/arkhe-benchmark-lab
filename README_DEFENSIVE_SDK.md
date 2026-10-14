@@ -8,7 +8,7 @@ A aplicação hospedeira autentica o produtor, resolve cliente, principal, papel
 
 Políticas são provisionadas por `policy_admin` com `policy:write`, isoladas por cliente e ativadas explicitamente. Uma versão existente não pode receber conteúdo diferente. SHA-256 identifica o conteúdo; não é assinatura digital. O agente não escolhe uma versão antiga para recuperar privilégios. A missão é metadado administrativo: as regras explícitas determinam a avaliação, sem interpretação semântica por LLM.
 
-Aprovações exigem principal distinto do agente e `approvals:write`. Vinculam cliente, trajetória, agente, ação, ferramenta, recurso, parâmetros resumidos e versão da política. Expiração considera relógio do host e revogação é reavaliada na conclusão. O host precisa autenticar o aprovador e proteger relógio, registry e armazenamento.
+Aprovações exigem principal distinto do agente e `approvals:write`. Vinculam cliente, trajetória, agente, ação, ferramenta, recurso, parâmetros resumidos e versão da política. Expiração considera relógio do host e revogação é reavaliada na conclusão. O avaliador recusa com `DefenseError` um relógio do host que retroceda, para que aprovações expiradas não voltem a valer para ações retroativas; a sessão durável recusa com `JournalError`, sem contaminar a sessão, um recebimento anterior a qualquer outro já observado. O host precisa autenticar o aprovador e proteger relógio, registry e armazenamento.
 
 ## Uso
 
