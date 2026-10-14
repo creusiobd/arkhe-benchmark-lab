@@ -6,6 +6,7 @@ from pathlib import Path
 from datetime import timedelta
 from arkhe_defense.journal import DurableDefenseSession, JournalError
 from arkhe_defense.config import SDKConfig
+from arkhe_defense.errors import EventConflictError, EventRejectedError
 from tests.defense import test_security
 
 
@@ -49,6 +50,50 @@ class JournalTests(unittest.TestCase):
         session.ingest(f.propose(occurred_at=f.now+timedelta(seconds=1)),f.agent)
         self.assertEqual(session._db.execute('SELECT COUNT(*) FROM ledger').fetchone()[0],0)
         self.assertEqual(f.status(session.ingest(f.propose(),f.agent)),'approval_required')
+
+    def test_receipt_regression_after_unpersisted_observation_does_not_taint(self):
+        f = self.fixture
+        session = self.open()
+        start = f.now
+        f.now = start + timedelta(seconds=30)
+        session.ingest(f.propose('future',occurred_at=f.now+timedelta(seconds=1)),f.agent)
+        f.now = start
+        with self.assertRaises(JournalError):
+            session.ingest(f.propose(),f.agent)
+        self.assertFalse(session.tainted)
+        f.now = start + timedelta(seconds=31)
+        self.assertEqual(f.status(session.ingest(f.propose(),f.agent)),'approval_required')
+
+    def test_agent_graph_abuse_cannot_close_session_and_replays(self):
+        f = self.fixture
+        session = self.open()
+        session.ingest(f.propose('left',parent_event_ids=('right',)),f.agent)
+        cycle = session.ingest(f.propose('right',action_id='a2',parent_event_ids=('left',)),f.agent)
+        wide = session.ingest(f.propose('wide',action_id='a3',parent_event_ids=tuple(f'x{i}' for i in range(17))),f.agent)
+        self.assertEqual(cycle.missing_fields,('event_graph_cycle',))
+        self.assertEqual(wide.missing_fields,('parent_count',))
+        self.assertFalse(session.closed or session.tainted)
+        later = session.ingest(f.propose('p9',action_id='a9'),f.agent)
+        session.close()
+        restored = self.open()
+        self.assertEqual(restored._db.execute('SELECT COUNT(*) FROM ledger').fetchone()[0],4)
+        self.assertEqual(restored.ingest(f.propose('p9',action_id='a9'),f.agent),later)
+
+    def test_rejected_input_does_not_close_session(self):
+        f = self.fixture
+        session = self.open()
+        original = session.ingest(f.propose(),f.agent)
+        with self.assertRaises(EventConflictError):
+            session.ingest(f.propose(target_resource='/ledger/forbidden'),f.agent)
+        with self.assertRaises(EventRejectedError):
+            session.ingest(f.propose('big',parameters_summary={'blob':'x'*70000}),f.agent)
+        self.assertFalse(session.closed or session.tainted)
+        later = session.ingest(f.propose('p2',action_id='a2'),f.agent)
+        session.close()
+        restored = self.open()
+        self.assertEqual(restored._db.execute('SELECT COUNT(*) FROM ledger').fetchone()[0],2)
+        self.assertEqual(restored.ingest(f.propose(),f.agent),original)
+        self.assertEqual(restored.ingest(f.propose('p2',action_id='a2'),f.agent),later)
 
     def test_capacity_failclosed(self):
         f = self.fixture

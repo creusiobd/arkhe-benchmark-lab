@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from .config import SDKConfig
 from .contracts import RuntimeContext, parse_event, utc_datetime
-from .errors import DefenseError
+from .errors import DefenseError, EventRejectedError
 from .evaluator import DefenseEvaluator
 
 
@@ -138,6 +138,9 @@ class DurableDefenseSession:
         self._receipt = utc_datetime(self.clock())
         if self._last_receipt and self._receipt < self._last_receipt:
             raise JournalError('host receipt clock regression')
+        # Every observed receipt advances the floor, persisted or not, so the
+        # evaluator's own monotonic clock guard can never fire mid-transaction.
+        self._last_receipt = self._receipt
         # These paths never mutate evaluator state and are deliberately not
         # persisted, so untrusted/future observations cannot poison recovery.
         if not self.engine._trusted(event,context) or event.occurred_at > self._receipt or event.ingested_at > self._receipt:
@@ -162,8 +165,14 @@ class DurableDefenseSession:
             self._db.commit()
             self._tail = tail
             self.engine.policy_provider = self.provider
-            self._last_receipt = self._receipt
             return decision
+        except EventRejectedError:
+            # Refused before any evaluator state changed and before any row was
+            # written: nothing to replay, so the session stays usable.
+            if self._db:
+                self._db.rollback()
+            self.engine.policy_provider = self.provider
+            raise
         except Exception as exc:
             self.tainted = True
             if self._db:

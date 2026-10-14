@@ -8,7 +8,7 @@ A aplicação hospedeira autentica o produtor, resolve cliente, principal, papel
 
 Políticas são provisionadas por `policy_admin` com `policy:write`, isoladas por cliente e ativadas explicitamente. Uma versão existente não pode receber conteúdo diferente. SHA-256 identifica o conteúdo; não é assinatura digital. O agente não escolhe uma versão antiga para recuperar privilégios. A missão é metadado administrativo: as regras explícitas determinam a avaliação, sem interpretação semântica por LLM.
 
-Aprovações exigem principal distinto do agente e `approvals:write`. Vinculam cliente, trajetória, agente, ação, ferramenta, recurso, parâmetros resumidos e versão da política. Expiração considera relógio do host e revogação é reavaliada na conclusão. O host precisa autenticar o aprovador e proteger relógio, registry e armazenamento.
+Aprovações exigem principal distinto do agente e `approvals:write`. Vinculam cliente, trajetória, agente, ação, ferramenta, recurso, parâmetros resumidos e versão da política. Expiração considera relógio do host e revogação é reavaliada na conclusão. O avaliador recusa com `DefenseError` um relógio do host que retroceda, para que aprovações expiradas não voltem a valer para ações retroativas; a sessão durável recusa com `JournalError`, sem contaminar a sessão, um recebimento anterior a qualquer outro já observado. O host precisa autenticar o aprovador e proteger relógio, registry e armazenamento.
 
 ## Uso
 
@@ -36,7 +36,7 @@ Eventos tipados: `ActionProposed`, `ActionCompleted`, `ApprovalRecorded`, `Polic
 
 ## Estado e limites
 
-Estado particionado por `(tenant_id, trajectory_id)`. IDs duplicados com conteúdo diferente geram conflito. TTL, capacidade, pais ausentes, ciclos e profundidade excessiva produzem evidência insuficiente. Violações observadas permanecem sinalizadas durante a retenção; fechamento não as apaga. Eventos atrasados não revisam automaticamente decisões anteriores. A perda do registro limitado de evicções é conservadora.
+Estado particionado por `(tenant_id, trajectory_id)`. IDs duplicados com conteúdo diferente geram conflito. Conflito e payload acima de `max_payload_bytes` são entrada inválida: levantam `EventRejectedError` (`EventConflictError` é subclasse) antes de qualquer mudança de estado. TTL, capacidade, pais ausentes, excesso de pais, ciclos e profundidade excessiva produzem evidência insuficiente (`missing_fields` indica `parent_count`, `event_graph_cycle` ou `event_graph_depth`); o evento recusado não entra no grafo, e descendentes que o citem ficam com pai ausente. Autorreferência continua inválida no contrato. Violações observadas permanecem sinalizadas durante a retenção; fechamento não as apaga. Eventos atrasados não revisam automaticamente decisões anteriores. A perda do registro limitado de evicções é conservadora.
 
 Esta versão é alpha, serial e em memória. Reinício perde contexto: o host deve exigir nova trajetória ou restaurar evidência confiável. Não há persistência, autenticação de transporte, assinatura de políticas, avaliação distribuída, fila durável ou certificação de isolamento de processo. Um processo por cliente pode ser exigido pelo modelo de ameaça. A exportação JSONL é síncrona e registra decisões; falha de exportação fica em `last_export_error` e não muda a avaliação.
 
@@ -53,4 +53,4 @@ Replay: `arkhe-defense replay eventos.jsonl --contexts contextos.json --policy p
 
 `DurableDefenseSession(provider, config, db_path, tenant, clock=None, max_rows=100000)` oferece `ingest(event, context)`, `close()` e context manager. Use um banco e diretório protegido por cliente. Ao reabrir, a sessão reproduz observações com seus horários originais e exige as mesmas políticas históricas e decisões. Configuração e orçamento de linhas ficam vinculados ao diário.
 
-SQLite guarda eventos/contexto em texto claro; autenticação continua no host. Um lock exclui escritores concorrentes. Falha de gravação encerra a sessão; orçamento esgotado rejeita novos registros. Não há compactação automática, operação distribuída nem garantia de execução única de ferramentas externas. Consulte SECURITY.md e reports/team/durable-journals-2026-10-06.md.
+SQLite guarda eventos/contexto em texto claro; autenticação continua no host. Um lock exclui escritores concorrentes. Entrada recusada (`EventRejectedError`) não é gravada e não encerra a sessão. Falha de gravação encerra a sessão; orçamento esgotado rejeita novos registros. Não há compactação automática, operação distribuída nem garantia de execução única de ferramentas externas. Consulte SECURITY.md e reports/team/durable-journals-2026-10-06.md.

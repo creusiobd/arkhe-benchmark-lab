@@ -4,7 +4,7 @@ import hashlib
 import json
 
 from .contracts import Decision, parse_event, RuntimeContext, utc_datetime
-from .errors import DefenseError, EventConflictError, PolicyError
+from .errors import DefenseError, EventConflictError, EventRejectedError, PolicyError
 from .config import SDKConfig
 from .policy import hash_action
 from .state import BoundedStateStore
@@ -22,6 +22,16 @@ class DefenseEvaluator:
         self.state = state or BoundedStateStore(self.config.state_limits, self.clock)
         self.exporter = exporter
         self.last_export_error = None
+        self._last_now = None
+
+    def _now(self):
+        # A regressing host clock could re-validate expired approvals for
+        # backdated actions, so time observed by the evaluator never moves back.
+        now = utc_datetime(self.clock())
+        if self._last_now is not None and now < self._last_now:
+            raise DefenseError("host clock moved backwards")
+        self._last_now = now
+        return now
 
     def _decision(self, event, status, state=None, policy=None, rules=(), evidence=(), missing=()):
         identity = f"{event.tenant_id}\0{event.trajectory_id}\0{event.event_id}"
@@ -108,28 +118,41 @@ class DefenseEvaluator:
         context = RuntimeContext.model_validate(context).model_copy(deep=True)
         encoded = json.dumps(event.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
         if len(encoded.encode()) > self.config.max_payload_bytes:
-            raise DefenseError("event exceeds maximum payload bytes")
+            raise EventRejectedError("event exceeds maximum payload bytes")
         if not self._trusted(event, context):
             return self._publish(self._decision(event, "insufficient_evidence", missing=("trusted_context",)))
-        now = utc_datetime(self.clock())
+        now = self._now()
         if event.occurred_at > now or event.ingested_at > now:
             return self._publish(self._decision(event, "insufficient_evidence", missing=("future_event_time",)))
-        state = self.state.get((event.tenant_id, event.trajectory_id), now)
+        key = (event.tenant_id, event.trajectory_id)
         fingerprint = hashlib.sha256(encoded.encode()).hexdigest()
+        # A conflicting event_id is refused before the trajectory is touched, so
+        # the refusal leaves no trace that a durable replay would have to repeat.
+        known = self.state.peek(key, now)
+        if known is not None and known.fingerprints.get(event.event_id, fingerprint) != fingerprint:
+            raise EventConflictError("event_id reused with conflicting payload")
+        # Graph limits describe untrustworthy lineage, not malformed input: the
+        # event gets a conservative decision and never enters the graph. Raising
+        # here would let a producer (including the observed agent) close a
+        # durable session. The parent count needs no state, so it is decided
+        # before the trajectory is created, touched or allowed to evict another.
+        if len(event.parent_event_ids) > self.config.state_limits.max_parent_ids:
+            return self._publish(self._decision(event, "insufficient_evidence", missing=("parent_count",)))
+        state = self.state.get(key, now)
         if event.event_id in state.fingerprints:
             if state.fingerprints[event.event_id] != fingerprint:
-                raise EventConflictError("event_id reused with conflicting payload")
+                # Unreachable while peek() matches get(); state was touched, so
+                # this must not be reported as a side-effect-free rejection.
+                raise DefenseError("event_id conflict found after state access")
             return state.decisions[event.event_id]
         if self._cycle(event, state):
-            raise DefenseError("event graph contains a cycle")
-        if len(event.parent_event_ids) > self.config.state_limits.max_parent_ids:
-            raise DefenseError("parent count exceeds configured maximum")
+            return self._publish(self._decision(event, "insufficient_evidence", state, missing=("event_graph_cycle",)))
         if len(state.events) >= self.config.state_limits.max_events_per_trajectory:
             self.state.mark_event_capacity(state)
             return self._publish(self._decision(event, "insufficient_evidence", state, missing=("event_capacity",)))
         depth = 1 + max((state.depths.get(p, 0) for p in event.parent_event_ids), default=0)
         if depth > self.config.state_limits.max_depth:
-            raise DefenseError("event graph depth exceeds configured maximum")
+            return self._publish(self._decision(event, "insufficient_evidence", state, missing=("event_graph_depth",)))
         missing_parents = tuple(p for p in event.parent_event_ids if p not in state.events
                                 or state.events[p].occurred_at > event.occurred_at
                                 or any(field.startswith("parent:") for field in state.decisions[p].missing_fields))

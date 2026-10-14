@@ -1,3 +1,11 @@
+# SDKs — não publicado
+
+- Defesa: o avaliador recusa relógio do host que retroceda (`DefenseError`). Antes, uma regressão de relógio permitia que aprovação expirada autorizasse conclusão retroativa.
+- Sessão durável de defesa: todo recebimento observado, persistido ou não, passa a ser o piso para detectar regressão de relógio.
+- Defesa: ciclo, profundidade excessiva e excesso de pais produzem `insufficient_evidence`, como documentado, em vez de `DefenseError`. O evento não entra no grafo. Antes, um produtor confiável, inclusive o próprio agente observado, podia contaminar e fechar a sessão durável com dois eventos.
+- Defesa: excesso de pais é decidido antes de criar ou tocar o estado da trajetória; não despeja mais outra trajetória ativa.
+- Defesa: conflito de `event_id` e payload acima do limite levantam `EventRejectedError` (nova base de `EventConflictError`) antes de tocar o estado. A sessão durável recusa esses eventos sem se contaminar; antes, qualquer produtor confiável, inclusive o agente observado, podia fechá-la assim.
+
 # SDKs — 0.2.0 alpha local
 
 - Limites explícitos de evidências e achados nas avaliações de jornadas, preservando contagem completa e indicação de truncamento.
