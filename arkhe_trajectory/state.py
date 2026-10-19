@@ -52,6 +52,13 @@ class BoundedTrajectoryState:
         self.trajectories.move_to_end(key)
         return state
 
+    def peek(self, key, now):
+        """The state get() would return for an existing live key, without expiring, touching or creating."""
+        state = self.trajectories.get(key)
+        if state is None or (now - state.touched_at).total_seconds() >= self.config.ttl_seconds:
+            return None
+        return state
+
     def find(self, key, now):
         self.expire(now)
         return self.trajectories.get(key)

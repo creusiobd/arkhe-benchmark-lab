@@ -1,5 +1,8 @@
 # SDKs — não publicado
 
+- Trajetória: entrada inválida levanta `EventRejectedError` (nova base de `DuplicateEventError`) antes de alterar estado. A sessão durável recusa essa entrada sem se contaminar; antes, um único evento inválido de qualquer fonte, ou um `check` com tenant errado, encerrava a sessão.
+- Trajetória: `event_id` reutilizado com outro conteúdo é recusado antes de tocar a trajetória e não renova mais o TTL.
+- Documentação: os READMEs deixam de afirmar que não há persistência ou recuperação após reinício; ambas existem com as sessões duráveis.
 - Defesa: o avaliador recusa relógio do host que retroceda (`DefenseError`). Antes, uma regressão de relógio permitia que aprovação expirada autorizasse conclusão retroativa.
 - Sessão durável de defesa: todo recebimento observado, persistido ou não, passa a ser o piso para detectar regressão de relógio.
 - Defesa: ciclo, profundidade excessiva e excesso de pais produzem `insufficient_evidence`, como documentado, em vez de `DefenseError`. O evento não entra no grafo. Antes, um produtor confiável, inclusive o próprio agente observado, podia contaminar e fechar a sessão durável com dois eventos.

@@ -6,7 +6,7 @@ import math
 import operator
 from .config import JourneyConfig
 from .contracts import TrajectoryEvent, TrajectoryAssessment, RuleFinding, aware, identifier
-from .errors import EventValidationError, DuplicateEventError, ConfigurationError
+from .errors import EventValidationError, EventRejectedError, DuplicateEventError, ConfigurationError
 from .state import BoundedTrajectoryState
 
 OPS = {'gt': operator.gt, 'ge': operator.ge, 'lt': operator.lt, 'le': operator.le}
@@ -60,9 +60,9 @@ class JourneyEngine:
         return now
 
     def _key(self, tenant, trajectory):
-        identifier(trajectory, 'trajectory_id')
+        identifier(trajectory, 'trajectory_id', EventRejectedError)
         if tenant != self.config.tenant_id:
-            raise EventValidationError('tenant_id: configuration mismatch')
+            raise EventRejectedError('tenant_id: configuration mismatch')
         return (tenant, self.config.journey_id, self.config.version, trajectory)
 
     def _assessment(self, trajectory, at, status, **kwargs):
@@ -72,24 +72,31 @@ class JourneyEngine:
             configuration_hash=self._configuration_hash, **kwargs)
 
     def ingest(self, event):
+        # Every refusal below raises EventRejectedError before trajectory state
+        # changes, so a durable session can refuse the input and stay open.
         # Reconstruct even typed instances: validation and detached immutable maps.
         event = TrajectoryEvent.from_dict(event.to_dict() if isinstance(event, TrajectoryEvent) else event)
         if event.journey_id != self.config.journey_id or event.journey_version != self.config.version:
-            raise EventValidationError('journey identity/version: configuration mismatch')
+            raise EventRejectedError('journey identity/version: configuration mismatch')
         key = self._key(event.tenant_id, event.trajectory_id)
         if event.step_id not in self.steps:
-            raise EventValidationError('step_id: unknown configured step')
+            raise EventRejectedError('step_id: unknown configured step')
         now = self._now()
         if event.event_time > now or event.ingested_at > now:
-            raise EventValidationError('event timestamps: future evidence rejected')
+            raise EventRejectedError('event timestamps: future evidence rejected')
         encoded = json.dumps(event.to_dict(), sort_keys=True, separators=(',', ':'), ensure_ascii=True, allow_nan=False).encode()
         if len(encoded) > self.config.max_payload_bytes:
-            raise EventValidationError('event: payload limit exceeded')
+            raise EventRejectedError('event: payload limit exceeded')
         digest = hashlib.sha256(encoded).hexdigest()
+        known = self.state.peek(key, now)
+        if known is not None and known.fingerprints.get(event.event_id, digest) != digest:
+            raise DuplicateEventError('event_id: conflicting content')
         state = self.state.get(key, now)
         if event.event_id in state.fingerprints:
             if state.fingerprints[event.event_id] != digest:
-                raise DuplicateEventError('event_id: conflicting content')
+                # Unreachable while peek() matches get(); state was touched, so
+                # this must not be reported as a side-effect-free rejection.
+                raise EventValidationError('event_id: conflict found after state access')
             return state.assessments[event.event_id]
         if len(state.events) >= self.config.max_events:
             state.context_loss_reason = 'event_capacity_exceeded'
@@ -109,7 +116,7 @@ class JourneyEngine:
         now = self._now()
         at = aware(as_of, 'as_of') if as_of is not None else now
         if at > now:
-            raise EventValidationError('as_of: future evaluation rejected')
+            raise EventRejectedError('as_of: future evaluation rejected')
         key = self._key(tenant_id, trajectory_id)
         state = self.state.find(key, now)
         if state is None:

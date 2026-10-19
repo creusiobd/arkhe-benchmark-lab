@@ -86,7 +86,7 @@ p95 e taxas dos presets já são agregados upstream. O motor não calcula p95 po
 
 ## Limites e validação
 
-Alpha observacional, estado serial em memória, sem recuperação após reinício, backfill durável, assinatura de configuração, scheduler, exportação assíncrona, alertas enviados ou implantação de infraestrutura. Limites de contagem não são orçamento de performance comprovado; avaliação percorre histórico e regras. Testes de carga e perfil de memória são etapa própria.
+Alpha observacional, estado serial em memória. Sem `DurableJourneySession` (abaixo), não há recuperação após reinício. Não há backfill durável, assinatura de configuração, scheduler, exportação assíncrona, alertas enviados ou implantação de infraestrutura. Limites de contagem não são orçamento de performance comprovado; avaliação percorre histórico e regras. Testes de carga e perfil de memória são etapa própria.
 
 Exemplos e testes demonstram comportamento determinístico. Sinais de tendência antes de um threshold absoluto em dados sintéticos não provam antecipação real. Piloto deve medir falsos positivos, incidentes perdidos, lead time, cobertura, qualidade de correlação e regime sazonal com separação temporal entre calibração e validação.
 
@@ -95,6 +95,6 @@ Exemplos e testes demonstram comportamento determinístico. Sinais de tendência
 
 `max_evidence_refs` (padrão32) limita referências por achado; `max_findings` (padrão128) limita achados exportados por avaliação. `evidence_truncated`, `total_findings` e `findings_truncated` tornam o corte explícito. Estatísticas e status usam o conjunto completo antes do corte. Duplicatas preservam avaliações históricas.
 
-`DurableJourneySession(config, db_path, clock=None, max_rows=100000)` oferece `ingest`, `check`, `close` e context manager. Um diário protegido por cliente registra ingestões e checks, inclusive duplicatas, e recupera estado por replay com horários originais. Configuração é imutável por diário; esgotamento do orçamento rejeita novos registros.
+`DurableJourneySession(config, db_path, clock=None, max_rows=100000)` oferece `ingest`, `check`, `close` e context manager. Um diário protegido por cliente registra ingestões e checks, inclusive duplicatas, e recupera estado por replay com horários originais. Configuração é imutável por diário; esgotamento do orçamento rejeita novos registros. Entrada recusada pelo motor (`EventRejectedError`: tenant, jornada ou versão diferentes, passo desconhecido, horário futuro, payload acima do limite, `event_id` reutilizado com outro conteúdo, `check` com tenant ou `as_of` inválidos) não altera estado, não é gravada e não encerra a sessão. Regressão do relógio do host e falha de gravação encerram a sessão.
 
 O diário SQLite é texto claro, serial e local. Hashes detectam corrupção acidental; não autenticam um arquivo controlado por adversário. Não há compactação automática nem coordenação distribuída. Consulte SECURITY.md e reports/team/durable-journals-2026-10-06.md.

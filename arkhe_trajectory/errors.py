@@ -9,5 +9,8 @@ class ConfigurationError(TrajectoryError):
 class EventValidationError(TrajectoryError):
     pass
 
-class DuplicateEventError(EventValidationError):
+class EventRejectedError(EventValidationError):
+    """Engine refused the input before any trajectory state changed; safe to retry or drop."""
+
+class DuplicateEventError(EventRejectedError):
     pass
