@@ -6,24 +6,48 @@ The staging source is retained, including its standalone pyproject and README.
 """
 from __future__ import annotations
 import argparse
+import ast
 import hashlib
 import json
 import os
 from pathlib import Path
-import re
 import shutil
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def project_version(path: Path = ROOT / "sdk/pyproject.toml") -> str:
+    """Static [project] version, read with a TOML parser rather than a text pattern."""
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # Python 3.10: setuptools, already required to build, provides tomli.
+        from setuptools.compat.py310 import tomllib
+    with path.open("rb") as stream:
+        value = tomllib.load(stream).get("project", {}).get("version")
+    if not isinstance(value, str):
+        raise ValueError(f"{path.name} must declare a static [project] version")
+    return value
+
+
+def package_version(path: Path = ROOT / "arkhe_defense/__init__.py") -> str:
+    """Module-level __version__ string literal, read from the syntax tree without importing."""
+    for node in ast.parse(path.read_text(encoding="utf-8")).body:
+        targets = (node.targets if isinstance(node, ast.Assign)
+                   else [node.target] if isinstance(node, ast.AnnAssign) else [])
+        if any(isinstance(target, ast.Name) and target.id == "__version__" for target in targets):
+            if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                return node.value.value
+            raise ValueError("__version__ must be assigned a string literal")
+    raise ValueError("__version__ not found")
+
+
 def version() -> str:
     """Single release version: pyproject and the package must agree, or the build stops."""
-    declared = re.search(r'^version = "([^"]+)"$', (ROOT / "sdk/pyproject.toml").read_text(encoding="utf-8"), re.M)
-    package = re.search(r"^__version__ = ['\"]([^'\"]+)['\"]$", (ROOT / "arkhe_defense/__init__.py").read_text(encoding="utf-8"), re.M)
-    if not declared or not package or declared.group(1) != package.group(1):
-        raise ValueError("sdk/pyproject.toml version and arkhe_defense.__version__ must match")
-    return declared.group(1)
+    declared, package = project_version(), package_version()
+    if declared != package:
+        raise ValueError(f"sdk/pyproject.toml version {declared} differs from arkhe_defense.__version__ {package}")
+    return declared
 
 
 def build(output: Path) -> list[Path]:
