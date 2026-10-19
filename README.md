@@ -185,7 +185,7 @@ To cite this repository in academic or technical work:
 
 ## 11. Independent alpha SDKs and controlled pilot
 
-The repository also contains two separately packaged SDKs, both0.2.0 alpha:
+The repository also contains two separately packaged SDKs, both alpha (defense 0.3.0, trajectory 0.2.0):
 
 - [Defensive agent evaluation](README_DEFENSIVE_SDK.md): host-provided authority, versioned policies and local durable observation sessions.
 - [Operational trajectory intelligence](README_TRAJECTORY_SDK.md): configurable journeys, bounded evidence and local replay. Cards remain a distinct operational use case.

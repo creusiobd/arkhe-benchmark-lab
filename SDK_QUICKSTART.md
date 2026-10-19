@@ -9,7 +9,7 @@ python -m venv .venv
 .venv\Scripts\python.exe -m pip install "setuptools>=77" wheel "pydantic>=2.7,<3"
 .venv\Scripts\python.exe sdk/build.py
 .venv\Scripts\python.exe trajectory-sdk/build.py
-.venv\Scripts\python.exe -m pip install .review-build/defense-0.2.0/arkhe_defense_sdk-0.2.0-py3-none-any.whl .review-build/trajectory-0.2.0/arkhe_trajectory_sdk-0.2.0-py3-none-any.whl
+.venv\Scripts\python.exe -m pip install .review-build/defense-0.3.0/arkhe_defense_sdk-0.3.0-py3-none-any.whl .review-build/trajectory-0.2.0/arkhe_trajectory_sdk-0.2.0-py3-none-any.whl
 .venv\Scripts\python.exe -m pip check
 .venv\Scripts\python.exe -m examples.defense.pilot_demo --output-dir results/local-pilot-demo
 ```
@@ -24,7 +24,7 @@ Os wheels permitem instalar os SDKs fora deste checkout. A demo é um exemplo do
 
 ## Validação independente
 
-Instale `pytest` no ambiente de desenvolvimento e execute `python -m pytest tests/defense tests/trajectory tests/audit -q`. Verifique os artefatos com `python scripts/verify_sdk_release.py --output .review-build/defense-0.2.0 --rebuild-sdist` e o equivalente para trajetória. CI cobre uma matriz proposta Windows/Linux e Python3.10–3.12; não considere uma plataforma validada até o job correspondente passar.
+Instale `pytest` no ambiente de desenvolvimento e execute `python -m pytest tests/defense tests/trajectory tests/audit -q`. Verifique os artefatos com `python scripts/verify_sdk_release.py --output .review-build/defense-0.3.0 --rebuild-sdist` e o equivalente para trajetória. CI cobre uma matriz proposta Windows/Linux e Python3.10–3.12; não considere uma plataforma validada até o job correspondente passar.
 
 ## Evidência congelada no Windows
 
