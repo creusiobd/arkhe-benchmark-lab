@@ -17,13 +17,13 @@ jobs:
       - run: python -m pytest tests/defense tests/trajectory tests/audit -q
       - run: python sdk/build.py
       - run: python trajectory-sdk/build.py
-      - run: python scripts/verify_sdk_release.py --output .review-build/defense-0.2.0 --rebuild-sdist
+      - run: python scripts/verify_sdk_release.py --output .review-build/defense-0.3.0 --rebuild-sdist
       - run: python scripts/verify_sdk_release.py --output .review-build/trajectory-0.2.0 --rebuild-sdist
       - name: Install and smoke test outside checkout
         shell: python
         run: |
           import pathlib, subprocess, sys, tempfile, venv
-          wheels = list(pathlib.Path('.review-build/defense-0.2.0').glob('*.whl')) + list(pathlib.Path('.review-build/trajectory-0.2.0').glob('*.whl'))
+          wheels = list(pathlib.Path('.review-build/defense-0.3.0').glob('*.whl')) + list(pathlib.Path('.review-build/trajectory-0.2.0').glob('*.whl'))
           assert len(wheels) == 2
           with tempfile.TemporaryDirectory() as tmp:
               env = pathlib.Path(tmp) / 'venv'

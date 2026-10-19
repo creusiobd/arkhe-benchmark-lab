@@ -1,4 +1,4 @@
-# ARKHÉ Defensive SDK 0.2.0 alpha
+# ARKHÉ Defensive SDK 0.3.0 alpha
 
 Núcleo Python independente para avaliação defensiva contínua de ações de agentes. Distribuição `arkhe-defense-sdk`; import `arkhe_defense`. Somente Pydantic é dependência de execução. Não importa benchmark, autorização de cartões, FastAPI ou bibliotecas de modelos.
 
@@ -44,12 +44,12 @@ O avaliador é alpha, serial e em memória. Sem a sessão durável descrita abai
 
 Em um ambiente novo, instale as dependências de build: `python -m pip install "setuptools>=77" wheel`. Veja [instalação completa](SDK_QUICKSTART.md).
 
-`python sdk/build.py` gera wheel, sdist e manifesto em `.review-build/defense-0.2.0`. O staging preservado pode ser compilado independente do benchmark. Instale o wheel com pip.
+`python sdk/build.py` gera wheel, sdist e manifesto em `.review-build/defense-0.3.0`. O staging preservado pode ser compilado independente do benchmark. Instale o wheel com pip.
 
 `arkhe-defense doctor`, `validate-config arquivo.json`, `validate-policy politica.json`.
 
 Replay: `arkhe-defense replay eventos.jsonl --contexts contextos.json --policy politica.json --output decisoes.jsonl`. Contextos são registros `{event_hash, context}`, vinculados ao digest canônico do evento por `arkhe_defense.cli.event_digest`. Esse sidecar deve ser controlado pelo operador; ele não fornece autenticação criptográfica e serve para replay local. Em produção, use identidade autenticada pelo transporte e contexto fornecido pela aplicação.
-# Sessão durável — 0.2.0 alpha local
+# Sessão durável — 0.3.0 alpha
 
 `DurableDefenseSession(provider, config, db_path, tenant, clock=None, max_rows=100000)` oferece `ingest(event, context)`, `close()` e context manager. Use um banco e diretório protegido por cliente. Ao reabrir, a sessão reproduz observações com seus horários originais e exige as mesmas políticas históricas e decisões. Configuração e orçamento de linhas ficam vinculados ao diário.
 

@@ -19,4 +19,4 @@ __all__ = ['ActionProposed', 'ActionCompleted', 'ApprovalRecorded', 'PolicyChang
     'PolicyError', 'EventConflictError', 'EventRejectedError', 'DefenseEvaluator', 'DefenseSDK',
     'BoundedStateStore', 'JSONLExporter', 'Evaluator', 'DurableDefenseSession', 'JournalError']
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'
