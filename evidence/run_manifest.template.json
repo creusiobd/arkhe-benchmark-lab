@@ -1,0 +1,46 @@
+{
+  "schema_version": "0.1.0",
+  "run_id": "replace-me",
+  "claim_status": "development_only",
+  "repository": {
+    "commit_sha": "replace-me",
+    "branch": "replace-me"
+  },
+  "protocol": {
+    "name": "replace-me",
+    "version": "replace-me",
+    "sha256": "replace-me"
+  },
+  "case": {
+    "source_type": "synthetic",
+    "case_id": "replace-me",
+    "input_sha256": "replace-me",
+    "authorization_record": null,
+    "contains_real_personal_data": false,
+    "contains_real_credentials": false
+  },
+  "evaluation": {
+    "primary_endpoint": "replace-me",
+    "baseline": "replace-me",
+    "threshold_source": "validation_only",
+    "denominators": {},
+    "stopping_conditions": []
+  },
+  "runtime": {
+    "environment": "replace-me",
+    "detectors": [],
+    "models": [],
+    "random_seed": null,
+    "started_at": null,
+    "completed_at": null
+  },
+  "usage": {
+    "api_requests": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "estimated_cost_usd": 0.0
+  },
+  "artifacts": {},
+  "deviations": [],
+  "limitations": []
+}
