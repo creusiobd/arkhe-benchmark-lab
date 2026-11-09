@@ -1,0 +1,54 @@
+name: v0.6 Preregistration Guard
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "configs/evaluation_protocol_v0.6.yaml"
+      - "contracts/preregistration.py"
+      - "scripts/validate_v06_preregistration.py"
+      - "tests/test_v06_preregistration.py"
+      - "docs/v0.6_preregistration.md"
+      - ".github/workflows/v06-preregistration-gate.yml"
+      - "datasets/v0.6*"
+      - "results/v0.6*"
+      - "reports/v0.6*"
+      - "freezes/v0.6*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  design-guard:
+    name: Enforce design-before-data
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate preregistration contract
+        run: python scripts/validate_v06_preregistration.py
+
+      - name: Run preregistration tests
+        run: python -m unittest tests.test_v06_preregistration -v
+
+      - name: Reject v0.6 evidence during design
+        shell: bash
+        run: |
+          tracked="$(git ls-files 'datasets/v0.6*' 'results/v0.6*' 'reports/v0.6*' 'freezes/v0.6*')"
+          if [ -n "$tracked" ]; then
+            echo "v0.6 design phase must not contain test data or results:"
+            echo "$tracked"
+            exit 1
+          fi
+          echo "Design phase is clean: no v0.6 evidence artifacts are tracked."
