@@ -113,6 +113,7 @@ class TestOpenAISemanticClient(unittest.TestCase):
         mock_choice.message.parsed = expected_resp
 
         mock_completion = MagicMock()
+        mock_completion.id = "chatcmpl_test_001"
         mock_completion.choices = [mock_choice]
         mock_completion.usage.prompt_tokens = 120
         mock_completion.usage.completion_tokens = 35
@@ -129,6 +130,10 @@ class TestOpenAISemanticClient(unittest.TestCase):
         self.assertEqual(client.total_prompt_tokens, 120)
         self.assertEqual(client.total_completion_tokens, 35)
         self.assertEqual(client.total_requests, 1)
+        self.assertEqual(len(client.call_traces), 1)
+        self.assertEqual(client.call_traces[0]["request_id"], "chatcmpl_test_001")
+        self.assertEqual(client.call_traces[0]["status"], "success")
+        self.assertNotIn("prompt", client.call_traces[0])
 
     @patch("openai.OpenAI")
     def test_retry_on_transient_rate_limit(self, mock_openai_cls):
@@ -146,6 +151,7 @@ class TestOpenAISemanticClient(unittest.TestCase):
         mock_choice.message.parsed = expected_resp
 
         mock_completion = MagicMock()
+        mock_completion.id = "chatcmpl_test_002"
         mock_completion.choices = [mock_choice]
         mock_completion.usage.prompt_tokens = 100
         mock_completion.usage.completion_tokens = 20
@@ -168,6 +174,7 @@ class TestOpenAISemanticClient(unittest.TestCase):
 
         self.assertEqual(result.predicted_class, "benign")
         self.assertEqual(mock_instance.beta.chat.completions.parse.call_count, 2)
+        self.assertEqual([trace["status"] for trace in client.call_traces], ["retry", "success"])
 
 
 class TestSemanticEventDetectorIntegration(unittest.TestCase):

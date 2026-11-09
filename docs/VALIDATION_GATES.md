@@ -17,7 +17,7 @@ This document prevents laboratory evidence from being represented as production 
 
 **Exit criteria**
 
-- README and proposal distinguish historical, exploratory, prospective, and confirmatory artifacts.
+- README and proposal distinguish historical, exploratory, prospective and confirmatory artifacts.
 - Every result names dataset, commit, model, mode, split and claim status.
 - Synthetic, internal and externally sourced evidence are never pooled.
 - Known test-informed datasets cannot be relabeled as untouched holdouts.
@@ -32,22 +32,19 @@ This document prevents laboratory evidence from being represented as production 
 - Dataset, split, scoring code, configuration and thresholds are hashed.
 - Baselines and ARKHÉ receive the same detector-visible observations.
 - Calibration uses validation data only.
-- Test results include raw numerators, denominators and uncertainty.
+- Results include raw numerators, denominators and uncertainty.
 - A clean checkout reproduces the evidence package.
 - Failures and high false-positive outcomes remain visible.
 
 **Required artifacts**
 
-- protocol;
-- freeze manifest;
-- run manifest;
-- predictions;
-- evaluation;
-- cost report;
-- limitations;
+- protocol and freeze manifest;
+- run manifest and predictions;
+- evaluation and limitations;
+- cost report when an API is used;
 - integrity verification output.
 
-**Current blocker:** the prospective v0.5 implementation is not integrated with the current `main`.
+**Current status:** implementation integrated on `feat/g1-prospective-pipeline`; clean-checkout CI and review are pending. v0.5 remains reproducibility-only and cannot close a confirmatory gate.
 
 ## G2 — Independent reproduction
 
@@ -57,7 +54,7 @@ This document prevents laboratory evidence from being represented as production 
 - Environment and deviations are recorded.
 - Artifact hashes match or justified differences are documented.
 - The reviewer can reconstruct at least one decision from inputs to evidence.
-- The reproduction result is retained even if it fails.
+- The result is retained even if it fails.
 
 **Current blocker:** no independent reviewer or signed reproduction record.
 
@@ -68,7 +65,7 @@ This document prevents laboratory evidence from being represented as production 
 - A partner supplies an already closed incident or workflow-derived case.
 - Data is sanitized and authorized before transfer.
 - Ground truth comes from partner evidence, not ARKHÉ output.
-- The baseline and acceptance thresholds are frozen before evaluation.
+- Baseline and acceptance thresholds are frozen before evaluation.
 - No production connection, real credential or live financial action is used.
 - The partner reviews usefulness and factual accuracy.
 - The report states whether the outcome supports, weakens or leaves the hypothesis unresolved.
@@ -93,7 +90,7 @@ This document prevents laboratory evidence from being represented as production 
 **Exit criteria**
 
 - At least one external pilot has measurable, reviewable results.
-- The service boundary, support model and responsibility matrix are defined.
+- Service boundary, support model and responsibility matrix are defined.
 - Security, privacy, legal and operational risks have owners.
 - Customer need and deployment path are evidenced.
 - Claims match the narrow evaluated scope.
@@ -102,4 +99,4 @@ This document prevents laboratory evidence from being represented as production 
 
 ## Decision rule
 
-Daybreak partner positioning is not permitted before G3. Production-effectiveness language is not permitted before G4. Bug bounty submission requires a real in-scope product control failure; benchmark behavior alone remains research evidence.
+Partner positioning is not permitted before G3. Production-effectiveness language is not permitted before G4. Bug bounty submission requires a real in-scope product control failure; benchmark behavior alone remains research evidence.
