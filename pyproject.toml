@@ -40,6 +40,7 @@ dependencies = [
     "fastapi>=0.111.0",
     "uvicorn[standard]>=0.30.0",
     "httpx>=0.27.0",
+    "socksio>=1.0.0",
     "openai>=1.30.0",
 ]
 
@@ -58,4 +59,4 @@ arkhe-estimate-cost = "tools.estimate_api_cost:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["contracts*", "detectors*", "harness*", "evaluator*", "tools*"]
+include = ["calibration*", "contracts*", "detectors*", "harness*", "evaluator*", "tools*"]

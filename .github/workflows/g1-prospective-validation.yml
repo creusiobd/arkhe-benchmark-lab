@@ -1,0 +1,86 @@
+name: G1 Prospective Pipeline
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "calibration/**"
+      - "configs/evaluation_protocol_v0.5.yaml"
+      - "contracts/**"
+      - "datasets/v0.5_hard/**"
+      - "detectors/**"
+      - "evaluator/**"
+      - "harness/run_v05_folds.py"
+      - "scripts/*v05*.py"
+      - "tests/test_v05_prospective_pipeline.py"
+      - ".github/workflows/g1-prospective-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: g1-prospective-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reproduce-v05:
+    name: Reproduce v0.5 integration evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Run v0.5 tests
+        run: python -m unittest tests.test_v05_prospective_pipeline -v
+
+      - name: Regenerate corpus and audits
+        run: |
+          python scripts/generate_v05_dataset.py
+          python scripts/audit_v05_shortcuts.py
+          python scripts/power_analysis_v05.py
+
+      - name: Run offline fold evaluation
+        run: |
+          python harness/run_v05_folds.py --semantic-mode offline_proxy --output results/v0.5_ci
+          python evaluator/evaluate_v05.py --run results/v0.5_ci
+
+      - name: Enforce evidence labels
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          run = Path("results/v0.5_ci")
+          manifest = json.loads((run / "execution_manifest.json").read_text())
+          evaluation = json.loads((run / "evaluation.json").read_text())
+          assert manifest["status"] == "development_rehearsal_test_informed"
+          assert evaluation["claim_status"] == "integration_only"
+          assert manifest["prediction_count"] == 1200
+          print("Evidence labels and prediction cardinality verified.")
+          PY
+
+      - name: Upload reproducibility package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0.5-integration-evidence
+          path: |
+            results/v0.5_ci/
+            reports/v0.5_shortcut_audit.json
+            reports/v0.5_power_analysis.json
+            reports/v0.5_power_analysis.md
+          retention-days: 14

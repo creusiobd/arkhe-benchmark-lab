@@ -72,6 +72,7 @@ class OpenAISemanticClient:
         self.total_completion_tokens = 0
         self.total_requests = 0
         self.total_api_latency_ms = 0.0
+        self.call_traces = []
 
     def classify_step(self, step: StepObservation) -> SemanticClassificationResponse:
         """
@@ -129,6 +130,17 @@ class OpenAISemanticClient:
                     self.total_prompt_tokens += completion.usage.prompt_tokens
                     self.total_completion_tokens += completion.usage.completion_tokens
 
+                self.call_traces.append({
+                    "request_id": getattr(completion, "id", None),
+                    "model": self.model,
+                    "step_index": step_idx,
+                    "attempts": attempts,
+                    "status": "success",
+                    "latency_ms": round(lat_ms, 2),
+                    "prompt_tokens": completion.usage.prompt_tokens if completion.usage else 0,
+                    "completion_tokens": completion.usage.completion_tokens if completion.usage else 0,
+                })
+
                 parsed: Optional[SemanticClassificationResponse] = completion.choices[0].message.parsed
                 if parsed is not None:
                     return parsed
@@ -136,6 +148,17 @@ class OpenAISemanticClient:
                 raise ValueError("OpenAI API returned null parsed structured response.")
 
             except (RateLimitError, APITimeoutError, APIConnectionError) as e:
+                self.call_traces.append({
+                    "request_id": None,
+                    "model": self.model,
+                    "step_index": step_idx,
+                    "attempts": attempts,
+                    "status": "retry" if attempts < self.max_retries else "failed",
+                    "error_type": type(e).__name__,
+                    "latency_ms": round((time.perf_counter() - t0) * 1000.0, 2),
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                })
                 logger.warning(
                     f"Transient error calling OpenAI API (attempt {attempts}/{self.max_retries}): {type(e).__name__}"
                 )
@@ -148,6 +171,17 @@ class OpenAISemanticClient:
 
             except Exception as e:
                 # Fatal error (e.g. AuthenticationError, BadRequestError)
+                self.call_traces.append({
+                    "request_id": None,
+                    "model": self.model,
+                    "step_index": step_idx,
+                    "attempts": attempts,
+                    "status": "failed",
+                    "error_type": type(e).__name__,
+                    "latency_ms": round((time.perf_counter() - t0) * 1000.0, 2),
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                })
                 raise RuntimeError(f"OpenAI API semantic evaluation failed: {type(e).__name__}: {str(e)}") from e
 
         raise RuntimeError("Unexpected termination of classification retry loop.")
