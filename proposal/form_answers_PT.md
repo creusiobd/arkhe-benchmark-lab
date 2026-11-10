@@ -1,7 +1,7 @@
 # Respostas Oficiais do Formulário — OpenAI Cybersecurity Grant Program
 
 **Candidatura:** ARKHÉ v0.6
-**Proponente:** Creúsio Adolfo Gaspar Kizua — São Paulo, Brasil
+**Proponente:** Creusio Adolfo Gaspar Kizua — São Paulo, Brasil
 **Estado:** Rascunho para revisão humana. Não submetido.
 
 ## Campo 1: Título do Projeto
@@ -37,6 +37,10 @@ O repositório público já contém SDKs defensivo e de trajetória sob Apache-2
 A evidência existente é propositalmente limitada. A v0.5 é reproduzível, mas seus resultados foram inspecionados durante o desenvolvimento e permanecem `reproducibility_only`. Eles não podem tornar-se evidência confirmatória retroativamente. Uma integração exploratória anterior executou 268 chamadas e 147.172 tokens, com custo configurado de US$ 0,028966. Ela demonstrou apenas o caminho de requisições e telemetria, não eficácia comparativa.
 
 O protocolo v0.6 está na fase de desenho com `claim_eligibility: none` e `confirmatory_claims_allowed: false`. Não existem dataset, rótulos, previsões, resultados ou artefatos de freeze da v0.6. Isso é um controle científico deliberado.
+
+### Capacidade de execução
+
+O pesquisador principal Creusio Adolfo Gaspar Kizua possui mais de seis anos de experiência em sistemas financeiros e de pagamentos, observabilidade distribuída, APIs, resposta a incidentes e operações 24×7. Liderou uma equipe técnica de 13 profissionais e construiu o benchmark público ARKHÉ, seus contratos, SDKs, integração OpenAI e controles de governança experimental. Essa combinação de prática operacional em confiabilidade e limites explícitos de evidência o posiciona para executar o estudo sem apresentar resultado laboratorial como prova de produção.
 
 ### Nova população do estudo
 
@@ -79,6 +83,8 @@ Resultados positivos, nulos e desfavoráveis serão publicados. CI aprovada demo
 
 O dataset sanitizado será publicado sob CC-BY-4.0; harness, detectores, contratos e avaliador sob Apache-2.0. A liberação incluirá dataset card, threat model, pré-registro, guia de reprodução, relatório técnico e preprint aberto. Não serão incluídos segredos reais, malware, exploits de dia zero ou alvos não autorizados.
 
+O resultado imediato será um gate de evidência anterior à implantação, não uma alegação de implantação em larga escala. Projetos open source poderão executar o benchmark em CI antes de conectar agentes a memória persistente, ferramentas delegadas, componentes skills/MCP ou sistemas de identidade e autorização. Isso cria um caminho mensurável do laboratório para uma implantação controlada posterior sem apresentar resultados sintéticos como prova operacional.
+
 ## Campo 5: Cronograma
 
 - **Semana 1:** análise de sensibilidade; nomear custodiante e aprovador; finalizar prompt, schema e retentativas.
@@ -90,7 +96,7 @@ O dataset sanitizado será publicado sob CC-BY-4.0; harness, detectores, contrat
 
 ## Campo 6: Financiamento, Créditos e Recursos Solicitados
 
-**Solicitação total: US$ 10.000**
+**Solicitação principal: US$ 9.700 em financiamento direto de pesquisa mais US$ 300 em créditos da API OpenAI (US$ 10.000 em apoio total).**
 
 | Item | Valor | Finalidade |
 |---|---:|---|
@@ -103,13 +109,19 @@ A parcela da API é deliberadamente modesta. Aos preços atuais, `gpt-6.1-sol` c
 
 O projeto também solicita feedback metodológico sobre o desenho congelado. Não solicita implantação em produção, dados internos privilegiados ou acesso a sistemas de terceiros.
 
+### Níveis de financiamento
+
+- **US$ 10.000 — estudo completo:** executar o desenho integral de 200 casos sob custódia independente, análise primária, repetibilidade, depósito arquivístico, revisão de acessibilidade e publicação aberta descritos acima.
+- **US$ 5.000 em financiamento direto mais US$ 300 em créditos de API:** preservar o mesmo desenho primário de 200 casos, priorizando US$ 3.000 para autoria/custódia independente e US$ 2.000 para a execução central da pesquisa. Adiar a análise opcional com Astra, serviços arquivísticos pagos e divulgação ampliada. O endpoint primário e as regras de evidência não mudam.
+- **Somente US$ 300 em créditos de API:** validar o caminho de execução OpenAI e a repetibilidade usando artefatos existentes não confirmatórios. O estudo v0.6 com autoria independente não será executado e nenhuma alegação confirmatória ou de produção será feita.
+
 ## Campo 7: Proponente e Equipe
 
-**Pesquisador principal:** Creúsio Adolfo Gaspar Kizua, São Paulo, Brasil.
+**Pesquisador principal:** Creusio Adolfo Gaspar Kizua, São Paulo, Brasil.
 
-Creúsio possui mais de seis anos de experiência em sistemas financeiros e de pagamentos, observabilidade distribuída, APIs, resposta a incidentes e operações 24×7. Liderou equipe técnica de 13 profissionais e trabalhou com OpenTelemetry, Kubernetes, Prometheus, Grafana, Dynatrace, Elastic e ferramentas de confiabilidade. É o criador do benchmark, contratos, SDKs e controles experimentais abertos do ARKHÉ.
+Creusio possui mais de seis anos de experiência em sistemas financeiros e de pagamentos, observabilidade distribuída, APIs, resposta a incidentes e operações 24×7. Liderou equipe técnica de 13 profissionais e trabalhou com OpenTelemetry, Kubernetes, Prometheus, Grafana, Dynatrace, Elastic e ferramentas de confiabilidade. É o criador do benchmark, contratos, SDKs e controles experimentais abertos do ARKHÉ.
 
-A candidatura é atualmente individual. O autor independente/custodiante e o aprovador serão selecionados e identificados antes do freeze. A remuneração está prevista. Nenhum revisor anônimo ou simulado será apresentado como validação independente.
+A candidatura é atualmente individual, sem outro integrante nomeado no momento da submissão. O autor independente/custodiante e um aprovador separado serão contratados ou selecionados e identificados antes do freeze. A remuneração está prevista. Nenhum revisor anônimo ou simulado será apresentado como validação independente.
 
 ## Campo 8: Novo Dataset
 
@@ -128,4 +140,4 @@ Código, schemas, protocolos, resultados agregados, dataset sanitizado e relató
 
 ## Gate de Submissão
 
-Enviar somente após os testes de consistência EN/PT, nova verificação de modelos e preços, conferência dos links e contatos e aprovação final do proponente. Nenhum campo pode sugerir validação em produção, endosso da OpenAI ou evidência v0.6 já executada.
+Enviar somente após os testes de consistência EN/PT, nova verificação de modelos e preços, conferência dos links e contatos privados e aprovação final do proponente sobre texto, orçamento, termos do programa e submissão externa. Nenhum campo pode sugerir validação em produção, endosso da OpenAI ou evidência v0.6 já executada. O e-mail pessoal deve permanecer fora do repositório público.

@@ -1,7 +1,7 @@
 # Official Application Form Answers — OpenAI Cybersecurity Grant Program
 
 **Submission candidate:** ARKHÉ v0.6
-**Applicant:** Creúsio Adolfo Gaspar Kizua — São Paulo, Brazil
+**Applicant:** Creusio Adolfo Gaspar Kizua — São Paulo, Brazil
 **Status:** Draft for human review. Not submitted.
 
 ## Field 1: Project Title
@@ -37,6 +37,10 @@ The public repository already contains Apache-2.0 defensive and trajectory SDKs,
 The existing evidence is intentionally bounded. The v0.5 pipeline is reproducible, but its outputs were inspected during development and remain `reproducibility_only`. They cannot become confirmatory evidence retrospectively. An earlier exploratory OpenAI integration completed 268 calls and 147,172 tokens at a configured cost of USD 0.028966. It demonstrated the request and telemetry path only; it did not establish comparative effectiveness.
 
 The v0.6 protocol is currently in design with `claim_eligibility: none` and `confirmatory_claims_allowed: false`. No v0.6 dataset, labels, predictions, results, or freeze artifacts exist. This is a deliberate scientific control.
+
+### Execution capability
+
+Principal researcher Creusio Adolfo Gaspar Kizua has more than six years of experience in financial and payment systems, distributed observability, APIs, incident response, and 24×7 operations. He has led a 13-person technical team and built the public ARKHÉ benchmark, contracts, SDKs, OpenAI integration, and experimental governance controls. This combination of operational reliability practice and explicit evidence boundaries positions him to execute the study without presenting laboratory output as operational validation.
 
 ### New study population
 
@@ -79,6 +83,8 @@ Positive, null, and adverse results will be published. Passing CI demonstrates i
 
 The sanitized dataset will be released under CC-BY-4.0; the harness, detectors, contracts, and evaluator under Apache-2.0. The release will include a dataset card, threat model, preregistration, reproducibility guide, technical report, and open preprint. No live secrets, malware, zero-day exploits, or unauthorized targets will be included.
 
+The immediate output is a pre-deployment evidence gate rather than a claim of large-scale deployment. Open-source teams will be able to run the benchmark in CI before connecting agents to persistent memory, delegated tools, skills/MCP components, or identity and authorization systems. This creates a measurable path from laboratory evidence to later controlled deployment without representing synthetic results as operational proof.
+
 ## Field 5: Project Timeline
 
 - **Week 1:** sensitivity analysis; appoint custodian and approver; finalize prompt, schema, and retries.
@@ -90,7 +96,7 @@ The sanitized dataset will be released under CC-BY-4.0; the harness, detectors, 
 
 ## Field 6: Requested Funding, API Credits, and Resources
 
-**Total request: USD 10,000**
+**Primary request: USD 9,700 in direct research funding plus USD 300 in OpenAI API credits (USD 10,000 total support).**
 
 | Item | Amount | Purpose |
 |---|---:|---|
@@ -103,13 +109,19 @@ The API allocation is intentionally modest. At current list prices, `gpt-6.1-sol
 
 The project also requests methodological feedback on the frozen evaluation design. It does not request production deployment, privileged internal data, or access to third-party systems.
 
+### Funding levels
+
+- **USD 10,000 full study:** execute the complete 200-case independently custodied design, primary analysis, repeatability, archival deposit, accessibility review, and open release described above.
+- **USD 5,000 direct funding plus USD 300 API credits:** preserve the same 200-case primary design by prioritizing USD 3,000 for independent authorship/custody and USD 2,000 for core research execution. Defer the optional Astra analysis, paid archival services, and expanded dissemination. The primary endpoint and evidentiary rules do not change.
+- **USD 300 API credits only:** validate the OpenAI execution path and repeatability on existing non-confirmatory artifacts. The independently authored v0.6 study would not execute, and no confirmatory or production claim would be made.
+
 ## Field 7: Applicant and Team
 
-**Principal researcher:** Creúsio Adolfo Gaspar Kizua, São Paulo, Brazil.
+**Principal researcher:** Creusio Adolfo Gaspar Kizua, São Paulo, Brazil.
 
-Creúsio has more than six years of experience in financial and payment systems, distributed observability, APIs, incident response, and 24×7 operations. He has led a 13-person technical team and worked with OpenTelemetry, Kubernetes, Prometheus, Grafana, Dynatrace, Elastic, and related reliability tooling. He created the ARKHÉ open-source benchmark, contracts, SDKs, and experimental governance controls.
+Creusio has more than six years of experience in financial and payment systems, distributed observability, APIs, incident response, and 24×7 operations. He has led a 13-person technical team and worked with OpenTelemetry, Kubernetes, Prometheus, Grafana, Dynatrace, Elastic, and related reliability tooling. He created the ARKHÉ open-source benchmark, contracts, SDKs, and experimental governance controls.
 
-The application is currently individual. The independent author/custodian and approver will be selected and named before freeze. Their compensation is budgeted. No anonymous or simulated reviewer will be represented as independent validation.
+The application is currently individual, with no additional team member named at submission. The independent author/custodian and separate approver will be contracted or selected and named before freeze. Their compensation is budgeted. No anonymous or simulated reviewer will be represented as independent validation.
 
 ## Field 8: New Dataset
 
@@ -128,4 +140,4 @@ Code, schemas, protocols, aggregate results, a sanitized dataset, and the techni
 
 ## Submission Gate
 
-Submit only after English and Portuguese consistency tests pass, model availability and pricing are reverified, repository links and contact details are checked, and the applicant approves the final wording and budget. No field may imply production validation, OpenAI endorsement, or completed v0.6 evidence.
+Submit only after English and Portuguese consistency tests pass, model availability and pricing are reverified, repository links and private contact details are checked, and the applicant approves the final wording, budget, program terms, and external submission. No field may imply production validation, OpenAI endorsement, or completed v0.6 evidence. Personal email must remain outside the public repository.
