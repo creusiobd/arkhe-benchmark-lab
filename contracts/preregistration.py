@@ -36,8 +36,8 @@ class PopulationPlan(BaseModel):
 
 
 class SplitPlan(BaseModel):
-    strategy: Literal["leave_one_family_out"]
-    calibration_source: Literal["validation_only"]
+    strategy: Literal["sealed_external_test"]
+    calibration_source: Literal["historical_validation_only"]
     test_outcomes_available_to_detector_developers: Literal[False]
 
 

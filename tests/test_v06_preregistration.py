@@ -27,12 +27,27 @@ class TestV06Preregistration(unittest.TestCase):
     def test_unresolved_decisions_block_freeze(self):
         protocol = V06Preregistration.model_validate(self.load_raw())
         unresolved = protocol.unresolved_for_freeze()
-        self.assertIn("primary_hypothesis.primary_comparator", unresolved)
-        self.assertIn("population.families", unresolved)
-        self.assertIn("models.semantic_model_id", unresolved)
+        self.assertNotIn("primary_hypothesis.primary_comparator", unresolved)
+        self.assertNotIn("population.families", unresolved)
+        self.assertNotIn("models.semantic_model_id", unresolved)
+        self.assertNotIn("statistics.missing_data_rule", unresolved)
+        self.assertNotIn("statistics.stopping_rule", unresolved)
+        self.assertIn("blinding.custodian_identity", unresolved)
         self.assertIn("blinding.sealed_test_manifest_sha256", unresolved)
+        self.assertIn("freeze.approver", unresolved)
         with self.assertRaises(ValueError):
             protocol.assert_freezable()
+
+    def test_scientific_design_decisions_are_predeclared(self):
+        protocol = V06Preregistration.model_validate(self.load_raw())
+        self.assertEqual(protocol.primary_hypothesis.primary_comparator, "semantic_event")
+        self.assertEqual(protocol.primary_hypothesis.minimum_effect_percentage_points, 15.0)
+        self.assertEqual(protocol.population.source_type, "independent_synthetic")
+        self.assertEqual(protocol.population.total_trajectories, 160)
+        self.assertEqual(len(protocol.population.families), 4)
+        self.assertEqual(protocol.split.strategy, "sealed_external_test")
+        self.assertEqual(protocol.split.calibration_source, "historical_validation_only")
+        self.assertEqual(protocol.models.semantic_model_id, "gpt-6.1-sol")
 
     def test_design_cannot_enable_confirmatory_claims(self):
         raw = copy.deepcopy(self.load_raw())

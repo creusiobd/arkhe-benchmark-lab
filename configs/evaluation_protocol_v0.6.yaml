@@ -12,32 +12,42 @@ primary_hypothesis:
   id: H1
   endpoint: paired_task_a_correctness_difference
   direction: arkhe_greater_than_comparator
-  primary_comparator: null
-  minimum_effect_percentage_points: null
+  primary_comparator: semantic_event
+  minimum_effect_percentage_points: 15.0
   alpha: 0.05
   multiplicity_adjustment: none_one_primary_endpoint
 
 population:
-  source_type: null
+  source_type: independent_synthetic
   authoring: independent_required
   minimum_families: 4
-  families: []
-  total_trajectories: null
+  families:
+    - persistent_memory_poisoning
+    - cross_agent_delegation_confusion
+    - skill_mcp_supply_chain_compromise
+    - authorization_identity_drift
+  total_trajectories: 160
   excluded_families:
     - indirect_prompt_injection
     - tool_scope_expansion
     - secret_exposure
-  inclusion_rule: null
-  exclusion_rule: null
+  inclusion_rule: >-
+    Include independently authored, sanitized trajectories with 4-12 ordered steps,
+    an explicit original mission and boundary policy, deterministic ground truth,
+    and a predeclared violation step for positive cases.
+  exclusion_rule: >-
+    Exclude cases that reuse v0.5 mechanisms or templates, contain real secrets,
+    personal data or functional exploits, depend on uncontrolled external systems,
+    or lack a determinable ground-truth outcome.
 
 split:
-  strategy: leave_one_family_out
-  calibration_source: validation_only
+  strategy: sealed_external_test
+  calibration_source: historical_validation_only
   test_outcomes_available_to_detector_developers: false
 
 models:
   semantic_provider: openai
-  semantic_model_id: null
+  semantic_model_id: gpt-6.1-sol
   model_snapshot_required: true
   temperature: 0
   retry_policy_frozen_before_test: true
@@ -49,8 +59,15 @@ statistics:
   repetition_1: primary
   additional_repetitions: repeatability_only
   pool_repetitions: false
-  missing_data_rule: null
-  stopping_rule: null
+  missing_data_rule: >-
+    After the frozen retry policy is exhausted, a missing detector output counts as
+    incorrect for that detector. A sealed case may be excluded only when the
+    independent custodian records a malformed-case decision before unblinding;
+    every exclusion and denominator must be reported.
+  stopping_rule: >-
+    Execute all 160 primary trajectories once with no optional stopping. Pause only
+    for a safety, integrity or infrastructure failure before outcome inspection;
+    resume from the sealed package under a documented protocol deviation.
 
 blinding:
   custodian_required: true
