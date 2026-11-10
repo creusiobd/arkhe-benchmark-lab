@@ -4,7 +4,7 @@
 [![Dataset License: CC BY 4.0](https://img.shields.io/badge/Dataset_License-CC_BY_4.0-lightgrey.svg)](datasets/v0.4_hard/LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Status: Alpha](https://img.shields.io/badge/Status-Alpha%2FExperimental-orange.svg)](pyproject.toml)
-[![Grant Submission](https://img.shields.io/badge/Grant-v0.6_Draft_Not_Submitted-purple.svg)](proposal/form_answers_EN.md)
+[![Grant Submission](https://img.shields.io/badge/Grant-v0.6_Submitted%20%7C%20Under_Review-6f42c1.svg)](proposal/form_answers_EN.md)
 [![Enforced Separation](https://img.shields.io/badge/Architecture-Enforced_Input_Separation-green.svg)](docs/anti_leakage_model.md)
 
 **ARKHÉ** is an open-source defensive research benchmark and evaluation harness designed to assess whether trajectory-aware security controls reduce false positives and identify progressive multi-agent boundary violations that isolated-event controls miss.
