@@ -5,9 +5,8 @@ It intentionally excludes the applicant's private email.
 
 ## Applicant information
 
-- First name: `Creusio`
-- Last name: `Adolfo Gaspar Kizua` — applicant must confirm this split matches the
-  identity document used for the application
+- First name: `Creusio Adolfo Gaspar`
+- Last name: `Kizua` — split confirmed by the applicant for this application
 - Email: provide only in the private submission packet and official form
 - Company or university: leave blank; the application is individual
 - Role / title: `IT Leader and Independent Researcher`
@@ -44,3 +43,4 @@ funding field; the official form does not expose separate fields with those numb
 - Review the current program terms before submission.
 - The applicant must explicitly approve the final text, budget, terms, and external
   form submission. Preparing this packet is not authorization to submit it.
+
