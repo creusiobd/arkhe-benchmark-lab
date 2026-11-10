@@ -46,7 +46,7 @@ ARKHÉ models and benchmarks defensive responses across **5 priority boundary vi
 ## 3. Scientific Hypotheses
 
 ### Primary Hypothesis
-> **H1 (v0.6 design stage):** ARKHÉ will test whether trajectory-aware analysis improves paired timely-classification correctness by at least 15 percentage points over one frozen semantic event-level comparator on 160 independently authored, previously unseen cases. This is a preregistered research hypothesis, not an observed result.
+> **H1 (v0.6 design stage):** ARKHÉ will test whether trajectory-aware analysis improves paired timely-classification correctness by at least 15 percentage points over one frozen semantic event-level comparator on 200 independently authored, previously unseen cases. This is a preregistered research hypothesis, not an observed result.
 
 ### Secondary Hypothesis (Exploratory)
 > **H2 (Anticipatory Lead Time):** Across persistent memory poisoning, cross-agent delegation confusion, skill/MCP supply-chain compromise, and authorization/identity drift, ARKHÉ may produce an alert at least one step before the predeclared violation. This remains exploratory and is not pooled into the primary endpoint.
@@ -99,7 +99,7 @@ The v0.4 pilot ran the single-event semantic baseline on 50 trajectories (134 st
 
 The integrated v0.5 pipeline contains 120 deterministic synthetic trajectories and an internal leave-one-family-out evaluation. Because its outputs were inspected during development, it is restricted to integration and reproducibility evidence. See [the v0.5 evaluation protocol](docs/evaluation_protocol_v0.5.md) and [the v0.5 runbook](docs/v0.5_runbook.md).
 
-The planned v0.6 study has no dataset or results. Its design declares 160 independently authored cases across four previously unused families, one frozen `gpt-6.1-sol` event-level comparator, a 15-percentage-point minimum relevant effect, and independent test custody. The protocol remains non-confirmatory until a custodian, sealed manifest and approver are recorded. See [the v0.6 preregistration](docs/v0.6_preregistration.md) and [the machine-readable protocol](configs/evaluation_protocol_v0.6.yaml).
+The planned v0.6 study has no dataset or results. Its design declares 200 independently authored cases across four previously unused families, one frozen `gpt-6.1-sol` event-level comparator, a 15-percentage-point minimum relevant effect, and independent test custody. At the predeclared 50% discordance scenario, exact two-sided McNemar power is 83.64%; the 60% scenario remains underpowered and is disclosed. The protocol remains non-confirmatory until a custodian, sealed manifest and approver are recorded. See [the v0.6 preregistration](docs/v0.6_preregistration.md), [the sensitivity analysis](docs/v0.6_sensitivity_analysis.md), and [the machine-readable protocol](configs/evaluation_protocol_v0.6.yaml).
 
 ---
 

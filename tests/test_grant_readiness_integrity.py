@@ -170,8 +170,8 @@ class TestGrantReadinessIntegrity(unittest.TestCase):
 
     def test_proposal_protocol_targets_the_preregistered_v06_design(self):
         for relative_path, expected in (
-            ("proposal/form_answers_EN.md", "160 independently authored synthetic trajectories"),
-            ("proposal/form_answers_PT.md", "160 trajetórias sintéticas produzidas independentemente"),
+            ("proposal/form_answers_EN.md", "200 independently authored synthetic trajectories"),
+            ("proposal/form_answers_PT.md", "200 trajetórias sintéticas produzidas independentemente"),
         ):
             with open(os.path.join(ROOT, relative_path), encoding="utf-8") as source:
                 text = source.read()

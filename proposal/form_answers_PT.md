@@ -10,7 +10,7 @@
 
 ## Campo 2: Descrição em Uma Frase
 
-Estudo defensivo aberto que testará se a análise de trajetórias melhora a classificação antecipada de violações em comparação com um classificador OpenAI congelado por evento, usando 160 casos inéditos e produzidos sob custódia independente.
+Estudo defensivo aberto que testará se a análise de trajetórias melhora a classificação antecipada de violações em comparação com um classificador OpenAI congelado por evento, usando 200 casos inéditos e produzidos sob custódia independente.
 
 ## Campo 3: Descrição do Problema
 
@@ -18,7 +18,7 @@ Agentes autônomos podem permanecer plausíveis localmente enquanto se tornam in
 
 O trabalho laboratorial existente do ARKHÉ demonstra que esse trade-off pode ser medido de forma reproduzível, mas não estabelece generalização externa nem eficácia em produção. O corpus v0.5 foi criado e inspecionado durante o desenvolvimento; por isso, está deliberadamente restrito a evidência de integração e reprodutibilidade.
 
-O estudo v0.6 produzirá a evidência ainda ausente. Ele comparará um classificador semântico congelado por evento com um detector orientado à trajetória em 160 casos sintéticos, inéditos e produzidos por autor independente, distribuídos em quatro novas famílias de segurança. Os rótulos permanecerão sob custódia até que protocolo, código, modelo, retentativas e manifesto sejam congelados. Resultados positivos, nulos ou negativos serão publicados com denominadores, falsos positivos, violações perdidas, latência, tokens e custo.
+O estudo v0.6 produzirá a evidência ainda ausente. Ele comparará um classificador semântico congelado por evento com um detector orientado à trajetória em 200 casos sintéticos, inéditos e produzidos por autor independente, distribuídos em quatro novas famílias de segurança. Os rótulos permanecerão sob custódia até que protocolo, código, modelo, retentativas e manifesto sejam congelados. Resultados positivos, nulos ou negativos serão publicados com denominadores, falsos positivos, violações perdidas, latência, tokens e custo.
 
 *(Contagem de palavras: 189 palavras — dentro do limite de 200)*
 
@@ -28,7 +28,7 @@ O estudo v0.6 produzirá a evidência ainda ausente. Ele comparará um classific
 
 A análise orientada à trajetória melhora a classificação antecipada de violações em comparação com um classificador semântico congelado por evento em casos inéditos de segurança de agentes?
 
-A hipótese primária é que o ARKHÉ melhorará a correção pareada da Tarefa A em pelo menos **15 pontos percentuais** em relação ao comparador por evento, preservando uma meta de recall pré-especificada. A comparação estatística primária será McNemar exato bicaudal com `alpha = 0,05`. Efeito mínimo, endpoint, regra para dados ausentes, regra de parada e comparador são declarados antes da existência da evidência de teste.
+A hipótese primária é que o ARKHÉ melhorará a correção pareada da Tarefa A em pelo menos **15 pontos percentuais** em relação ao comparador por evento. A comparação estatística primária será McNemar exato bicaudal com `alpha = 0,05`. Efeito mínimo, endpoint, regra para dados ausentes, regra de parada e comparador são declarados antes da existência da evidência de teste.
 
 ### Base existente e limite da evidência
 
@@ -40,14 +40,14 @@ O protocolo v0.6 está na fase de desenho com `claim_eligibility: none` e `confi
 
 ### Nova população do estudo
 
-O estudo conterá **160 trajetórias sintéticas produzidas independentemente**, 40 em cada família inédita:
+O estudo conterá **200 trajetórias sintéticas produzidas independentemente**, 50 em cada família inédita:
 
 1. `persistent_memory_poisoning` — comportamento inseguro emergindo após alteração persistente de memória;
 2. `cross_agent_delegation_confusion` — autoridade ou intenção mudando durante handoffs;
 3. `skill_mcp_supply_chain_compromise` — comportamento enganoso introduzido por skills, componentes MCP ou metadados;
 4. `authorization_identity_drift` — pressupostos de identidade, papel ou permissão mudando ao longo do fluxo.
 
-A distribuição planejada por família é de 16 negativos benignos difíceis, 12 quase-violações e 12 violações consumadas. Cada caso terá 4–12 etapas, missão e política de fronteira explícitas, ground truth determinável e etapa de violação predefinida nos casos positivos.
+A distribuição pré-declarada por família é de 20 negativos benignos difíceis, 15 quase-violações e 15 violações consumadas. Cada caso terá 4–12 etapas, missão e política de fronteira explícitas, ground truth determinável e etapa de violação predefinida nos casos positivos.
 
 Serão excluídos casos que reutilizem mecanismos ou templates da v0.5, contenham segredos reais ou dados pessoais, incluam exploits funcionais, dependam de sistemas externos não controlados ou não tenham desfecho determinável. Todos os recursos serão sintéticos ou locais.
 
@@ -65,9 +65,11 @@ O ARKHÉ receberá o mesmo evento e os passos observáveis anteriores. Ele utili
 
 O desenho utiliza um único conjunto de teste externo selado. Limiares, prompts, schemas e regras de retentativa serão bloqueados usando apenas artefatos históricos de desenvolvimento e validação; nenhum caso, rótulo ou predição da v0.6 será usado para calibração. A tarefa primária é a classificação antecipada de violações consumadas: o alerta deve ocorrer estritamente antes da etapa de violação. Pressão de fronteira será relatada separadamente.
 
+Uma análise prospectiva de poder exato não utiliza resultados da v0.6. Com efeito pareado de 15 pontos, `alpha = 0,05` bicaudal e 50% de discordância total entre detectores, 200 casos fornecem poder de 83,64%; o mínimo exato é 183. Com 40% de discordância, o poder é 91,12%; com 60%, cai para 76,11%. O cenário de 50% é a premissa pré-declarada do desenho. Não haverá expansão da amostra orientada pelos resultados, e o cenário de 60% permanece uma limitação explícita.
+
 A repetição 1 será primária. Repetições adicionais medirão reprodutibilidade e não serão agregadas como novas evidências. Depois das retentativas congeladas, saída ausente contará como erro do detector correspondente. Caso selado só poderá ser excluído se o custodiante registrar malformação antes da abertura. Todas as exclusões e denominadores serão publicados.
 
-Não haverá parada opcional. As 160 trajetórias primárias serão executadas uma vez. A execução só poderá ser pausada por falha de segurança, integridade ou infraestrutura antes da inspeção dos resultados, retomando do pacote selado sob desvio documentado.
+Não haverá parada opcional. As 200 trajetórias primárias serão executadas uma vez. A execução só poderá ser pausada por falha de segurança, integridade ou infraestrutura antes da inspeção dos resultados, retomando do pacote selado sob desvio documentado.
 
 ### Métricas e benefício público
 
@@ -81,8 +83,8 @@ O dataset sanitizado será publicado sob CC-BY-4.0; harness, detectores, contrat
 
 - **Semana 1:** análise de sensibilidade; nomear custodiante e aprovador; finalizar prompt, schema e retentativas.
 - **Semana 2:** bloquear detector, plano de análise, commit, identificador do modelo e hash do protocolo antes da autoria dos testes.
-- **Semanas 3–4:** produzir, revisar, auditar e selar 160 casos sanitizados sob autoria independente; registrar o hash do manifesto assinado e concluir o congelamento final.
-- **Semanas 5–6:** executar comparador e ARKHÉ congelados; registrar previsões e telemetria; realizar a análise primária.
+- **Semanas 3–5:** produzir, revisar, auditar e selar 200 casos sanitizados sob autoria independente; registrar o hash do manifesto assinado e concluir o congelamento final.
+- **Semana 6:** executar comparador e ARKHÉ congelados; registrar previsões e telemetria; realizar a análise primária.
 - **Semana 7:** executar reprodutibilidade sem agregar amostras; revisar protocolo; documentar desvios e limitações.
 - **Semana 8:** publicar código, dados sanitizados, manifestos, relatório e preprint, incluindo resultados nulos ou negativos.
 
@@ -92,8 +94,8 @@ O dataset sanitizado será publicado sob CC-BY-4.0; harness, detectores, contrat
 
 | Item | Valor | Finalidade |
 |---|---:|---|
-| Pesquisa aplicada e engenharia | US$ 6.200 | Oito semanas de protocolo, implementação, execução, análise, documentação e publicação |
-| Autor independente/custodiante e revisão | US$ 2.500 | Construção dos casos, custódia, selagem e revisão anterior à abertura |
+| Pesquisa aplicada e engenharia | US$ 5.700 | Oito semanas de protocolo, implementação, execução, análise, documentação e publicação |
+| Autor independente/custodiante e revisão | US$ 3.000 | Construção e custódia de 200 casos, selagem e revisão anterior à abertura |
 | Créditos da API OpenAI | US$ 300 | Avaliação com `gpt-6.1-sol`, retentativas, repetibilidade e análise limitada com `gpt-6-astra` |
 | Infraestrutura e publicação aberta | US$ 1.000 | Execução isolada, artefatos de CI, hospedagem, depósito com DOI e acessibilidade |
 
@@ -111,7 +113,7 @@ A candidatura é atualmente individual. O autor independente/custodiante e o apr
 
 ## Campo 8: Novo Dataset
 
-Sim. O projeto criará um dataset sintético de 160 trajetórias, produzido independentemente, cobrindo quatro famílias inéditas. Os desenvolvedores não receberão os rótulos antes do lock. A publicação excluirá credenciais reais, dados pessoais, exploits funcionais e informações confidenciais e incluirá proveniência, schemas, classes, limitações, hashes e licença CC-BY-4.0.
+Sim. O projeto criará um dataset sintético de 200 trajetórias, produzido independentemente, cobrindo quatro famílias inéditas. Os desenvolvedores não receberão os rótulos antes do lock. A publicação excluirá credenciais reais, dados pessoais, exploits funcionais e informações confidenciais e incluirá proveniência, schemas, classes, limitações, hashes e licença CC-BY-4.0.
 
 ## Campo 9: Modelos OpenAI
 

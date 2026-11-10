@@ -60,7 +60,7 @@ class TestProposalConsistency(unittest.TestCase):
 
     def test_v06_scope_is_aligned_across_languages(self):
         shared_tokens = (
-            "160",
+            "200",
             "persistent_memory_poisoning",
             "cross_agent_delegation_confusion",
             "skill_mcp_supply_chain_compromise",
@@ -76,9 +76,9 @@ class TestProposalConsistency(unittest.TestCase):
             self.assertIn(token, self.pt_text)
 
     def test_budget_is_balanced_and_independence_is_funded(self):
-        for token in ("6,200", "2,500", "300", "1,000"):
+        for token in ("5,700", "3,000", "300", "1,000"):
             self.assertIn(token, self.en_text)
-        for token in ("6.200", "2.500", "300", "1.000"):
+        for token in ("5.700", "3.000", "300", "1.000"):
             self.assertIn(token, self.pt_text)
         self.assertIn("independent case author/test custodian", self.en_text.lower())
         self.assertIn("autor independente", self.pt_text.lower())
@@ -106,6 +106,16 @@ class TestProposalConsistency(unittest.TestCase):
         self.assertNotIn("leave-one-family-out", self.en_text)
         self.assertNotIn("quatro folds leave-one-family-out", self.pt_text)
 
+    def test_sample_size_is_powered_and_not_outcome_adaptive(self):
+        self.assertIn("200 independently authored synthetic trajectories", self.en_text)
+        self.assertIn("200 trajetórias sintéticas produzidas independentemente", self.pt_text)
+        self.assertIn("83.64% power", self.en_text)
+        self.assertIn("poder de 83,64%", self.pt_text)
+        self.assertIn("no outcome-driven sample expansion", self.en_text)
+        self.assertIn("Não haverá expansão da amostra orientada pelos resultados", self.pt_text)
+        self.assertNotIn("pre-specified recall target", self.en_text)
+        self.assertNotIn("meta de recall pré-especificada", self.pt_text)
+
     def test_timeline_seals_manifest_after_case_authoring(self):
         self.assertLess(self.en_text.index("before test authoring"), self.en_text.index("signed test-manifest hash"))
         self.assertLess(self.pt_text.index("antes da autoria dos testes"), self.pt_text.index("hash do manifesto assinado"))
@@ -121,6 +131,8 @@ class TestProposalConsistency(unittest.TestCase):
         self.assertIn("Semana 8", self.pt_text)
         self.assertNotIn("6 Months", self.en_text)
         self.assertNotIn("6 Meses", self.pt_text)
+        self.assertIn("Weeks 3–5", self.en_text)
+        self.assertIn("Semanas 3–5", self.pt_text)
 
     def test_prohibited_claims_are_absent(self):
         prohibited = (
