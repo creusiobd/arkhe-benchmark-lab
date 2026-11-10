@@ -4,7 +4,7 @@
 [![Dataset License: CC BY 4.0](https://img.shields.io/badge/Dataset_License-CC_BY_4.0-lightgrey.svg)](datasets/v0.4_hard/LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Status: Alpha](https://img.shields.io/badge/Status-Alpha%2FExperimental-orange.svg)](pyproject.toml)
-[![Grant Submission](https://img.shields.io/badge/Grant-Prepared_for_Cybersecurity_Grant_Submission-purple.svg)](proposal/form_answers_EN.md)
+[![Grant Submission](https://img.shields.io/badge/Grant-v0.6_Draft_Not_Submitted-purple.svg)](proposal/form_answers_EN.md)
 [![Enforced Separation](https://img.shields.io/badge/Architecture-Enforced_Input_Separation-green.svg)](docs/anti_leakage_model.md)
 
 **ARKHÉ** is an open-source defensive research benchmark and evaluation harness designed to assess whether trajectory-aware security controls reduce false positives and identify progressive multi-agent boundary violations that isolated-event controls miss.
@@ -22,7 +22,7 @@
 ### What ARKHÉ Does Not Do:
 - **Not a Production-Ready Commercial Product:** ARKHÉ is an experimental research harness (`Development Status :: 3 - Alpha`).
 - **No Absolute Guarantees:** We do not claim an absolute "Zero Label Leakage Guarantee" or complete prevention of all boundary breaches; we provide an enforced structural separation verified by automated test suites.
-- **No Demonstrated Comparative Gain:** The v0.3 tables are historical results from a synthetic candidate run. The v0.4 live pilot evaluated 50 trajectories with the single-event semantic baseline only and included development, validation, and test trajectories. It is an exploratory integration run, not a detector comparison or an untouched holdout result. The proposed v0.5 comparison remains prospective.
+- **No Demonstrated Comparative Gain:** The v0.3 tables are historical synthetic results. The v0.4 live pilot tested the single-event API path only. The v0.5 pipeline proves internal reproducibility, but its outputs were inspected during development and remain `reproducibility_only`. The planned v0.6 confirmatory study has no dataset or results.
 - **No Unaffiliated Endorsement:** This benchmark is an independent proposal prepared for the OpenAI Cybersecurity Grant Program and is neither sponsored by nor affiliated with OpenAI.
 
 ---
@@ -46,7 +46,7 @@ ARKHÉ models and benchmarks defensive responses across **5 priority boundary vi
 ## 3. Scientific Hypotheses
 
 ### Primary Hypothesis
-> **H1 (Prospective):** The v0.5 study will test whether trajectory signals reduce false-positive rates under a pre-specified validation recall target of 0.90, compared with isolated-event baselines. This is a research hypothesis, not an observed result.
+> **H1 (v0.6 design stage):** ARKHÉ will test whether trajectory-aware analysis improves paired timely-classification correctness by at least 15 percentage points over one frozen semantic event-level comparator on 160 independently authored, previously unseen cases. This is a preregistered research hypothesis, not an observed result.
 
 ### Secondary Hypothesis (Exploratory)
 > **H2 (Anticipatory Lead Time):** In progressive violation patterns involving multi-step reconnaissance or indirect prompt propagation, trajectory-aware sentinels can produce early alerts ($N_{\text{lead}} \ge 1$ step) prior to irreversible boundary breaches.
@@ -97,7 +97,9 @@ The repository contains historical v0.3 synthetic candidate results and a v0.4 l
 
 The v0.4 pilot ran the single-event semantic baseline on 50 trajectories (134 steps) across development, validation, and test, twice. It used `gpt-4o-mini-2024-07-18`, made 268 successful API calls, and recorded 147,172 tokens. Because it included the test split, that pilot is exploratory and the v0.4 test split is no longer untouched. See [the pilot report](results/openai_pilot_v0.4/pilot_report.md), [the artifact integrity note](results/openai_pilot_v0.4/ARTIFACT_INTEGRITY_NOTE.md), and [the freeze policy](docs/test_split_freeze_policy.md).
 
-The proposed v0.5 study is prospective: 120 synthetic trajectories across three families, evaluated by internal leave-one-family-out folds. The metric definitions and limits are recorded in [the v0.5 evaluation protocol](docs/evaluation_protocol_v0.5.md). No comparative performance outcome is claimed here.
+The integrated v0.5 pipeline contains 120 deterministic synthetic trajectories and an internal leave-one-family-out evaluation. Because its outputs were inspected during development, it is restricted to integration and reproducibility evidence. See [the v0.5 evaluation protocol](docs/evaluation_protocol_v0.5.md) and [the v0.5 runbook](docs/v0.5_runbook.md).
+
+The planned v0.6 study has no dataset or results. Its design declares 160 independently authored cases across four previously unused families, one frozen `gpt-6.1-sol` event-level comparator, a 15-percentage-point minimum relevant effect, and independent test custody. The protocol remains non-confirmatory until a custodian, sealed manifest and approver are recorded. See [the v0.6 preregistration](docs/v0.6_preregistration.md) and [the machine-readable protocol](configs/evaluation_protocol_v0.6.yaml).
 
 ---
 
@@ -125,7 +127,7 @@ Or execute the steps individually:
 # 1. Run the unit and contract test suite
 python -m unittest discover -s tests -v
 
-# 2. Reproduce the historical v0.3 candidate run (not the proposed v0.5 study)
+# 2. Reproduce the historical v0.3 candidate run (not v0.6 evidence)
 python -m harness.agent_benchmark_runner --config configs/grant_candidate_v0.3.yaml
 
 # 3. Compute metrics, confidence intervals, and statistical tests
@@ -147,7 +149,7 @@ The semantic baseline detector (`detectors/semantic_event.py`) supports two expl
    - Performs structured API calls to the OpenAI API using the official SDK.
    - Requires `OPENAI_API_KEY` in environment. Fails fast with descriptive error if credentials are missing (no silent fallback).
    - Validates response schemas via Pydantic (`SemanticClassificationResponse`).
-   - Configurable model via `OPENAI_SEMANTIC_MODEL` (e.g., `gpt-4o-mini`).
+   - Configurable model via `OPENAI_SEMANTIC_MODEL` (the v0.6 design currently declares `gpt-6.1-sol`).
 
 ---
 

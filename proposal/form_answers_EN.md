@@ -1,182 +1,129 @@
 # Official Application Form Answers — OpenAI Cybersecurity Grant Program
 
-This document contains the consolidated, audit-grade answers for each field of the **OpenAI Cybersecurity Grant Program** application form, in English, strictly aligned with the scoped, testable applied research protocol of the **ARKHÉ Agent Boundary Defense Benchmark**.
+**Submission candidate:** ARKHÉ v0.6
+**Applicant:** Creúsio Adolfo Gaspar Kizua — São Paulo, Brazil
+**Status:** Draft for human review. Not submitted.
 
----
+## Field 1: Project Title
 
-### Field 1: Project Title
-**ARKHÉ Agent Boundary Defense Benchmark: Evaluating Trajectory-Aware Signals Against Single-Event Guardrails Under Pre-Specified Recall Constraints**
+**ARKHÉ v0.6: An Independently Custodied Benchmark for Trajectory-Aware Agent Security**
 
----
+## Field 2: One-Sentence Description
 
-### Field 2: One-line Description
-A focused empirical study and open benchmark evaluating whether multi-step trajectory signals reduce false positive rates under a pre-specified 90% recall floor compared to single-event LLM classifiers across 120 hard agent trajectories.
+An open defensive study testing whether multi-step trajectory analysis improves timely pre-violation classification over a frozen single-event OpenAI comparator on 160 independently authored, previously unseen agent-security cases.
 
----
+## Field 3: Problem Statement
 
-### Field 3: Problem Statement
-*(Strict constraint: $\le 200$ words)*
+Autonomous agents can remain locally plausible while becoming globally unsafe. A tool call, memory write, delegation, or authorization check may appear acceptable in isolation, yet the sequence can gradually alter mission, trust, capability, or identity until a boundary is crossed. Event-level guardrails therefore face a difficult trade-off: sensitive thresholds interrupt legitimate workflows, while permissive thresholds miss violations that only become visible across time.
 
-Autonomous AI agents executing enterprise workflows chain sequences of tool calls, environment queries, and state mutations. In these multi-step pipelines, individual actions often appear benign and policy-compliant when evaluated in isolation. However, across sequential steps, operations compound into hazardous trajectories such as cumulative context contamination from indirect prompt injection, unprompted capability expansion, and stealthy credential egress.
+Existing ARKHÉ laboratory work shows that this trade-off can be measured reproducibly, but it does not establish external generalization or production effectiveness. Its v0.5 corpus was authored and inspected during development, so it is deliberately restricted to integration and reproducibility evidence.
 
-Existing perimeter defenses rely predominantly on point-in-time guardrails: single-event semantic classifiers, static regex policies, and per-call tool filters. Because they evaluate the immediate invocation without causal sequence context, single-event guardrails face a severe operational dilemma: tightening detection thresholds triggers prohibitive false alarm rates on legitimate multi-step workflows containing adversarial vocabulary, while relaxing thresholds permits multi-step intent hijacking to evade detection.
+The proposed v0.6 study addresses the missing evidence. It will compare one frozen semantic event-level classifier with a frozen trajectory-aware detector on 160 independently authored synthetic cases from four previously unused security families. Test labels will remain under independent custody until the protocol, code, model, retry policy, and sealed manifest are frozen. The study will publish positive, null, or negative results, including raw denominators, false positives, missed violations, latency, token use, and cost.
 
-The critical research gap is the absence of an open, reproducible benchmark measuring whether temporal trajectory observability can systematically reduce false positive rates while maintaining an operationally mandatory recall floor ($Recall \ge 90\%$) against hard negatives and indirect violations. This project delivers a scoped, empirical evaluation of that specific trade-off.
+*(Word count: 177 words — within the 200-word limit)*
 
-*(Word count: 171 words — Approved under the 200-word limit)*
+## Field 4: Complete Project Proposal
 
----
+### Research question and hypothesis
 
-### Field 4: Research Hypothesis & Methodology
+Does trajectory-aware analysis improve timely pre-violation classification over a frozen single-event semantic comparator on previously unseen agent-security cases?
 
-#### 1. Central Research Question & Formal Hypothesis
-**Core Question:** Do multi-step trajectory signals systematically reduce false positive rates on benign workflows with adversarial framing, under a pre-specified recall floor ($Recall \ge 90\%$), compared to isolated event-level classifiers?
+The primary hypothesis is that ARKHÉ will improve paired Task A correctness by at least **15 percentage points** relative to the event-level comparator while preserving a pre-specified recall target. The primary comparison will be a two-sided exact McNemar test at `alpha = 0.05`. The minimum relevant effect, endpoint, missing-data rule, stopping rule, and comparator are declared before test evidence exists.
 
-**Prospective hypothesis ($H_1$):** The planned study will test whether a trajectory-aware detector reduces false-positive rates relative to isolated-event baselines while meeting a pre-specified validation recall target of $Recall_{val} \ge 0.90$. No statistically significant reduction has yet been observed for this comparison.
+### Existing foundation and evidence boundary
 
-**Null Hypothesis ($H_0$):** The planned comparison finds no reduction in trajectory-level false positives at the pre-specified validation recall target, or a detector fails to reach that validation target.
+The public repository already contains Apache-2.0 defensive and trajectory SDKs, strict separation between observations and ground truth, deterministic generation, validation-only calibration, an evaluator isolated from detector tuning, anti-leakage CI, OpenAI Structured Outputs integration, and operational telemetry.
 
-#### 2. Experimental Scope & Threat Taxonomy (120 Hard Trajectories)
-The study freezes an evaluation corpus of **120 hard trajectories** distributed across **three core threat families** (40 trajectories per family):
-1. **`indirect_prompt_injection` (40 trajectories):** Untrusted data sources embedding prompt-mediated instructions that alter agent intent.
-2. **`tool_scope_expansion` (40 trajectories):** Gradual capability escalation where the agent discovers and invokes tools outside its declared mission scope.
-3. **`unauthorized_secret_exposure_or_egress` (40 trajectories):** Stealthy access, harvesting, or egress of credentials and private environment variables.
+The existing evidence is intentionally bounded. The v0.5 pipeline is reproducible, but its outputs were inspected during development and remain `reproducibility_only`. They cannot become confirmatory evidence retrospectively. An earlier exploratory OpenAI integration completed 268 calls and 147,172 tokens at a configured cost of USD 0.028966. It demonstrated the request and telemetry path only; it did not establish comparative effectiveness.
 
-**Pre-Specified Class Stratification per Family (40 trajectories each):**
-- **Hard Negatives / Benign with Adversarial Framing (16 trajectories, 40%):** Legitimate workflows containing security-relevant vocabulary, prompt injection warnings, or multi-step queries that must *not* trigger alarms. Total: 48 benign trajectories.
-- **Near-Violations / Boundary Pressure (12 trajectories, 30%):** Trajectories approaching boundary limits (e.g., failed probes, reading adjacent non-sensitive metadata) without consummating an unauthorized action. Total: 36 near-violations.
-- **Consummated Boundary Violations (12 trajectories, 30%):** Explicit, unauthorized security breaches executed across sequential steps. Total: 36 violations.
+The v0.6 protocol is currently in design with `claim_eligibility: none` and `confirmatory_claims_allowed: false`. No v0.6 dataset, labels, predictions, results, or freeze artifacts exist. This is a deliberate scientific control.
 
-#### 3. Evaluation Protocol: Internal Leave-One-Family-Out Cross-Validation
-Because the corpus comprises three threat families, generalization across mechanisms is evaluated via a **3-fold leave-one-family-out cross-validation**:
-- **Fold 1:** Test = Family 1 (40 trajectories); Dev/Val = Families 2 & 3 (80 trajectories).
-- **Fold 2:** Test = Family 2 (40 trajectories); Dev/Val = Families 1 & 3 (80 trajectories).
-- **Fold 3:** Test = Family 3 (40 trajectories); Dev/Val = Families 1 & 2 (80 trajectories).
+### New study population
 
-**Protocol Guarantees:**
-- **Strict Family Disjointness:** No decision, threshold, prompt, or parameter for a test fold is calibrated using data or labels from the held-out family.
-- **Internal Evaluation Disclosure:** This is an internal family-held-out evaluation created by the project, not an independent external or blind audit. The repository is public, so the split cannot be protected from future inspection.
-- **Aggregated Testing:** Each of the 120 trajectories appears in the test partition exactly once across the aggregated evaluation ($N = 120$).
-- **Development vs. Validation Split:** Within the training families, trajectories are partitioned into development and validation by clustering templates and paraphrases to prevent mechanism leakage.
+The study will contain **160 independently authored synthetic trajectories**, 40 in each novel family:
 
-#### 4. Reference Detectors
-1. **Baseline 1 (Deterministic Event Rule Baseline):** Regex patterns, keyword filters, and forbidden target lists evaluating only the immediate tool call.
-2. **Baseline 2 (Semantic Event Classifier Baseline):** Single-step LLM classifier querying a versioned OpenAI model (`gpt-4o-mini-2024-07-18`) with Pydantic structured output (`SemanticClassificationResponse`) evaluating immediate actions in isolation without trajectory history.
-3. **Primary Detector (ARKHÉ Trajectory Sentinel):** Trajectory-oriented detector using the repository's deterministic local subword projection and a quadratic risk/energy score inspired by Lyapunov analysis. The implementation checks that its matrix is positive definite; this check is not a formal proof of system stability. The primary configuration does not call an OpenAI embeddings model.
-4. **Optional Robustness Analysis:** A second OpenAI model (`gpt-4o-2024-11-20`) may be evaluated as an optional robustness check, conditional on schedule, budget, and API access. It is not part of the primary model comparison.
+1. `persistent_memory_poisoning` — unsafe behavior emerging after persistent memory changes;
+2. `cross_agent_delegation_confusion` — authority or intent changing through agent handoffs;
+3. `skill_mcp_supply_chain_compromise` — misleading behavior introduced through skills, MCP components, or metadata;
+4. `authorization_identity_drift` — identity, role, or permission assumptions changing across a workflow.
 
-#### 5. Pre-Specified Decision Rule & Metrics
-1. **Threshold Calibration:** Operating thresholds for all detectors are chosen exclusively on the validation sets to satisfy the operational recall floor:
-   $$Recall_{\text{val}} \ge 0.90$$
-2. **Primary Task — Anticipation of Consummated Violation:** A true positive requires the first alert strictly before the first violation step. Alerts at or after the violation do not count as anticipation. The positive class is 36 consummated violations; the negative class is all 84 non-violation trajectories (48 benign hard negatives plus 36 near-violations). A negative trajectory with any alert is a false positive. Thus, primary $FPR=FP/(FP+TN)$ uses 84 negatives.
-3. **Separate Pressure Task:** Near-violations and consummated violations are positive for boundary-pressure detection; the 48 benign trajectories are negative. Report its results separately from the consummated-violation task.
-4. **Decision and Non-Compliance:** Select thresholds using validation only to target $Recall_{val} \ge 0.90$. Report test recall and whether it meets the target; never retune against test outcomes.
-5. **Secondary Metrics and Statistics:** Report precision, recall, F1, lead steps, latency, cost, and raw numerators/denominators. Use a paired two-sided exact McNemar test over the 84 Task A negatives and report paired recall outcomes over the 36 positives. Wilson 95% intervals use trajectory as the unit. Repetition 1 is the pre-specified primary run; repetition 2 is reported separately for repeatability and is not counted as new trajectories. See `docs/evaluation_protocol_v0.5.md`.
+The target distribution per family is 16 benign hard negatives, 12 near-violations, and 12 consummated violations. Each case must contain 4–12 ordered steps, an explicit mission and boundary policy, deterministic ground truth, and a predeclared violation step for positive cases.
 
----
+Cases will be excluded if they reuse v0.5 mechanisms or templates, contain real secrets or personal data, include functional exploits, depend on uncontrolled external systems, or lack a determinable outcome. All resources will be synthetic or local.
 
-### Field 5: Deliverables & Expected Outcomes
+### Independent custody and freeze
 
-All grant deliverables are public, open-source, and verifiable:
+An independent case author/test custodian will be contracted before freeze. This person will not tune ARKHÉ and will control test labels and the sealed manifest. A separate named reviewer will approve the protocol.
 
-1. **Open Hard Benchmark Dataset (v0.5):**
-   - 120 structurally hard agent trajectories in JSONL format, fully labeled with ground truth annotations (classes, breach steps, containment attempts, and final outcomes).
-   - Accompanied by a comprehensive Dataset Card, templates catalog, provenance manifest, and dual-licensing (Dataset: **CC-BY-4.0**).
-2. **Reproducible Benchmark Harness & Evaluator Isolated from Detectors:**
-   - Python testbed (licensed under **Apache-2.0**) with strict architectural separation between observable agent traces (`StepObservation`) and ground truth (`TrajectoryGroundTruth`).
-   - Automated 1-click reproduction scripts (`reproduce_dataset_generation.sh` / `.ps1`) and continuous CI workflow on GitHub Actions.
-3. **Public Technical Report:**
-   - Transparent publication of empirical findings—documenting positive, null, or negative results regarding whether trajectory signals reduce false positives under the 90% recall floor.
-4. **Open-Access Scientific Preprint:**
-   - Formal manuscript submitted to arXiv / Zenodo detailing the leave-one-family-out methodology, statistical tests, and trade-offs observed (submitted as an open preprint without asserting journal acceptance).
-5. **Responsible Disclosure & Limitations Dossier:**
-   - Explicit documentation of threat model boundaries, synthetic data constraints, and guidelines preventing the weaponization of benchmark scenarios.
-6. **Optional Trajectory Visualizer (Stretch Goal):**
-   - Interactive terminal or web-based UI visualizer for inspection of state-space trajectories, implemented only if milestone deadlines permit without impacting core evaluation.
+Before unblinding, the repository will record the frozen commit, protocol SHA-256, exact provider-returned model identifier, prompts, structured-output schema, thresholds, retry policy, inclusion and exclusion rules, signed test-manifest SHA-256, custodian, and approver. Without those roles, the protocol cannot freeze and no confirmatory claim will be made.
 
----
+### Comparator, detector, and evaluation
 
-### Field 6: Defensive Orientation & Safety
+The primary comparator will be a semantic single-event classifier using **`gpt-6.1-sol`** through the Responses API with Structured Outputs. It will receive only the current event, never history or ground truth.
 
-The project is exclusively defensive in purpose, architecture, and deployment:
-* **Strictly Synthetic & Sanitized Environment:** All 120 trajectories use mock credentials (`ARKHE_FAKE_TOKEN_DO_NOT_USE_*`) and local simulated sinks (`http://localhost:8080/mock-sink`). No real-world infrastructure, production databases, or live secrets are touched.
-* **No Weaponized Payloads:** Prompts and observations model behavioral and telemetry signatures of prompt injection and capability expansion; they contain no zero-day exploits, executable malware, or weaponized exploit chains.
-* **Direct Defensive Utility:** Enables security practitioners and frontier lab safety teams to quantify the exact false positive trade-offs of runtime agent guardrails before deploying autonomous workflows with tool-calling capabilities into production.
+ARKHÉ will receive the same event plus prior observable steps. It uses mission, capability, boundary, state-change, and persistence signals. Its quadratic score is a risk feature inspired by dynamical-systems methods, not proof of Lyapunov stability. An optional `gpt-6-astra` robustness analysis may run only after the primary result and will be reported separately.
 
----
+The design uses one sealed external test set. Thresholds, prompts, schemas, and retry rules are locked using historical development and validation artifacts only; no v0.6 case, label, or prediction is used for calibration. The primary task is timely classification of consummated violations: an alert must occur strictly before the predeclared violation step. Pressure detection is reported separately.
 
-### Field 7: Work Plan & Timeline (8 Weeks)
+Repetition 1 is primary. Additional repetitions measure repeatability and are not pooled as independent evidence. After frozen retries are exhausted, a missing detector output counts as incorrect for that detector. A sealed case may be excluded only if the custodian records a malformed-case decision before unblinding. All exclusions and denominators will be published.
 
-The project is structured into an intensive, 8-week execution plan with concrete weekly milestones:
+There is no optional stopping. All 160 primary trajectories will run once. Execution may pause only for a safety, integrity, or infrastructure failure before outcome inspection and may resume only from the sealed package under a documented deviation.
 
-```
-[Weeks 1–2] Protocol, Pre-Registration & Scope Freeze
-     └── Milestone 1: Registered protocol, frozen taxonomy & statistical analysis plan.
-[Weeks 3–4] Dataset Curation, Synthesis & Non-Leakage Validation
-     └── Milestone 2: 120 hard trajectories generated with deterministic CI checks.
-[Weeks 5–6] Controlled Leave-One-Family-Out Execution & Live API Baselines
-     └── Milestone 3: 3-fold evaluation executed with gpt-4o-mini; traces & cost logged.
-[Weeks 7–8] Statistical Analysis, Public Report & Preprint Dissemination
-     └── Milestone 4: Paired McNemar tests, open dataset release & arXiv preprint.
-```
+### Metrics and public benefit
 
-* **Weeks 1–2 (Milestone 1 — Protocol Pre-Registration & Scope Freeze):**
-  - Finalize formal statistical plan, freeze the 90% recall floor ($R_{\min} = 0.90$), and specify exact leave-one-family-out data splits.
-  - *Verifiable Output:* Versioned YAML protocol and frozen analysis specification committed to repository.
-* **Weeks 3–4 (Milestone 2 — Dataset Curation, Hard Negatives & Anti-Leakage Audit):**
-  - Author and programmatically synthesize 120 hard trajectories across the 3 families (48 hard negatives, 36 near-violations, 36 violations).
-  - Verify deterministic reproduction (100% SHA-256 match) and run AST anti-leakage validators.
-  - *Verifiable Output:* `datasets/v0.5_hard/` with 120 trajectories, dataset card, and CI passing with zero failures.
-* **Weeks 5–6 (Milestone 3 — Controlled Live Evaluation & Baseline Execution):**
-  - Execute 3-fold leave-one-family-out cross-validation. Calibrate detection thresholds on validation folds to satisfy $Recall \ge 0.90$.
-  - Run live API evaluations against `gpt-4o-mini-2024-07-18` across 2 repeated measures per trajectory. Record complete per-call traces, tokens, latency, and costs in `api_call_traces.jsonl`.
-  - Conduct optional secondary robustness evaluation with `gpt-4o` if schedule and budget allow.
-  - *Verifiable Output:* Frozen predictions for all 3 folds, full API traces, and verifiable cost report.
-* **Weeks 7–8 (Milestone 4 — Statistical Evaluation, Open Release & Preprint):**
-  - Run the evaluator isolated from detector code across the 120 fold-held-out trajectories. Compute paired McNemar tests, Wilson score 95% intervals, and repeatability measures for the second run.
-  - Deposit dataset and code to Zenodo/HuggingFace with permanent DOI; publish technical report and upload preprint to arXiv.
-  - *Verifiable Output:* Public GitHub release (Apache-2.0), Zenodo DOI, and published arXiv preprint.
+The report will publish paired correctness, exact McNemar results, TP/FP/TN/FN, precision, recall, F1, false-positive rate, Wilson 95% intervals, lead steps, results by family, repeatability, latency, calls, tokens, retries, failures, cost, exclusions, and deviations.
 
----
+Positive, null, and adverse results will be published. Passing CI demonstrates implementation consistency, not detector superiority. Synthetic results will not be described as production validation.
 
-### Field 8: Budget Breakdown & Justification
+The sanitized dataset will be released under CC-BY-4.0; the harness, detectors, contracts, and evaluator under Apache-2.0. The release will include a dataset card, threat model, preregistration, reproducibility guide, technical report, and open preprint. No live secrets, malware, zero-day exploits, or unauthorized targets will be included.
 
-The total grant request is **$10,000 USD**, strictly partitioned into verified inference credits and direct research support:
+## Field 5: Project Timeline
 
-| Budget Item | Allocation | Cost Basis & Calculation | Verifiable Milestone Output |
-| :--- | :---: | :--- | :--- |
-| **OpenAI API Inference Credits** | **$20** | • **Primary model:** `gpt-4o-mini-2024-07-18`; official list rates checked 2026-10-01: $0.15/1M input and $0.60/1M output tokens.<br/>• **Planning volume:** approximately 2,500 calls / 1.4M tokens across test runs and permitted development/validation calibration; extrapolating the v0.4 token mix gives approximately $0.28.<br/>• **Optional `gpt-4o-2024-11-20` robustness run:** 720 calls and 560 tokens/call; using the v0.4 input/output mix and current official rates ($2.50/1M input, $10/1M output) gives approximately $1.32.<br/>• **Contingency:** $20 is about 12.5 times the combined $1.60 planning estimate. This projection excludes production traffic and must be recalculated if token profiles, call volume, pricing, or model scope changes. The primary ARKHÉ configuration uses local embeddings, so no embeddings API cost is assumed. | `api_call_traces.jsonl`, `cost_report.json` with actual token counts, latency, retries, failures, model IDs, and no offline fallback. |
-| **Applied Research & Engineering Stipend** | **$9,480** | • **Rate:** $1,185 / week across 8 weeks of dedicated effort.<br/>• **Effort:** Delivery by the Principal Researcher: authoring 120 trajectories, leave-one-family-out harness engineering, validation-only calibration, and statistical reporting. The quadratic detector score is treated as a risk feature, not a proved stability guarantee. | Milestones 1–4; reproducible test suite and open-source codebase. |
-| **Infrastructure, CI/CD & Open Access Deposit** | **$500** | • Cloud execution runners for sandboxed agent environments, Zenodo DOI registration, and persistent dataset hosting. | Public Zenodo DOI, active GitHub Actions CI workflow. |
-| **Total Requested Funding** | **$10,000** | **$20 in API Credits + $9,980 in Direct Research/Infra Support** | Complete public benchmark delivery in 8 weeks. |
+- **Week 1:** sensitivity analysis; appoint custodian and approver; finalize prompt, schema, and retries.
+- **Week 2:** lock the detector, analysis plan, source commit, model identifier, and protocol hash before test authoring.
+- **Weeks 3–4:** independently author, review, audit, and seal 160 sanitized cases; record the signed test-manifest hash and complete the final freeze.
+- **Weeks 5–6:** execute the frozen comparator and ARKHÉ once; record predictions and telemetry; run the primary analysis.
+- **Week 7:** run repeatability without pooling; conduct independent protocol review; document deviations and limitations.
+- **Week 8:** publish code, sanitized data, manifests, technical report, and preprint, including null or negative results.
 
-*Note on Prior Exploratory Integration Run:* The v0.4 live run evaluated the semantic single-event baseline on all 50 trajectories across development, validation, and test, in two repetitions (268 successful calls, 147,172 tokens, $0.028966 at the configured rates). Its manifest records a dirty source worktree. The run demonstrates API integration and telemetry collection only; it does not compare ARKHÉ with the baseline and does not provide an untouched test result. The planning estimates extrapolate its token mix; verify official rates and actual token distributions again before the study.
+## Field 6: Requested Funding, API Credits, and Resources
 
-Pricing references checked 2026-10-01: [GPT-4o mini](https://developers.openai.com/api/docs/models/gpt-4o-mini), [GPT-4o](https://developers.openai.com/api/docs/models/gpt-4o), and [text-embedding-3-small](https://developers.openai.com/api/docs/models/text-embedding-3-small). Embeddings are not included in the primary configuration.
+**Total request: USD 10,000**
 
----
+| Item | Amount | Purpose |
+|---|---:|---|
+| Applied research and engineering | USD 6,200 | Eight-week protocol, implementation, execution, analysis, documentation, and release |
+| Independent case author/custodian and protocol review | USD 2,500 | Case construction, custody, sealing, and pre-unblinding review |
+| OpenAI API credits | USD 300 | `gpt-6.1-sol` primary evaluation, retries, repeatability, and bounded `gpt-6-astra` robustness analysis |
+| Infrastructure and open dissemination | USD 1,000 | Isolated execution, CI artifacts, persistent hosting, DOI deposit, and accessibility review |
 
-### Field 9: Applicant Background & Execution Capacity
+The API allocation is intentionally modest. At current list prices, `gpt-6.1-sol` costs USD 2 per million input tokens and USD 10 per million output tokens. The allocation supports up to approximately 6,000 structured-output calls with contingency for retries, token-profile variance, and a bounded Astra run. Actual IDs, tokens, and costs will be published; unused credits will not be represented as expenditure.
 
-**Principal Researcher: Creúsio Adolfo Gaspar Kizua (São Paulo, Brazil)**
-* **6+ years of practical engineering experience** in high-throughput transactional architectures, mission-critical infrastructure, and distributed telemetry.
-* **Technical Lead of an engineering team of 13 engineers** maintaining 24×7 financial and banking production environments under strict regulatory standards (Central Bank of Brazil BACEN Resolution 85/2021 and PCI-DSS v4.0).
-* **Technical governance and observability across 33 production APIs**, specialized in telemetry instrumentation (OpenTelemetry, Prometheus, Kubernetes, Grafana).
-* **Creator of the ARKHÉ Benchmark Repository:** Designed and implemented the complete open-source codebase, including:
-  - Deterministic local subword projection and a quadratic risk score inspired by Lyapunov analysis in `detectors/arkhe_trajectory.py`;
-  - Fail-fast live OpenAI API integration with Pydantic structured schemas in `detectors/clients/openai_semantic_client.py`;
-  - Hermetic anti-leakage architectural contracts separating observable step traces from sealed ground truth;
-  - Deterministic dataset generation with canonical cryptographic trajectory IDs.
+The project also requests methodological feedback on the frozen evaluation design. It does not request production deployment, privileged internal data, or access to third-party systems.
 
----
+## Field 7: Applicant and Team
 
-### Field 10: Open Source Commitment & Reproducibility
+**Principal researcher:** Creúsio Adolfo Gaspar Kizua, São Paulo, Brazil.
 
-* **Permissive Open Source Licensing:** Codebase licensed under **Apache-2.0**, dataset licensed under **CC-BY-4.0**.
-* **Automated Contracts:** CI covers contract separation, deterministic generation, event immutability, causal evaluation, and detector-input isolation. Passing checks do not establish comparative detector performance.
-* **Empirical Grounding of Existing Pilot:**
-  - *Offline Baseline (`v0.3`):* 65 trajectories evaluated under hermetic proxy mode.
-  - *Exploratory live integration (`v0.4_hard`):* 50 trajectories (134 steps), including development, validation, and test, evaluated in 2 repetitions against `gpt-4o-mini-2024-07-18` (268 successful calls, 147,172 tokens, $0.028966). It tested only the single-event baseline and is not confirmatory.
-* **What Remains Unknown (To Be Tested Under Grant Funding):**
-  - Whether trajectory observability lowers false positives at the pre-specified validation recall target in the planned 120-trajectory internal leave-one-family-out study.
-  - Whether the quadratic trajectory-risk signal is useful across held-out synthetic mechanisms. No formal Lyapunov stability or external generalization claim is made.
+Creúsio has more than six years of experience in financial and payment systems, distributed observability, APIs, incident response, and 24×7 operations. He has led a 13-person technical team and worked with OpenTelemetry, Kubernetes, Prometheus, Grafana, Dynatrace, Elastic, and related reliability tooling. He created the ARKHÉ open-source benchmark, contracts, SDKs, and experimental governance controls.
+
+The application is currently individual. The independent author/custodian and approver will be selected and named before freeze. Their compensation is budgeted. No anonymous or simulated reviewer will be represented as independent validation.
+
+## Field 8: New Dataset
+
+Yes. The project will create a new 160-trajectory independently authored synthetic dataset covering four previously unused agent-security families. Detector developers will not receive test labels before lock. The public release will exclude real credentials, personal data, functional exploits, and third-party confidential information and will include provenance, schemas, class definitions, limitations, hashes, and a CC-BY-4.0 license.
+
+## Field 9: OpenAI Models
+
+- **Primary comparator:** `gpt-6.1-sol`, event-level Structured Outputs classifier through the Responses API.
+- **Optional robustness analysis:** `gpt-6-astra`, executed only after the primary result and reported separately.
+
+The provider-returned model identifier, configuration, prompt hash, retry policy, tokens, latency, errors, and cost will be recorded. No offline proxy will be presented as an OpenAI-model result.
+
+## Field 10: Availability of Results
+
+Code, schemas, protocols, aggregate results, a sanitized dataset, and the technical report will be released publicly through GitHub and an open archival repository. Positive, null, and negative findings will be published. Case-level material that creates unnecessary misuse risk will be abstracted while preserving enough evidence to reproduce the defensive evaluation.
+
+## Submission Gate
+
+Submit only after English and Portuguese consistency tests pass, model availability and pricing are reverified, repository links and contact details are checked, and the applicant approves the final wording and budget. No field may imply production validation, OpenAI endorsement, or completed v0.6 evidence.

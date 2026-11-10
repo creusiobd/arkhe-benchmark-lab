@@ -1,20 +1,9 @@
-"""
-Unit Tests for ARKHÉ Proposal Consistency & Audit Guardrails
-============================================================
-Verifies:
-1. Exact semantic alignment between English (form_answers_EN.md) and Portuguese (form_answers_PT.md).
-2. Central research question focus: false positive reduction under a 90% recall floor.
-3. Scoped 120-trajectory, 3-family leave-one-family-out experimental design.
-4. Correct detector descriptions (Deterministic, Semantic gpt-4o-mini, ARKHÉ Trajectory Sentinel).
-5. 8-week timeline and $10,000 USD budget ($20 OpenAI credits + $9,480 research stipend + $500 infrastructure).
-6. Word count compliance for Field 3 (<= 200 words).
-7. Strict prohibition of unsubstantiated claims (no guaranteed peer review, no OpenAI partnership claim, no untested models presented as observed facts).
-8. Faithful reflection of verified repository pilot telemetry (268 calls, $0.0290 cost).
-"""
+"""Regression tests for the v0.6 Cybersecurity Grant submission package."""
 
 import os
 import re
 import unittest
+
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 EN_PATH = os.path.join(BASE_DIR, "proposal", "form_answers_EN.md")
@@ -23,193 +12,139 @@ PT_PATH = os.path.join(BASE_DIR, "proposal", "form_answers_PT.md")
 
 class TestProposalConsistency(unittest.TestCase):
     def setUp(self):
-        self.assertTrue(os.path.exists(EN_PATH), f"Missing {EN_PATH}")
-        self.assertTrue(os.path.exists(PT_PATH), f"Missing {PT_PATH}")
+        with open(EN_PATH, encoding="utf-8") as source:
+            self.en_text = source.read()
+        with open(PT_PATH, encoding="utf-8") as source:
+            self.pt_text = source.read()
 
-        with open(EN_PATH, "r", encoding="utf-8") as f:
-            self.en_text = f.read()
-        with open(PT_PATH, "r", encoding="utf-8") as f:
-            self.pt_text = f.read()
+    def test_submission_files_and_briefs_exist(self):
+        self.assertGreater(len(self.en_text), 5_000)
+        self.assertGreater(len(self.pt_text), 5_000)
+        for relative_path in (
+            "proposal/ARKHE_CYBERSECURITY_GRANT_v0.6_EN.md",
+            "proposal/ARKHE_CYBERSECURITY_GRANT_v0.6_PT.md",
+        ):
+            self.assertTrue(os.path.exists(os.path.join(BASE_DIR, relative_path)))
 
-    def test_01_proposal_files_exist_and_non_empty(self):
-        self.assertGreater(len(self.en_text), 2000)
-        self.assertGreater(len(self.pt_text), 2000)
+    def test_problem_statements_respect_200_word_limit(self):
+        match_en = re.search(
+            r"## Field 3: Problem Statement\n\n(.*?)\n\n\*\(Word count:",
+            self.en_text,
+            re.DOTALL,
+        )
+        match_pt = re.search(
+            r"## Campo 3: Descrição do Problema\n\n(.*?)\n\n\*\(Contagem de palavras:",
+            self.pt_text,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(match_en)
+        self.assertIsNotNone(match_pt)
+        self.assertLessEqual(len(match_en.group(1).split()), 200)
+        self.assertLessEqual(len(match_pt.group(1).split()), 200)
 
-    def test_02_central_research_question_present(self):
-        # Must evaluate false positive reduction under recall floor
-        self.assertIn("false positive", self.en_text.lower())
-        self.assertIn("recall floor", self.en_text.lower())
-        self.assertIn("90%", self.en_text)
+    def test_complete_proposals_respect_3000_word_limit(self):
+        match_en = re.search(
+            r"## Field 4: Complete Project Proposal\n\n(.*?)\n\n## Field 5:",
+            self.en_text,
+            re.DOTALL,
+        )
+        match_pt = re.search(
+            r"## Campo 4: Proposta Completa\n\n(.*?)\n\n## Campo 5:",
+            self.pt_text,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(match_en)
+        self.assertIsNotNone(match_pt)
+        self.assertLessEqual(len(match_en.group(1).split()), 3_000)
+        self.assertLessEqual(len(match_pt.group(1).split()), 3_000)
 
-        self.assertIn("falsos positivos", self.pt_text.lower())
-        self.assertIn("piso", self.pt_text.lower())
-        self.assertIn("90%", self.pt_text)
+    def test_v06_scope_is_aligned_across_languages(self):
+        shared_tokens = (
+            "160",
+            "persistent_memory_poisoning",
+            "cross_agent_delegation_confusion",
+            "skill_mcp_supply_chain_compromise",
+            "authorization_identity_drift",
+            "gpt-6.1-sol",
+            "gpt-6-astra",
+            "15",
+            "10,000",
+        )
+        for token in shared_tokens:
+            self.assertIn(token, self.en_text)
+        for token in shared_tokens[:-1] + ("10.000",):
+            self.assertIn(token, self.pt_text)
 
-    def test_03_scope_120_trajectories_and_three_families(self):
-        # 120 trajectories
-        self.assertIn("120", self.en_text)
-        self.assertIn("120", self.pt_text)
+    def test_budget_is_balanced_and_independence_is_funded(self):
+        for token in ("6,200", "2,500", "300", "1,000"):
+            self.assertIn(token, self.en_text)
+        for token in ("6.200", "2.500", "300", "1.000"):
+            self.assertIn(token, self.pt_text)
+        self.assertIn("independent case author/test custodian", self.en_text.lower())
+        self.assertIn("autor independente", self.pt_text.lower())
 
-        # 3 families
-        families = [
-            "indirect_prompt_injection",
-            "tool_scope_expansion",
-            "unauthorized_secret_exposure_or_egress"
-        ]
-        for fam in families:
-            self.assertIn(fam, self.en_text)
-            self.assertIn(fam, self.pt_text)
+    def test_evidence_boundary_is_explicit(self):
+        for text in (self.en_text, self.pt_text):
+            self.assertIn("reproducibility_only", text)
+            self.assertIn("claim_eligibility: none", text)
+            self.assertIn("confirmatory_claims_allowed: false", text)
+            self.assertIn("268", text)
+        self.assertIn("did not establish comparative effectiveness", self.en_text)
+        self.assertIn("não eficácia comparativa", self.pt_text)
 
-        # 40 per family, 48 benign, 36 near-violations, 36 violations
-        self.assertIn("40", self.en_text)
-        self.assertIn("40", self.pt_text)
-        self.assertIn("48", self.en_text)
-        self.assertIn("48", self.pt_text)
-        self.assertIn("36", self.en_text)
-        self.assertIn("36", self.pt_text)
+    def test_v06_is_described_as_planned_not_completed(self):
+        self.assertIn("No v0.6 dataset", self.en_text)
+        self.assertIn("Não existem dataset", self.pt_text)
+        self.assertIn("currently individual", self.en_text)
+        self.assertIn("atualmente individual", self.pt_text)
 
-    def test_04_leave_one_family_out_evaluation(self):
-        self.assertIn("leave-one-family-out", self.en_text.lower())
-        self.assertIn("leave-one-family-out", self.pt_text.lower())
-        self.assertIn("3-fold", self.en_text.lower())
-        self.assertIn("3 folds", self.pt_text.lower())
+    def test_v06_uses_a_sealed_external_test_without_test_calibration(self):
+        self.assertIn("one sealed external test set", self.en_text)
+        self.assertIn("no v0.6 case, label, or prediction is used for calibration", self.en_text)
+        self.assertIn("um único conjunto de teste externo selado", self.pt_text)
+        self.assertIn("nenhum caso, rótulo ou predição da v0.6 será usado para calibração", self.pt_text)
+        self.assertNotIn("leave-one-family-out", self.en_text)
+        self.assertNotIn("quatro folds leave-one-family-out", self.pt_text)
 
-        # Internal evaluation disclosure
-        self.assertIn("internal", self.en_text.lower())
-        self.assertIn("interna", self.pt_text.lower())
+    def test_timeline_seals_manifest_after_case_authoring(self):
+        self.assertLess(self.en_text.index("before test authoring"), self.en_text.index("signed test-manifest hash"))
+        self.assertLess(self.pt_text.index("antes da autoria dos testes"), self.pt_text.index("hash do manifesto assinado"))
 
-    def test_05_detectors_and_models_specifications(self):
-        # Baseline 1
-        self.assertIn("Deterministic", self.en_text)
-        self.assertIn("Determinístico", self.pt_text)
+    def test_current_models_replace_stale_primary_models(self):
+        self.assertNotIn("gpt-4o-mini-2024-07-18", self.en_text)
+        self.assertNotIn("gpt-4o-mini-2024-07-18", self.pt_text)
+        self.assertIn("Structured Outputs", self.en_text)
+        self.assertIn("Structured Outputs", self.pt_text)
 
-        # Baseline 2
-        self.assertIn("gpt-4o-mini-2024-07-18", self.en_text)
-        self.assertIn("gpt-4o-mini-2024-07-18", self.pt_text)
-
-        # Primary detector
-        self.assertIn("ARKHÉ Trajectory Sentinel", self.en_text)
-        self.assertIn("ARKHÉ Trajectory Sentinel", self.pt_text)
-
-        # gpt-4o only as optional robustness check
-        self.assertIn("robustness", self.en_text.lower())
-        self.assertIn("robustez", self.pt_text.lower())
-
-    def test_06_timeline_eight_weeks(self):
-        self.assertIn("8 Weeks", self.en_text)
-        self.assertIn("8 Semanas", self.pt_text)
+    def test_timeline_is_eight_weeks(self):
+        self.assertIn("Week 8", self.en_text)
+        self.assertIn("Semana 8", self.pt_text)
         self.assertNotIn("6 Months", self.en_text)
         self.assertNotIn("6 Meses", self.pt_text)
 
-    def test_07_budget_breakdown_and_justification(self):
-        # Total $10,000
-        self.assertIn("10,000", self.en_text)
-        self.assertIn("10.000", self.pt_text)
-
-        # Credits $20, reconciled to the stated token volumes and current model rates
-        self.assertIn("$20", self.en_text)
-        self.assertIn("US$ 20", self.pt_text)
-
-        # Research stipend $9,480 balances the fixed $10,000 request with $500 infra
-        self.assertIn("9,480", self.en_text)
-        self.assertIn("9.480", self.pt_text)
-
-        # Infrastructure $500
-        self.assertIn("500", self.en_text)
-        self.assertIn("500", self.pt_text)
-
-    def test_08_no_unsubstantiated_claims(self):
-        prohibited_phrases_en = [
-            "guaranteed peer review",
-            "accepted for publication",
+    def test_prohibited_claims_are_absent(self):
+        prohibited = (
             "endorsed by openai",
             "official partnership with openai",
-            "universal immunity",
-            "production proof"
-        ]
-        for phrase in prohibited_phrases_en:
-            self.assertNotIn(phrase, self.en_text.lower())
-
-        prohibited_phrases_pt = [
-            "peer review garantido",
-            "revisão por pares garantida",
+            "production proof",
+            "proven in production",
+            "zero label leakage",
+            "guaranteed peer review",
             "apoiado pela openai",
             "parceria oficial com a openai",
-            "imunidade universal",
-            "provada em produção"
-        ]
-        for phrase in prohibited_phrases_pt:
-            self.assertNotIn(phrase, self.pt_text.lower())
+            "provada em produção",
+            "vazamento zero de rótulos",
+            "revisão por pares garantida",
+        )
+        combined = (self.en_text + "\n" + self.pt_text).lower()
+        for phrase in prohibited:
+            self.assertNotIn(phrase, combined)
 
-        # No mention of o1 as tested
-        self.assertNotIn("o1-preview", self.en_text.lower())
-        self.assertNotIn("o1-preview", self.pt_text.lower())
-
-    def test_09_grounded_in_actual_pilot_results(self):
-        # Real verified pilot numbers from v0.4 live execution
-        self.assertIn("268", self.en_text)
-        self.assertIn("268", self.pt_text)
-        self.assertIn("0.028966", self.en_text)
-        self.assertIn("0,028966", self.pt_text)
-        self.assertIn("147,172", self.en_text)
-        self.assertIn("147.172", self.pt_text)
-
-    def test_10_field_3_word_count_limit(self):
-        # Extract Field 3 in EN
-        match_en = re.search(r"### Field 3: Problem Statement.*?\n\n(.*?)\n\n\*(?:Word count|\(Word count)", self.en_text, re.DOTALL)
-        self.assertIsNotNone(match_en, "Could not extract Field 3 in EN")
-        words_en = match_en.group(1).split()
-        self.assertLessEqual(len(words_en), 200, f"EN Problem Statement exceeded 200 words: {len(words_en)}")
-
-        # Extract Field 3 in PT
-        match_pt = re.search(r"### Campo 3: Descrição do Problema.*?\n\n(.*?)\n\n\*(?:Contagem de palavras|\(Contagem de palavras)", self.pt_text, re.DOTALL)
-        self.assertIsNotNone(match_pt, "Could not extract Campo 3 in PT")
-        words_pt = match_pt.group(1).split()
-        self.assertLessEqual(len(words_pt), 200, f"PT Problem Statement exceeded 200 words: {len(words_pt)}")
-
-    def test_11_metric_denominators_and_outcome_claims_are_explicit(self):
-        self.assertIn("84 non-violation trajectories", self.en_text)
-        self.assertIn("84 trajetórias sem violação", self.pt_text)
-        self.assertIn("prospective", self.en_text.lower())
-        self.assertIn("prospectiva", self.pt_text.lower())
-        self.assertNotIn("Independent Evaluator", self.en_text)
-        self.assertNotIn("Avaliador Independente", self.pt_text)
-        self.assertNotIn("156 passing automated tests", self.en_text)
-        self.assertNotIn("156 testes automatizados aprovados", self.pt_text)
-
-    def test_12_current_pilot_is_disclosed_as_exploratory_all_split_baseline_run(self):
-        for text in (self.en_text.lower(), self.pt_text.lower()):
-            self.assertIn("v0.4_hard", text)
-            self.assertIn("147,172" if text == self.en_text.lower() else "147.172", text)
-        self.assertIn("exploratory", self.en_text.lower())
-        self.assertIn("exploratória", self.pt_text.lower())
-
-
-    def test_13_researcher_access_program_files_exist_and_consistent(self):
-        rap_en_path = os.path.join(BASE_DIR, "proposal", "researcher_access_program_EN.md")
-        rap_pt_path = os.path.join(BASE_DIR, "proposal", "researcher_access_program_PT.md")
-
-        self.assertTrue(os.path.exists(rap_en_path), f"Missing {rap_en_path}")
-        self.assertTrue(os.path.exists(rap_pt_path), f"Missing {rap_pt_path}")
-
-        with open(rap_en_path, "r", encoding="utf-8") as f:
-            rap_en = f.read()
-        with open(rap_pt_path, "r", encoding="utf-8") as f:
-            rap_pt = f.read()
-
-        self.assertIn("1,000", rap_en)
-        self.assertIn("1.000", rap_pt)
-        self.assertIn("text-embedding-3-small", rap_en)
-        self.assertIn("text-embedding-3-small", rap_pt)
-        self.assertIn("gpt-4o-mini", rap_en)
-        self.assertIn("gpt-4o-mini", rap_pt)
-        self.assertIn("120", rap_en)
-        self.assertIn("120", rap_pt)
-        self.assertIn("268", rap_en)
-        self.assertIn("268", rap_pt)
-
-        self.assertNotIn("guaranteed peer review", rap_en.lower())
-        self.assertNotIn("revisão por pares garantida", rap_pt.lower())
+    def test_submission_requires_human_approval(self):
+        self.assertIn("Not submitted", self.en_text)
+        self.assertIn("Não submetido", self.pt_text)
+        self.assertIn("applicant approves", self.en_text)
+        self.assertIn("aprovação final do proponente", self.pt_text)
 
 
 if __name__ == "__main__":
