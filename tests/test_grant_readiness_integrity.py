@@ -168,15 +168,16 @@ class TestGrantReadinessIntegrity(unittest.TestCase):
         self.assertEqual(prediction.final_outcome, "violation_consummated")
         self.assertNotIn("ground_truth_class", prediction.model_dump())
 
-    def test_proposal_protocol_uses_the_declared_primary_denominator(self):
+    def test_proposal_protocol_targets_the_preregistered_v06_design(self):
         for relative_path, expected in (
-            ("proposal/form_answers_EN.md", "84 non-violation trajectories"),
-            ("proposal/form_answers_PT.md", "84 trajetórias sem violação"),
+            ("proposal/form_answers_EN.md", "160 independently authored synthetic trajectories"),
+            ("proposal/form_answers_PT.md", "160 trajetórias sintéticas produzidas independentemente"),
         ):
             with open(os.path.join(ROOT, relative_path), encoding="utf-8") as source:
                 text = source.read()
             self.assertIn(expected, text)
-            self.assertIn("docs/evaluation_protocol_v0.5.md", text)
+            self.assertIn("gpt-6.1-sol", text)
+            self.assertIn("reproducibility_only", text)
 
 
 if __name__ == "__main__":

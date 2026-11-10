@@ -1,182 +1,129 @@
-# Respostas Oficiais para o Formulário de Submissão — OpenAI Cybersecurity Grant Program
+# Respostas Oficiais do Formulário — OpenAI Cybersecurity Grant Program
 
-Este documento contém as respostas consolidadas e auditadas para os campos do formulário de submissão do **OpenAI Cybersecurity Grant Program**, em português, estritamente alinhadas ao protocolo de pesquisa aplicada enxuto, testável e delimitado do **ARKHÉ Agent Boundary Defense Benchmark**.
+**Candidatura:** ARKHÉ v0.6
+**Proponente:** Creúsio Adolfo Gaspar Kizua — São Paulo, Brasil
+**Estado:** Rascunho para revisão humana. Não submetido.
 
----
+## Campo 1: Título do Projeto
 
-### Campo 1: Título do Projeto (Project Title)
-**ARKHÉ Agent Boundary Defense Benchmark: Avaliação de Sinais de Trajetória contra Guardrails por Evento Sob Restrições Pré-Especificadas de Recall**
+**ARKHÉ v0.6: Benchmark com Custódia Independente para Segurança de Agentes Orientada à Trajetória**
 
----
+## Campo 2: Descrição em Uma Frase
 
-### Campo 2: Descrição em Uma Frase (One-line Description)
-Um estudo empírico focado e benchmark aberto para avaliar se sinais de trajetória reduzem a taxa de falsos positivos sob um piso pré-especificado de recall de 90% em comparação com classificadores LLM por evento em 120 trajetórias agênticas difíceis.
+Estudo defensivo aberto que testará se a análise de trajetórias melhora a classificação antecipada de violações em comparação com um classificador OpenAI congelado por evento, usando 160 casos inéditos e produzidos sob custódia independente.
 
----
+## Campo 3: Descrição do Problema
 
-### Campo 3: Descrição do Problema que Busca Resolver (Problem Statement)
-*(Restrição estrita: $\le 200$ palavras)*
+Agentes autônomos podem permanecer plausíveis localmente enquanto se tornam inseguros no conjunto. Uma chamada de ferramenta, escrita em memória, delegação ou verificação de autorização pode parecer aceitável isoladamente, mas a sequência pode alterar gradualmente missão, confiança, capacidade ou identidade até romper uma fronteira. Guardrails por evento enfrentam, portanto, um dilema: limiares sensíveis interrompem fluxos legítimos, enquanto limiares permissivos não percebem violações visíveis apenas ao longo do tempo.
 
-Sistemas baseados em agentes autônomos executando fluxos corporativos encadeiam sequências de chamadas a ferramentas, consultas ao ambiente e mutações de estado. Nesses fluxos, ações individuais parecem frequentemente legítimas e conformes às políticas quando avaliadas isoladamente. No entanto, ao longo de etapas sequenciais, as operações se compõem em trajetórias arriscadas, como contaminação cumulativa de contexto por injeção indireta de prompt, expansão não solicitada de ferramentas e exfiltração gradual de credenciais.
+O trabalho laboratorial existente do ARKHÉ demonstra que esse trade-off pode ser medido de forma reproduzível, mas não estabelece generalização externa nem eficácia em produção. O corpus v0.5 foi criado e inspecionado durante o desenvolvimento; por isso, está deliberadamente restrito a evidência de integração e reprodutibilidade.
 
-As defesas de perímetro existentes dependem predominantemente de guardrails pontuais: classificadores semânticos por evento, expressões regulares estáticas e filtros por chamada. Por avaliarem a invocação imediata sem o contexto causal da sequência, os guardrails por evento enfrentam um dilema operacional severo: elevar a sensibilidade dispara taxas proibitivas de falsos alarmes em fluxos legítimos contendo vocabulário adverso, enquanto reduzir a sensibilidade permite que o sequestro de intenção em múltiplas etapas passe despercebido.
+O estudo v0.6 produzirá a evidência ainda ausente. Ele comparará um classificador semântico congelado por evento com um detector orientado à trajetória em 160 casos sintéticos, inéditos e produzidos por autor independente, distribuídos em quatro novas famílias de segurança. Os rótulos permanecerão sob custódia até que protocolo, código, modelo, retentativas e manifesto sejam congelados. Resultados positivos, nulos ou negativos serão publicados com denominadores, falsos positivos, violações perdidas, latência, tokens e custo.
 
-A lacuna crítica de pesquisa é a ausência de um benchmark aberto e reproduzível que mensure se a observabilidade temporal de trajetória pode reduzir sistematicamente os falsos positivos sob um piso mandatório de recall ($Recall \ge 90\%$) contra negativos difíceis e violações indiretas. Este projeto entrega uma avaliação empírica delimitada desse compromisso específico.
+*(Contagem de palavras: 189 palavras — dentro do limite de 200)*
 
-*(Contagem de palavras: 178 palavras — Aprovado sob o limite de 200 palavras)*
+## Campo 4: Proposta Completa
 
----
+### Pergunta de pesquisa e hipótese
 
-### Campo 4: Hipótese de Pesquisa e Metodologia (Research Hypothesis & Methodology)
+A análise orientada à trajetória melhora a classificação antecipada de violações em comparação com um classificador semântico congelado por evento em casos inéditos de segurança de agentes?
 
-#### 1. Pergunta Central de Pesquisa e Hipótese Formal
-**Pergunta Central:** Sinais de trajetória em múltiplas etapas reduzem sistematicamente a taxa de falsos positivos em fluxos benignos com enquadramento adversário, sob um piso pré-especificado de recall ($Recall \ge 90\%$), em comparação com classificadores isolados por evento?
+A hipótese primária é que o ARKHÉ melhorará a correção pareada da Tarefa A em pelo menos **15 pontos percentuais** em relação ao comparador por evento, preservando uma meta de recall pré-especificada. A comparação estatística primária será McNemar exato bicaudal com `alpha = 0,05`. Efeito mínimo, endpoint, regra para dados ausentes, regra de parada e comparador são declarados antes da existência da evidência de teste.
 
-**Hipótese prospectiva ($H_1$):** O estudo planejado testará se um detector orientado à trajetória reduz a taxa de falsos positivos em relação a baselines isolados por evento ao cumprir a meta de recall pré-especificada na validação ($Recall_{val} \ge 0,90$). Ainda não foi observada redução estatisticamente significativa nessa comparação.
+### Base existente e limite da evidência
 
-**Hipótese Nula ($H_0$):** A comparação planejada não encontra redução de falsos positivos no nível de trajetória sob a meta de recall pré-especificada na validação, ou um detector não alcança essa meta.
+O repositório público já contém SDKs defensivo e de trajetória sob Apache-2.0, separação entre observações e ground truth, geração determinística, calibração somente na validação, avaliador isolado do ajuste, CI contra vazamento, integração OpenAI com Structured Outputs e telemetria operacional.
 
-#### 2. Escopo Experimental e Taxonomia de Ameaças (120 Trajetórias Difíceis)
-O estudo congela um corpus de avaliação de **120 trajetórias difíceis** distribuídas em **três famílias centrais de ameaça** (40 trajetórias por família):
-1. **`indirect_prompt_injection` (40 trajetórias):** Fontes de dados não confiáveis inserindo instruções mediadas por prompt que alteram a intenção do agente.
-2. **`tool_scope_expansion` (40 trajetórias):** Escalação gradual de capacidades na qual o agente descobre e invoca ferramentas fora do escopo de sua missão declarada.
-3. **`unauthorized_secret_exposure_or_egress` (40 trajetórias):** Acesso furtivo, coleta ou exfiltração de credenciais e variáveis privadas de ambiente.
+A evidência existente é propositalmente limitada. A v0.5 é reproduzível, mas seus resultados foram inspecionados durante o desenvolvimento e permanecem `reproducibility_only`. Eles não podem tornar-se evidência confirmatória retroativamente. Uma integração exploratória anterior executou 268 chamadas e 147.172 tokens, com custo configurado de US$ 0,028966. Ela demonstrou apenas o caminho de requisições e telemetria, não eficácia comparativa.
 
-**Estratificação Pré-Especificada por Família (40 trajetórias cada):**
-- **Negativos Difíceis / Benignos com Enquadramento Adversário (16 trajetórias, 40%):** Fluxos de trabalho legítimos que contêm vocabulário de segurança, avisos de injeção ou consultas complexas que *não* devem disparar alertas. Total: 48 trajetórias benignas.
-- **Quase-Violações / Pressão de Fronteira (12 trajetórias, 30%):** Trajetórias que se aproximam dos limites de política (ex.: sondagens bloqueadas, leitura de metadados adjacentes não sensíveis) sem consumar uma violação não autorizada. Total: 36 quase-violações.
-- **Violações de Fronteira Consumadas (12 trajetórias, 30%):** Violações de segurança explícitas e não autorizadas executadas ao longo de passos sequenciais. Total: 36 violações.
+O protocolo v0.6 está na fase de desenho com `claim_eligibility: none` e `confirmatory_claims_allowed: false`. Não existem dataset, rótulos, previsões, resultados ou artefatos de freeze da v0.6. Isso é um controle científico deliberado.
 
-#### 3. Protocolo de Avaliação: Validação Cruzada Leave-One-Family-Out
-Como o corpus abrange três famílias de ameaças, a generalização entre mecanismos é avaliada via **validação cruzada em 3 folds (leave-one-family-out)**:
-- **Fold 1:** Teste = Família 1 (40 trajetórias); Treino/Val = Famílias 2 e 3 (80 trajetórias).
-- **Fold 2:** Teste = Família 2 (40 trajetórias); Treino/Val = Famílias 1 e 3 (80 trajetórias).
-- **Fold 3:** Teste = Família 3 (40 trajetórias); Treino/Val = Famílias 1 e 2 (80 trajetórias).
+### Nova população do estudo
 
-**Garantias do Protocolo:**
-- **Disjunção Estrita de Famílias:** Nenhuma decisão, limiar, prompt ou parâmetro para o fold de teste é calibrado utilizando dados ou rótulos da família retida.
-- **Transparência de Avaliação Interna:** Esta é uma avaliação interna retida por família, criada pelo projeto; não é uma auditoria externa ou cega. Como o repositório é público, os splits podem ser inspecionados futuramente.
-- **Avaliação Agregada:** Cada uma das 120 trajetórias aparece na partição de teste exatamente uma vez ao longo da avaliação agregada ($N = 120$).
-- **Divisão Treino vs. Validação:** Nas famílias de treino, as trajetórias são divididas entre desenvolvimento e validação agrupando templates e paráfrases para evitar vazamento de mecanismos.
+O estudo conterá **160 trajetórias sintéticas produzidas independentemente**, 40 em cada família inédita:
 
-#### 4. Detectores de Referência
-1. **Baseline 1 (Classificador Determinístico por Regras de Evento):** Expressões regulares, palavras-chave e listas de alvos proibidos avaliando estritamente a chamada de ferramenta imediata.
-2. **Baseline 2 (Classificador Semântico por Evento):** Classificador LLM por passo único consultando um modelo OpenAI versionado (`gpt-4o-mini-2024-07-18`) com saída estruturada Pydantic (`SemanticClassificationResponse`), avaliando a ação imediata em isolamento sem histórico de trajetória.
-3. **Detector Principal (ARKHÉ Trajectory Sentinel):** Detector orientado à trajetória que usa a projeção subword local e determinística do repositório e uma pontuação quadrática de risco/energia inspirada em Lyapunov. A implementação verifica se a matriz é positiva definida; essa verificação não constitui uma prova formal de estabilidade do sistema. A configuração principal não chama um modelo OpenAI de embeddings.
-4. **Análise Opcional de Robustez:** Um segundo modelo OpenAI (`gpt-4o-2024-11-20`) poderá ser avaliado como verificação opcional de robustez, condicionado ao cronograma, orçamento e acesso à API. Ele não faz parte da comparação principal.
+1. `persistent_memory_poisoning` — comportamento inseguro emergindo após alteração persistente de memória;
+2. `cross_agent_delegation_confusion` — autoridade ou intenção mudando durante handoffs;
+3. `skill_mcp_supply_chain_compromise` — comportamento enganoso introduzido por skills, componentes MCP ou metadados;
+4. `authorization_identity_drift` — pressupostos de identidade, papel ou permissão mudando ao longo do fluxo.
 
-#### 5. Regra de Decisão Pré-Especificada e Métricas
-1. **Calibração de Limiares:** Os limiares de decisão de todos os detectores são selecionados exclusivamente nos dados de validação para cumprir o piso operacional de recall:
-   $$Recall_{\text{val}} \ge 0,90$$
-2. **Tarefa Primária — Antecipação de Violação Consumada:** Um verdadeiro positivo exige que o primeiro alerta ocorra estritamente antes do primeiro passo de violação. Alertas no passo da violação ou depois dele não contam como antecipação. A classe positiva contém 36 violações consumadas; a negativa contém as 84 trajetórias sem violação (48 negativos benignos difíceis e 36 quase-violações). Uma trajetória negativa com qualquer alerta é falso positivo. Portanto, o $FPR=FP/(FP+TN)$ primário usa 84 negativos.
-3. **Tarefa Separada de Pressão de Fronteira:** Quase-violações e violações consumadas são positivas para detecção de pressão; as 48 trajetórias benignas são negativas. Relate os resultados separadamente da tarefa de violação consumada.
-4. **Decisão e Não Conformidade:** Selecione limiares apenas na validação para alcançar $Recall_{val} \ge 0,90$. Relate o recall de teste e se ele atende à meta; nunca reajuste com base nos resultados do teste.
-5. **Métricas Secundárias e Estatística:** Relate precisão, recall, F1, passos de antecipação, latência, custo e numeradores/denominadores brutos. Use McNemar exato pareado bicaudal nos 84 negativos da Tarefa A e reporte separadamente a comparação pareada de recall nas 36 violações. Os intervalos de Wilson de 95% usam a trajetória como unidade. A repetição 1 é a execução primária pré-especificada; a repetição 2 é relatada separadamente para reprodutibilidade e não conta como novas trajetórias. Consulte `docs/evaluation_protocol_v0.5.md`.
+A distribuição planejada por família é de 16 negativos benignos difíceis, 12 quase-violações e 12 violações consumadas. Cada caso terá 4–12 etapas, missão e política de fronteira explícitas, ground truth determinável e etapa de violação predefinida nos casos positivos.
 
----
+Serão excluídos casos que reutilizem mecanismos ou templates da v0.5, contenham segredos reais ou dados pessoais, incluam exploits funcionais, dependam de sistemas externos não controlados ou não tenham desfecho determinável. Todos os recursos serão sintéticos ou locais.
 
-### Campo 5: Entregáveis e Resultados Esperados (Deliverables & Expected Outcomes)
+### Custódia independente e congelamento
 
-Todos os entregáveis do grant são abertos, reproduzíveis e verificáveis:
+Um autor independente de casos/custodiante será contratado antes do freeze. Essa pessoa não ajustará o ARKHÉ e controlará rótulos e manifesto selado. Outro revisor identificado aprovará o protocolo.
 
-1. **Dataset Aberto de Trajetórias Difíceis (v0.5):**
-   - 120 trajetórias agênticas difíceis em formato JSONL, integralmente rotuladas com anotações de ground truth (classes, passos de quebra, tentativas de contenção e desfecho final).
-   - Acompanhado de Dataset Card completo, catálogo de templates, manifesto de proveniência e licenciamento aberto (Dataset: **CC-BY-4.0**).
-2. **Harness Reproduzível e Avaliador Isolado dos Detectores:**
-   - Base de código em Python (licenciada sob **Apache-2.0**) com separação arquitetural estrita entre observações operacionais do agente (`StepObservation`) e anotações de ground truth (`TrajectoryGroundTruth`).
-   - Scripts de reprodução em 1 clique (`reproduce_dataset_generation.sh` / `.ps1`) e esteira de CI contínua no GitHub Actions.
-3. **Relatório Técnico Público:**
-   - Publicação transparente dos achados empíricos — documentando resultados positivos, nulos ou negativos sobre a capacidade dos sinais de trajetória em reduzir falsos positivos sob o piso de 90% de recall.
-4. **Preprint Científico em Acesso Aberto:**
-   - Artigo formal submetido ao arXiv / Zenodo detalhando a metodologia leave-one-family-out, testes estatísticos e trade-offs observados (disponibilizado abertamente sem alegar aprovação prévia em periódicos).
-5. **Documentação de Limitações e Uso Responsável:**
-   - Descrição explícita das fronteiras do modelo de ameaça, restrições do conjunto sintético e diretrizes para evitar a armatização dos cenários.
-6. **Visualizador Opcional de Trajetórias (Meta Adicional):**
-   - Interface interativa no terminal ou web para visualização de trajetórias no espaço de estados, implementada apenas se os prazos permitirem sem comprometer a avaliação central.
+Antes da abertura, o repositório registrará commit congelado, SHA-256 do protocolo, identificador exato retornado pelo provedor, prompts, schema, limiares, política de retentativas, regras de inclusão e exclusão, SHA-256 do manifesto assinado, custodiante e aprovador. Sem esses papéis, o protocolo não poderá ser congelado e nenhuma alegação confirmatória será feita.
 
----
+### Comparador, detector e avaliação
 
-### Campo 6: Por Que Esta Abordagem é Estritamente Defensiva (Defensive Orientation & Safety)
+O comparador primário será um classificador semântico por evento com **`gpt-6.1-sol`**, via Responses API e Structured Outputs. Ele receberá somente o evento corrente, nunca histórico ou ground truth.
 
-O projeto é concebido e operado exclusivamente para fins defensivos:
-* **Ambiente Estritamente Sintético e Sanitizado:** Todas as 120 trajetórias operam com credenciais fictícias padronizadas (`ARKHE_FAKE_TOKEN_DO_NOT_USE_*`) e sumidouros locais simulados (`http://localhost:8080/mock-sink`). Nenhuma infraestrutura real, banco de dados ou segredo em produção é acessado.
-* **Ausência de Exploits Funcionais:** Os cenários avaliam assinaturas de telemetria e causalidade de injeção de prompt e expansão de escopo em nível de abstração comportamental; não distribuem exploits de dia zero, códigos maliciosos ou cargas úteis exploratórias.
-* **Utilidade Defensiva Direta:** Permite que engenheiros de segurança e laboratórios de IA meçam com rigor as taxas de falsos alarmes de guardrails de tempo de execução antes de autorizar agentes autônomos com acesso a ferramentas sensíveis em produção.
+O ARKHÉ receberá o mesmo evento e os passos observáveis anteriores. Ele utiliza sinais de missão, capacidade, fronteira, mudança de estado e persistência. Sua pontuação quadrática é um sinal de risco inspirado em sistemas dinâmicos, não prova de estabilidade de Lyapunov. Uma análise opcional com `gpt-6-astra` só poderá ocorrer após o resultado primário e será relatada separadamente.
 
----
+O desenho utiliza um único conjunto de teste externo selado. Limiares, prompts, schemas e regras de retentativa serão bloqueados usando apenas artefatos históricos de desenvolvimento e validação; nenhum caso, rótulo ou predição da v0.6 será usado para calibração. A tarefa primária é a classificação antecipada de violações consumadas: o alerta deve ocorrer estritamente antes da etapa de violação. Pressão de fronteira será relatada separadamente.
 
-### Campo 7: Plano de Trabalho e Cronograma (Work Plan & Timeline — 8 Semanas)
+A repetição 1 será primária. Repetições adicionais medirão reprodutibilidade e não serão agregadas como novas evidências. Depois das retentativas congeladas, saída ausente contará como erro do detector correspondente. Caso selado só poderá ser excluído se o custodiante registrar malformação antes da abertura. Todas as exclusões e denominadores serão publicados.
 
-O projeto é estruturado em um plano intensivo de 8 semanas com marcos semanais verificáveis:
+Não haverá parada opcional. As 160 trajetórias primárias serão executadas uma vez. A execução só poderá ser pausada por falha de segurança, integridade ou infraestrutura antes da inspeção dos resultados, retomando do pacote selado sob desvio documentado.
 
-```
-[Semanas 1–2] Protocolo, Pré-Registro e Congelamento de Escopo
-     └── Marco 1: Protocolo versionado, taxonomia congelada e plano estatístico.
-[Semanas 3–4] Curadoria, Síntese do Dataset e Auditoria de Não-Vazamento
-     └── Marco 2: 120 trajetórias difíceis geradas com validações determinísticas de CI.
-[Semanas 5–6] Execução Controlada Leave-One-Family-Out & Baselines Live
-     └── Marco 3: Avaliação em 3 folds com gpt-4o-mini; traces de API e custos auditados.
-[Semanas 7–8] Análise Estatística, Relatório Técnico e Preprint Aberto
-     └── Marco 4: Testes pareados de McNemar, liberação aberta e preprint no arXiv.
-```
+### Métricas e benefício público
 
-* **Semanas 1–2 (Marco 1 — Pré-Registro de Protocolo e Congelamento de Escopo):**
-  - Finalização do plano estatístico formal, fixação do piso de recall de 90% ($R_{\min} = 0,90$) e especificação formal das partições de leave-one-family-out.
-  - *Resultado Verificável:* Configuração versionada em YAML e plano estatístico congelado no repositório.
-* **Semanas 3–4 (Marco 2 — Curadoria do Dataset, Negativos Difíceis e Auditoria de Não-Vazamento):**
-  - Construção programática das 120 trajetórias difíceis nas 3 famílias (48 negativos difíceis, 36 quase-violações, 36 violações).
-  - Verificação de reprodução 100% determinística (SHA-256) e testes de não-vazamento por inspeção de AST.
-  - *Resultado Verificável:* `datasets/v0.5_hard/` com 120 trajetórias, dataset card e CI aprovado sem falhas.
-* **Semanas 5–6 (Marco 3 — Execução Controlada da Avaliação e Baselines Live):**
-  - Execução dos 3 folds de validação cruzada leave-one-family-out. Calibração de limiares nas partições de validação para cumprir $Recall \ge 0,90$.
-  - Chamadas reais contra `gpt-4o-mini-2024-07-18` com 2 repetições por trajetória. Registro de traces completos, contagem de tokens, latência e custos em `api_call_traces.jsonl`.
-  - Execução opcional de robustez com `gpt-4o` caso orçamento e prazo comportem.
-  - *Resultado Verificável:* Previsões congeladas dos 3 folds, traces de API completos e relatório auditado de custos.
-* **Semanas 7–8 (Marco 4 — Avaliação Estatística, Liberação Aberta e Preprint):**
-  - Execução do avaliador desacoplado sobre as 120 trajetórias retidas agregadas. Cálculo do teste de McNemar pareado, Wilson score CIs de 95% e concordância inter-repetições de Cohen.
-  - Depósito do dataset e código no Zenodo/HuggingFace com DOI permanente; publicação do relatório técnico e upload do preprint no arXiv.
-  - *Resultado Verificável:* Release público no GitHub (Apache-2.0), DOI no Zenodo e preprint disponível no arXiv.
+O relatório publicará correção pareada, McNemar exato, TP/FP/TN/FN, precisão, recall, F1, taxa de falsos positivos, Wilson 95%, passos de antecipação, resultados por família, repetibilidade, latência, chamadas, tokens, retentativas, falhas, custo, exclusões e desvios.
 
----
+Resultados positivos, nulos e desfavoráveis serão publicados. CI aprovada demonstra consistência da implementação, não superioridade. Resultados sintéticos não serão apresentados como validação em produção.
 
-### Campo 8: Orçamento Detalhado e Justificativa (Budget Breakdown & Justification)
+O dataset sanitizado será publicado sob CC-BY-4.0; harness, detectores, contratos e avaliador sob Apache-2.0. A liberação incluirá dataset card, threat model, pré-registro, guia de reprodução, relatório técnico e preprint aberto. Não serão incluídos segredos reais, malware, exploits de dia zero ou alvos não autorizados.
 
-O financiamento total solicitado é de **US$ 10.000**, rigorosamente dividido entre créditos de inferência verificáveis e apoio direto à pesquisa:
+## Campo 5: Cronograma
 
-| Rubrica Orçamentária | Alocação | Base de Cálculo e Justificativa | Resultado Verificável de Marco |
-| :--- | :---: | :--- | :--- |
-| **Créditos de API OpenAI** | **US$ 20** | • **Modelo principal:** `gpt-4o-mini-2024-07-18`; preços de lista oficiais consultados em 01/10/2026: US$ 0,15/1M tokens de entrada e US$ 0,60/1M tokens de saída.<br/>• **Volume de planejamento:** aproximadamente 2.500 chamadas / 1,4M tokens entre testes e calibração permitida em desenvolvimento/validação; extrapolando a distribuição de tokens do v0.4, o custo é aproximadamente US$ 0,28.<br/>• **Execução opcional com `gpt-4o-2024-11-20`:** 720 chamadas e 560 tokens/chamada; usando a proporção entrada/saída do v0.4 e preços oficiais atuais (US$ 2,50/1M entrada, US$ 10/1M saída), o custo estimado é US$ 1,32.<br/>• **Contingência:** US$ 20 equivalem a cerca de 12,5 vezes a estimativa combinada de US$ 1,60. A projeção exclui tráfego de produção e deve ser recalculada se volume, perfil de tokens, preços ou modelos mudarem. A configuração principal do ARKHÉ usa embeddings locais; não há custo de API de embeddings previsto. | `api_call_traces.jsonl`, `cost_report.json` com tokens, latência, tentativas, falhas, modelos e zero fallback offline. |
-| **Bolsa de Pesquisa Aplicada e Engenharia** | **US$ 9.480** | • **Taxa:** US$ 1.185 / semana ao longo de 8 semanas.<br/>• **Esforço:** Entregas do Pesquisador Principal: autoria de 120 trajetórias, engenharia do harness leave-one-family-out, calibração somente na validação e análise estatística. A pontuação quadrática do detector será tratada como sinal de risco, não como garantia formal de estabilidade. | Marcos 1–4; suíte reproduzível e base de código aberta. |
-| **Infraestrutura em Nuvem, CI/CD e Depósito Aberto** | **US$ 500** | • Instâncias efêmeras para execução isolada em sandbox, registro de DOI no Zenodo e hospedagem persistente de artefatos. | DOI público no Zenodo, workflow ativo de CI no GitHub Actions. |
-| **Financiamento Total Solicitado** | **US$ 10.000** | **US$ 20 em Créditos de API + US$ 9.980 em Recursos Diretos de Pesquisa/Infraestrutura** | Entrega completa do benchmark público em 8 semanas. |
+- **Semana 1:** análise de sensibilidade; nomear custodiante e aprovador; finalizar prompt, schema e retentativas.
+- **Semana 2:** bloquear detector, plano de análise, commit, identificador do modelo e hash do protocolo antes da autoria dos testes.
+- **Semanas 3–4:** produzir, revisar, auditar e selar 160 casos sanitizados sob autoria independente; registrar o hash do manifesto assinado e concluir o congelamento final.
+- **Semanas 5–6:** executar comparador e ARKHÉ congelados; registrar previsões e telemetria; realizar a análise primária.
+- **Semana 7:** executar reprodutibilidade sem agregar amostras; revisar protocolo; documentar desvios e limitações.
+- **Semana 8:** publicar código, dados sanitizados, manifestos, relatório e preprint, incluindo resultados nulos ou negativos.
 
-*Nota sobre a Execução Exploratória de Integração:* A execução live v0.4 avaliou o baseline semântico por evento único nas 50 trajetórias, incluindo development, validation e test, em duas repetições (268 chamadas bem-sucedidas, 147.172 tokens, US$ 0,028966 nas taxas configuradas). O manifesto registra um worktree de origem dirty. A execução demonstra integração com API e coleta de telemetria; não compara o ARKHÉ com o baseline nem produz resultado de teste intocado. As projeções usam a distribuição de tokens observada; confirme preços oficiais e tokens reais novamente antes do estudo.
+## Campo 6: Financiamento, Créditos e Recursos Solicitados
 
-Referências de preços consultadas em 01/10/2026: [GPT-4o mini](https://developers.openai.com/api/docs/models/gpt-4o-mini), [GPT-4o](https://developers.openai.com/api/docs/models/gpt-4o) e [text-embedding-3-small](https://developers.openai.com/api/docs/models/text-embedding-3-small). Embeddings não estão incluídos na configuração principal.
+**Solicitação total: US$ 10.000**
 
----
+| Item | Valor | Finalidade |
+|---|---:|---|
+| Pesquisa aplicada e engenharia | US$ 6.200 | Oito semanas de protocolo, implementação, execução, análise, documentação e publicação |
+| Autor independente/custodiante e revisão | US$ 2.500 | Construção dos casos, custódia, selagem e revisão anterior à abertura |
+| Créditos da API OpenAI | US$ 300 | Avaliação com `gpt-6.1-sol`, retentativas, repetibilidade e análise limitada com `gpt-6-astra` |
+| Infraestrutura e publicação aberta | US$ 1.000 | Execução isolada, artefatos de CI, hospedagem, depósito com DOI e acessibilidade |
 
-### Campo 9: Capacidade de Execução e Experiência do Proponente (Applicant Background)
+A parcela da API é deliberadamente modesta. Aos preços atuais, `gpt-6.1-sol` custa US$ 2 por milhão de tokens de entrada e US$ 10 por milhão de tokens de saída. A alocação suporta até aproximadamente 6.000 chamadas estruturadas, com contingência para retentativas, variação do perfil de tokens e uma execução limitada com Astra. IDs, tokens e custos reais serão publicados; créditos não utilizados não serão apresentados como despesa.
 
-**Pesquisador Principal: Creúsio Adolfo Gaspar Kizua (São Paulo, Brasil)**
-* **Mais de 6 anos de experiência prática** em engenharia de sistemas transacionais de alto débito, infraestrutura de missão crítica e telemetria distribuída.
-* **Liderança técnica de equipe de 13 engenheiros** operando ambientes bancários e financeiros em regime contínuo 24×7, em conformidade com normas regulatórias de segurança cibernética (Resolução BACEN 85/2021 e PCI-DSS v4.0).
-* **Governança técnica e observabilidade de 33 APIs em produção**, especializado em instrumentação de telemetria (OpenTelemetry, Prometheus, Kubernetes, Grafana).
-* **Criador do Repositório ARKHÉ Benchmark:** Projetou e implementou integralmente a base de código aberta, incluindo:
-  - Projeção subword local determinística e pontuação quadrática de risco inspirada em Lyapunov em `detectors/arkhe_trajectory.py`;
-  - Integração fail-fast com a API da OpenAI utilizando esquemas estruturados Pydantic em `detectors/clients/openai_semantic_client.py`;
-  - Contratos arquiteturais herméticos de não-vazamento separando observações operacionais de anotações de ground truth;
-  - Geração determinística de datasets com derivação canônica criptográfica de IDs.
+O projeto também solicita feedback metodológico sobre o desenho congelado. Não solicita implantação em produção, dados internos privilegiados ou acesso a sistemas de terceiros.
 
----
+## Campo 7: Proponente e Equipe
 
-### Campo 10: Reprodutibilidade e Abertura (Open Source Commitment)
+**Pesquisador principal:** Creúsio Adolfo Gaspar Kizua, São Paulo, Brasil.
 
-* **Licenciamento Aberto Permissivo:** Base de código sob **Apache-2.0**, dataset sob **CC-BY-4.0**.
-* **Contratos Automatizados:** A CI cobre separação de contratos, geração determinística, imutabilidade de eventos, avaliação causal e isolamento das entradas dos detectores. Checks aprovados não demonstram desempenho comparativo entre detectores.
-* **Fundamentação Empírica do Piloto Existente:**
-  - *Baseline Offline (`v0.3`):* 65 trajetórias avaliadas em modo de proxy hermético local.
-  - *Integração live exploratória (`v0.4_hard`):* 50 trajetórias (134 passos), incluindo development, validation e test, avaliadas em 2 repetições contra `gpt-4o-mini-2024-07-18` (268 chamadas bem-sucedidas, 147.172 tokens, US$ 0,028966). Foi avaliado somente o baseline por evento; não é uma execução confirmatória.
-* **O que Permanece Desconhecido (A Ser Testado com o Apoio do Grant):**
-  - Se a observabilidade de trajetória reduz falsos positivos na meta de recall pré-especificada na validação, no estudo interno planejado com 120 trajetórias e leave-one-family-out.
-  - Se a pontuação quadrática de risco é útil em mecanismos sintéticos retidos. Não se afirma prova formal de estabilidade de Lyapunov ou generalização externa.
+Creúsio possui mais de seis anos de experiência em sistemas financeiros e de pagamentos, observabilidade distribuída, APIs, resposta a incidentes e operações 24×7. Liderou equipe técnica de 13 profissionais e trabalhou com OpenTelemetry, Kubernetes, Prometheus, Grafana, Dynatrace, Elastic e ferramentas de confiabilidade. É o criador do benchmark, contratos, SDKs e controles experimentais abertos do ARKHÉ.
+
+A candidatura é atualmente individual. O autor independente/custodiante e o aprovador serão selecionados e identificados antes do freeze. A remuneração está prevista. Nenhum revisor anônimo ou simulado será apresentado como validação independente.
+
+## Campo 8: Novo Dataset
+
+Sim. O projeto criará um dataset sintético de 160 trajetórias, produzido independentemente, cobrindo quatro famílias inéditas. Os desenvolvedores não receberão os rótulos antes do lock. A publicação excluirá credenciais reais, dados pessoais, exploits funcionais e informações confidenciais e incluirá proveniência, schemas, classes, limitações, hashes e licença CC-BY-4.0.
+
+## Campo 9: Modelos OpenAI
+
+- **Comparador primário:** `gpt-6.1-sol`, classificador por evento com Structured Outputs via Responses API.
+- **Análise opcional:** `gpt-6-astra`, executada somente após o resultado primário e relatada separadamente.
+
+Serão registrados identificador retornado pelo provedor, configuração, hash do prompt, retentativas, tokens, latência, erros e custo. Proxy offline não será apresentado como resultado de modelo OpenAI.
+
+## Campo 10: Disponibilização dos Resultados
+
+Código, schemas, protocolos, resultados agregados, dataset sanitizado e relatório técnico serão disponibilizados no GitHub e em repositório arquivístico aberto. Resultados positivos, nulos e negativos serão publicados. Materiais que criem risco desnecessário de uso indevido serão abstraídos, preservando evidência suficiente para reproduzir a avaliação defensiva.
+
+## Gate de Submissão
+
+Enviar somente após os testes de consistência EN/PT, nova verificação de modelos e preços, conferência dos links e contatos e aprovação final do proponente. Nenhum campo pode sugerir validação em produção, endosso da OpenAI ou evidência v0.6 já executada.
