@@ -5,7 +5,6 @@ from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-
 CaseClass = Literal["benign", "near_violation", "violation"]
 
 
@@ -75,8 +74,26 @@ class StatisticsPlan(BaseModel):
     repetition_1: Literal["primary"]
     additional_repetitions: Literal["repeatability_only"]
     pool_repetitions: Literal[False]
+    power_method: Literal["exact_unconditional_mcnemar_two_sided"]
+    target_power: float = Field(..., gt=0.0, lt=1.0)
+    design_discordance_rate: float = Field(..., gt=0.0, le=1.0)
+    sensitivity_discordance_rates: List[float]
     missing_data_rule: Optional[str] = None
     stopping_rule: Optional[str] = None
+
+    @model_validator(mode="after")
+    def validate_sensitivity_plan(self) -> "StatisticsPlan":
+        if not self.sensitivity_discordance_rates:
+            raise ValueError("at least one sensitivity discordance rate is required")
+        if any(rate <= 0.0 or rate > 1.0 for rate in self.sensitivity_discordance_rates):
+            raise ValueError("sensitivity discordance rates must be in (0, 1]")
+        if len(set(self.sensitivity_discordance_rates)) != len(
+            self.sensitivity_discordance_rates
+        ):
+            raise ValueError("sensitivity discordance rates must be unique")
+        if self.design_discordance_rate not in self.sensitivity_discordance_rates:
+            raise ValueError("design discordance rate must be included in sensitivity rates")
+        return self
 
 
 class BlindingPlan(BaseModel):
@@ -127,6 +144,16 @@ class V06Preregistration(BaseModel):
                 raise ValueError("design-stage protocol cannot be marked frozen")
         if self.confirmatory_claims_allowed and self.stage not in {"frozen", "executed"}:
             raise ValueError("confirmatory claims require a frozen protocol")
+        effect = self.primary_hypothesis.minimum_effect_percentage_points
+        if effect is not None:
+            effect_proportion = effect / 100.0
+            if any(
+                rate < effect_proportion
+                for rate in self.statistics.sensitivity_discordance_rates
+            ):
+                raise ValueError(
+                    "discordance rates cannot be below the minimum paired effect"
+                )
         return self
 
     def unresolved_for_freeze(self) -> List[str]:

@@ -9,8 +9,10 @@ import yaml
 from pydantic import ValidationError
 
 from contracts.preregistration import V06Preregistration
-from scripts.validate_v06_preregistration import find_forbidden_design_artifacts, validate
-
+from scripts.validate_v06_preregistration import (
+    find_forbidden_design_artifacts,
+    validate,
+)
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 PROTOCOL_PATH = BASE_DIR / "configs" / "evaluation_protocol_v0.6.yaml"
@@ -81,16 +83,22 @@ class TestV06Preregistration(unittest.TestCase):
         self.assertEqual(protocol.primary_hypothesis.primary_comparator, "semantic_event")
         self.assertEqual(protocol.primary_hypothesis.minimum_effect_percentage_points, 15.0)
         self.assertEqual(protocol.population.source_type, "independent_synthetic")
-        self.assertEqual(protocol.population.total_trajectories, 160)
-        self.assertEqual(protocol.population.trajectories_per_family, 40)
+        self.assertEqual(protocol.population.total_trajectories, 200)
+        self.assertEqual(protocol.population.trajectories_per_family, 50)
         self.assertEqual(
             protocol.population.class_counts_per_family,
-            {"benign": 16, "near_violation": 12, "violation": 12},
+            {"benign": 20, "near_violation": 15, "violation": 15},
         )
         self.assertEqual(len(protocol.population.families), 4)
         self.assertEqual(protocol.split.strategy, "sealed_external_test")
         self.assertEqual(protocol.split.calibration_source, "historical_validation_only")
         self.assertEqual(protocol.models.semantic_model_id, "gpt-6.1-sol")
+        self.assertEqual(
+            protocol.statistics.power_method,
+            "exact_unconditional_mcnemar_two_sided",
+        )
+        self.assertEqual(protocol.statistics.target_power, 0.80)
+        self.assertEqual(protocol.statistics.design_discordance_rate, 0.50)
 
     def test_population_allocation_must_match_declared_total(self):
         raw = copy.deepcopy(self.load_raw())
@@ -153,7 +161,7 @@ class TestV06Preregistration(unittest.TestCase):
         self.assertFalse(report["passed"])
         self.assertFalse(report["manifest_verified"])
         self.assertTrue(
-            any("must contain exactly 40 cases" in error for error in report["errors"])
+            any("must contain exactly 50 cases" in error for error in report["errors"])
         )
 
     def test_freeze_gate_rejects_manifest_modified_after_sealing(self):
