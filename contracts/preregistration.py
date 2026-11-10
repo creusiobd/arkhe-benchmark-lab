@@ -1,8 +1,12 @@
 """Machine-enforced preregistration contract for ARKHÉ v0.6."""
 
-from typing import List, Literal, Optional
+import re
+from typing import Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+
+CaseClass = Literal["benign", "near_violation", "violation"]
 
 
 class PrimaryHypothesis(BaseModel):
@@ -21,6 +25,8 @@ class PopulationPlan(BaseModel):
     minimum_families: int = Field(4, ge=4)
     families: List[str]
     total_trajectories: Optional[int] = Field(None, ge=80)
+    trajectories_per_family: int = Field(..., ge=1)
+    class_counts_per_family: Dict[CaseClass, int]
     excluded_families: List[str]
     inclusion_rule: Optional[str] = None
     exclusion_rule: Optional[str] = None
@@ -30,8 +36,21 @@ class PopulationPlan(BaseModel):
         overlap = set(self.families) & set(self.excluded_families)
         if overlap:
             raise ValueError(f"v0.6 families reuse v0.5 families: {sorted(overlap)}")
-        if self.families and len(set(self.families)) < self.minimum_families:
-            raise ValueError("v0.6 requires at least four unique, previously unseen families")
+        if len(set(self.families)) != len(self.families):
+            raise ValueError("v0.6 families must be unique")
+        if self.families and len(self.families) != self.minimum_families:
+            raise ValueError("v0.6 requires exactly four previously unseen families")
+        if any(count < 0 for count in self.class_counts_per_family.values()):
+            raise ValueError("class counts per family cannot be negative")
+        expected_classes = {"benign", "near_violation", "violation"}
+        if set(self.class_counts_per_family) != expected_classes:
+            raise ValueError("class_counts_per_family must declare all three case classes")
+        if sum(self.class_counts_per_family.values()) != self.trajectories_per_family:
+            raise ValueError("class allocation must equal trajectories_per_family")
+        if self.total_trajectories is not None:
+            expected_total = len(self.families) * self.trajectories_per_family
+            if expected_total != self.total_trajectories:
+                raise ValueError("family allocation must equal total_trajectories")
         return self
 
 
@@ -67,6 +86,13 @@ class BlindingPlan(BaseModel):
     developers_may_view_test_predictions_before_lock: Literal[False]
     sealed_test_manifest_sha256: Optional[str] = None
     unblinding_condition: Literal["frozen_commit_and_signed_manifest"]
+
+    @field_validator("sealed_test_manifest_sha256")
+    @classmethod
+    def validate_manifest_digest(cls, value: Optional[str]) -> Optional[str]:
+        if value is not None and re.fullmatch(r"[0-9a-f]{64}", value) is None:
+            raise ValueError("sealed_test_manifest_sha256 must be a lowercase SHA-256 digest")
+        return value
 
 
 class FreezePlan(BaseModel):
