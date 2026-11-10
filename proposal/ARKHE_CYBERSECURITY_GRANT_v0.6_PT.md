@@ -22,13 +22,14 @@ independente, sobre controles de segurança de agentes orientados à trajetória
 
 ## Estudo financiado
 
-- 160 trajetórias sintéticas produzidas por autor independente;
+- 200 trajetórias sintéticas produzidas por autor independente, 50 por família;
 - quatro famílias inéditas: envenenamento de memória persistente, confusão de
   delegação entre agentes, comprometimento da cadeia de skills/MCP e deriva de
   autorização/identidade;
 - comparador primário: `gpt-6.1-sol` por evento com Structured Outputs;
 - endpoint primário: correção pareada da classificação antecipada;
 - efeito mínimo relevante de 15 pontos percentuais;
+- poder exato de 83,64% no cenário de desenho pré-declarado com 50% de discordância;
 - McNemar exato, intervalos de Wilson e telemetria completa;
 - publicação de resultados positivos, nulos e negativos.
 
@@ -42,8 +43,8 @@ esses requisitos, nenhuma execução confirmatória ocorrerá.
 
 | Item | Valor |
 |---|---:|
-| Pesquisa aplicada e engenharia | US$ 6.200 |
-| Autor independente/custodiante e revisão | US$ 2.500 |
+| Pesquisa aplicada e engenharia | US$ 5.700 |
+| Autor independente/custodiante e revisão | US$ 3.000 |
 | Créditos da API OpenAI | US$ 300 |
 | Infraestrutura e publicação aberta | US$ 1.000 |
 | **Total** | **US$ 10.000** |

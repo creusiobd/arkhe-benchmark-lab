@@ -17,7 +17,7 @@ reprodutibilidade e v0.6 ainda em desenho, sem evidência confirmatória.
 
 ## Resultado atual
 
-- quatro famílias inéditas e 160 trajetórias planejadas em um teste externo selado;
+- quatro famílias inéditas e 200 trajetórias planejadas em um teste externo selado;
 - comparador primário `gpt-6.1-sol`;
 - efeito mínimo relevante de 15 pontos percentuais;
 - regras de ausência e parada registradas;
@@ -26,14 +26,24 @@ reprodutibilidade e v0.6 ainda em desenho, sem evidência confirmatória.
 
 ## Endurecimento pós-PR #14
 
-- distribuição contratual: 40 casos por família;
-- classes contratuais por família: 16 benignos, 12 quase violações e 12 violações;
+- distribuição contratual: 50 casos por família;
+- classes contratuais por família: 20 benignos, 15 quase violações e 15 violações;
 - SHA-256 do manifesto aceita somente 64 caracteres hexadecimais minúsculos;
 - gate de freeze confere o manifesto privado, sua composição, IDs únicos e hashes de
   conteúdo sem publicar os rótulos;
 - manifesto vinculado ao ID e à versão do protocolo, com conteúdos duplicados
   rejeitados;
 - hipótese exploratória H2 alinhada às quatro famílias da v0.6.
+
+## Sensibilidade prospectiva
+
+- método: poder exato incondicional para McNemar bicaudal;
+- efeito mínimo: 15 pontos percentuais; `alpha = 0,05`; poder-alvo de 80%;
+- cenário de desenho: 50% de discordância total;
+- `n = 200`: poder de 83,64%; mínimo exato de 183;
+- cenário de 60%: poder de 76,11%, mantido como limitação explícita;
+- orçamento realocado: US$ 5.700 para engenharia e US$ 3.000 para autoria,
+  custódia e revisão, sem alterar o total de US$ 10.000.
 
 ## Próxima hipótese e ação
 

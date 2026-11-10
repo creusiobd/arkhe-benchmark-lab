@@ -21,12 +21,13 @@ study of trajectory-aware agent-security controls.
 
 ## Funded study
 
-- 160 independently authored synthetic trajectories;
+- 200 independently authored synthetic trajectories, 50 per family;
 - four new families: persistent memory poisoning, cross-agent delegation confusion,
   skill/MCP supply-chain compromise, and authorization/identity drift;
 - one primary comparator: event-level `gpt-6.1-sol` with Structured Outputs;
 - one primary endpoint: paired timely-classification correctness;
 - 15-percentage-point minimum relevant effect;
+- 83.64% exact power at the predeclared 50% discordance design scenario;
 - exact McNemar primary test, Wilson intervals, and full operational telemetry;
 - publication of positive, null, and negative results.
 
@@ -40,8 +41,8 @@ test-manifest SHA-256. Without those requirements, no confirmatory execution occ
 
 | Item | Amount |
 |---|---:|
-| Applied research and engineering | USD 6,200 |
-| Independent author/custodian and review | USD 2,500 |
+| Applied research and engineering | USD 5,700 |
+| Independent author/custodian and review | USD 3,000 |
 | OpenAI API credits | USD 300 |
 | Infrastructure and open dissemination | USD 1,000 |
 | **Total** | **USD 10,000** |
