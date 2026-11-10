@@ -4,7 +4,6 @@ import os
 import re
 import unittest
 
-
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 EN_PATH = os.path.join(BASE_DIR, "proposal", "form_answers_EN.md")
 PT_PATH = os.path.join(BASE_DIR, "proposal", "form_answers_PT.md")
@@ -83,6 +82,18 @@ class TestProposalConsistency(unittest.TestCase):
         self.assertIn("independent case author/test custodian", self.en_text.lower())
         self.assertIn("autor independente", self.pt_text.lower())
 
+    def test_funding_levels_preserve_evidence_boundaries(self):
+        self.assertIn("USD 5,000 direct funding plus USD 300", self.en_text)
+        self.assertIn("US$ 5.000 em financiamento direto mais US$ 300", self.pt_text)
+        self.assertIn("USD 300 API credits only", self.en_text)
+        self.assertIn("Somente US$ 300 em créditos de API", self.pt_text)
+        self.assertIn("v0.6 study would not execute", self.en_text)
+        self.assertIn("estudo v0.6 com autoria independente não será executado", self.pt_text)
+
+    def test_public_answers_exclude_private_email(self):
+        combined = self.en_text + "\n" + self.pt_text
+        self.assertNotRegex(combined, r"[A-Za-z0-9._%+-]+@gmail\.com")
+
     def test_evidence_boundary_is_explicit(self):
         for text in (self.en_text, self.pt_text):
             self.assertIn("reproducibility_only", text)
@@ -157,6 +168,8 @@ class TestProposalConsistency(unittest.TestCase):
         self.assertIn("Não submetido", self.pt_text)
         self.assertIn("applicant approves", self.en_text)
         self.assertIn("aprovação final do proponente", self.pt_text)
+        self.assertIn("Personal email must remain outside", self.en_text)
+        self.assertIn("e-mail pessoal deve permanecer fora", self.pt_text)
 
 
 if __name__ == "__main__":
