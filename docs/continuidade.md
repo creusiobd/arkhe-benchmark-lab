@@ -24,6 +24,16 @@ reprodutibilidade e v0.6 ainda em desenho, sem evidência confirmatória.
 - candidatura EN/PT atualizada para solicitar US$ 10.000;
 - protocolo permanece corretamente em `stage: design` e não pode congelar.
 
+## Marco de submissão — 10/11/2026
+
+- candidatura v0.6 submetida ao OpenAI Cybersecurity Grant Program;
+- orçamento total solicitado: **US$ 10.000**, composto por **US$ 9.700** em
+  financiamento direto e **US$ 300** em créditos de API;
+- a página oficial confirmou o recebimento da candidatura;
+- nenhum número de protocolo foi exibido;
+- próximo passo: **aguardar contato da OpenAI** pelo e-mail informado na
+  candidatura e evitar submissão duplicada.
+
 ## Endurecimento pós-PR #14
 
 - distribuição contratual: 50 casos por família;
@@ -51,8 +61,12 @@ reprodutibilidade e v0.6 ainda em desenho, sem evidência confirmatória.
 pré-registrado é mais defensável do que uma candidatura que tenta promover os
 resultados internos v0.5.
 
-**Próximas ações:** revisar a sensibilidade da amostra; reconfirmar modelo e preços;
-obter aprovação humana do texto; publicar a branch em PR sem merge e sem submeter o
-formulário. Depois de eventual financiamento, bloquear detector e análise antes da
+**Estado da decisão:** a candidatura foi revisada, aprovada e submetida em
+10/11/2026.
+
+**Próximas ações:** aguardar contato da OpenAI; monitorar a caixa de entrada e o
+spam do e-mail informado; preservar a versão submetida e as evidências associadas;
+não reenviar o formulário sem que exista uma revisão material e explicitamente
+versionada. Depois de eventual financiamento, bloquear detector e análise antes da
 autoria independente, selar o manifesto somente após a criação dos casos e então
 congelar o protocolo para execução.
