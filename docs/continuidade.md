@@ -31,6 +31,8 @@ reprodutibilidade e v0.6 ainda em desenho, sem evidência confirmatória.
 - SHA-256 do manifesto aceita somente 64 caracteres hexadecimais minúsculos;
 - gate de freeze confere o manifesto privado, sua composição, IDs únicos e hashes de
   conteúdo sem publicar os rótulos;
+- manifesto vinculado ao ID e à versão do protocolo, com conteúdos duplicados
+  rejeitados;
 - hipótese exploratória H2 alinhada às quatro famílias da v0.6.
 
 ## Próxima hipótese e ação

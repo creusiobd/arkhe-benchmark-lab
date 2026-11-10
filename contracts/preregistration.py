@@ -36,8 +36,10 @@ class PopulationPlan(BaseModel):
         overlap = set(self.families) & set(self.excluded_families)
         if overlap:
             raise ValueError(f"v0.6 families reuse v0.5 families: {sorted(overlap)}")
-        if self.families and len(set(self.families)) < self.minimum_families:
-            raise ValueError("v0.6 requires at least four unique, previously unseen families")
+        if len(set(self.families)) != len(self.families):
+            raise ValueError("v0.6 families must be unique")
+        if self.families and len(self.families) != self.minimum_families:
+            raise ValueError("v0.6 requires exactly four previously unseen families")
         if any(count < 0 for count in self.class_counts_per_family.values()):
             raise ValueError("class counts per family cannot be negative")
         expected_classes = {"benign", "near_violation", "violation"}

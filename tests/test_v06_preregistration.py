@@ -34,7 +34,11 @@ class TestV06Preregistration(unittest.TestCase):
                             "content_sha256": hashlib.sha256(case_id.encode()).hexdigest(),
                         }
                     )
-        return {"protocol_id": raw["protocol_id"], "cases": cases}
+        return {
+            "protocol_id": raw["protocol_id"],
+            "protocol_version": raw["version"],
+            "cases": cases,
+        }
 
     def write_freeze_candidate(self, root, raw, manifest):
         manifest_path = root / "private_manifest.json"
@@ -91,6 +95,13 @@ class TestV06Preregistration(unittest.TestCase):
     def test_population_allocation_must_match_declared_total(self):
         raw = copy.deepcopy(self.load_raw())
         raw["population"]["trajectories_per_family"] = 39
+        with self.assertRaises(ValidationError):
+            V06Preregistration.model_validate(raw)
+
+    def test_population_must_keep_exactly_four_unique_families(self):
+        raw = copy.deepcopy(self.load_raw())
+        raw["population"]["families"].append("fifth_family")
+        raw["population"]["total_trajectories"] = 200
         with self.assertRaises(ValidationError):
             V06Preregistration.model_validate(raw)
 
@@ -185,6 +196,49 @@ class TestV06Preregistration(unittest.TestCase):
         self.assertIn(
             "sealed manifest protocol_id does not match the protocol",
             report["errors"],
+        )
+
+    def test_freeze_gate_rejects_manifest_for_another_protocol_version(self):
+        raw = copy.deepcopy(self.load_raw())
+        manifest = self.build_manifest(raw)
+        manifest["protocol_version"] = "0.6.0-other"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            protocol_path, manifest_path = self.write_freeze_candidate(
+                root, raw, manifest
+            )
+            report = validate(
+                protocol_path,
+                require_freezable=True,
+                manifest_path=manifest_path,
+                base_dir=root,
+            )
+        self.assertFalse(report["passed"])
+        self.assertIn(
+            "sealed manifest protocol_version does not match the protocol",
+            report["errors"],
+        )
+
+    def test_freeze_gate_rejects_duplicate_case_content(self):
+        raw = copy.deepcopy(self.load_raw())
+        manifest = self.build_manifest(raw)
+        manifest["cases"][1]["content_sha256"] = manifest["cases"][0][
+            "content_sha256"
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            protocol_path, manifest_path = self.write_freeze_candidate(
+                root, raw, manifest
+            )
+            report = validate(
+                protocol_path,
+                require_freezable=True,
+                manifest_path=manifest_path,
+                base_dir=root,
+            )
+        self.assertFalse(report["passed"])
+        self.assertTrue(
+            any("duplicate content_sha256" in error for error in report["errors"])
         )
 
     def test_freeze_gate_requires_the_private_manifest(self):

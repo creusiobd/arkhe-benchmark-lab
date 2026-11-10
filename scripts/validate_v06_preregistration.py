@@ -57,6 +57,8 @@ def verify_sealed_manifest(
         return errors + ["sealed manifest must contain a cases array"]
     if payload.get("protocol_id") != protocol.protocol_id:
         errors.append("sealed manifest protocol_id does not match the protocol")
+    if payload.get("protocol_version") != protocol.version:
+        errors.append("sealed manifest protocol_version does not match the protocol")
 
     cases = payload["cases"]
     expected_total = protocol.population.total_trajectories
@@ -64,6 +66,7 @@ def verify_sealed_manifest(
         errors.append(f"manifest must contain exactly {expected_total} cases")
 
     case_ids = set()
+    content_digests = set()
     family_counts: Counter[str] = Counter()
     class_counts: Counter[tuple[str, str]] = Counter()
     allowed_families = set(protocol.population.families)
@@ -100,6 +103,10 @@ def verify_sealed_manifest(
             r"[0-9a-f]{64}", content_digest
         ) is None:
             errors.append(f"{prefix}.content_sha256 must be a lowercase SHA-256 digest")
+        elif content_digest in content_digests:
+            errors.append(f"duplicate content_sha256: {content_digest}")
+        else:
+            content_digests.add(content_digest)
 
     for family in protocol.population.families:
         expected_family_total = protocol.population.trajectories_per_family
