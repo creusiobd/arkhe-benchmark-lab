@@ -49,7 +49,7 @@ ARKHÉ models and benchmarks defensive responses across **5 priority boundary vi
 > **H1 (v0.6 design stage):** ARKHÉ will test whether trajectory-aware analysis improves paired timely-classification correctness by at least 15 percentage points over one frozen semantic event-level comparator on 160 independently authored, previously unseen cases. This is a preregistered research hypothesis, not an observed result.
 
 ### Secondary Hypothesis (Exploratory)
-> **H2 (Anticipatory Lead Time):** In progressive violation patterns involving multi-step reconnaissance or indirect prompt propagation, trajectory-aware sentinels can produce early alerts ($N_{\text{lead}} \ge 1$ step) prior to irreversible boundary breaches.
+> **H2 (Anticipatory Lead Time):** Across persistent memory poisoning, cross-agent delegation confusion, skill/MCP supply-chain compromise, and authorization/identity drift, ARKHÉ may produce an alert at least one step before the predeclared violation. This remains exploratory and is not pooled into the primary endpoint.
 
 ---
 

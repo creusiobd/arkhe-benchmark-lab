@@ -27,6 +27,11 @@ population:
     - skill_mcp_supply_chain_compromise
     - authorization_identity_drift
   total_trajectories: 160
+  trajectories_per_family: 40
+  class_counts_per_family:
+    benign: 16
+    near_violation: 12
+    violation: 12
   excluded_families:
     - indirect_prompt_injection
     - tool_scope_expansion

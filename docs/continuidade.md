@@ -24,6 +24,15 @@ reprodutibilidade e v0.6 ainda em desenho, sem evidência confirmatória.
 - candidatura EN/PT atualizada para solicitar US$ 10.000;
 - protocolo permanece corretamente em `stage: design` e não pode congelar.
 
+## Endurecimento pós-PR #14
+
+- distribuição contratual: 40 casos por família;
+- classes contratuais por família: 16 benignos, 12 quase violações e 12 violações;
+- SHA-256 do manifesto aceita somente 64 caracteres hexadecimais minúsculos;
+- gate de freeze confere o manifesto privado, sua composição, IDs únicos e hashes de
+  conteúdo sem publicar os rótulos;
+- hipótese exploratória H2 alinhada às quatro famílias da v0.6.
+
 ## Próxima hipótese e ação
 
 **Hipótese:** uma candidatura que financia custódia independente e um teste v0.6
