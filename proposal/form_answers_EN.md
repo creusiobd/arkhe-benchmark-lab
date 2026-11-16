@@ -2,7 +2,8 @@
 
 **Submission candidate:** ARKHÉ v0.6
 **Applicant:** Creusio Adolfo Gaspar Kizua — São Paulo, Brazil
-**Status:** Draft for human review. Not submitted.
+**Submission status:** Submitted on 2026-11-10. OpenAI receipt email received; review pending.
+**Record note:** This repository file is the versioned proposal reference. The exact field-by-field payload submitted through the external form has not been independently archived, so verbatim identity is not asserted.
 
 ## Field 1: Project Title
 
@@ -138,6 +139,8 @@ The provider-returned model identifier, configuration, prompt hash, retry policy
 
 Code, schemas, protocols, aggregate results, a sanitized dataset, and the technical report will be released publicly through GitHub and an open archival repository. Positive, null, and negative findings will be published. Case-level material that creates unnecessary misuse risk will be abstracted while preserving enough evidence to reproduce the defensive evaluation.
 
-## Submission Gate
+## Submission Record
 
-Submit only after English and Portuguese consistency tests pass, model availability and pricing are reverified, repository links and private contact details are checked, and the applicant approves the final wording, budget, program terms, and external submission. No field may imply production validation, OpenAI endorsement, or completed v0.6 evidence. Personal email must remain outside the public repository.
+The v0.6 application was submitted on 2026-11-10. An acknowledgment email from `noreply@openai.com` was received the same day, thanking the applicant for the submission and explaining that proposals are reviewed on a rolling basis. No application or tracking number was included in that email. This record confirms receipt only, not selection, funding, endorsement, or partnership.
+
+The text in this repository remains the versioned proposal reference. The exact field-by-field payload submitted through the external form has not been independently archived; do not describe this file as a verbatim export. Do not submit a duplicate application unless OpenAI requests it or a material, versioned correction is explicitly warranted. Personal email must remain outside the public repository.
