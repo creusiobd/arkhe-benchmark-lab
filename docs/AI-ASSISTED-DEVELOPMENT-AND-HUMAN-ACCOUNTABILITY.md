@@ -88,9 +88,9 @@ The following artifacts provide evidence of project direction, engineering contr
 
 ### 4.1 Repository consistency issue to resolve
 
-At the current `main` snapshot, `docs/continuidade.md` records a v0.6 submission on 2026-11-10 and states that the application receipt was confirmed. However, the reviewed application answer files, English proposal brief, and README badge still describe the application as a draft or not submitted.
+The repository records the v0.6 submission on 2026-11-10. The acknowledgment email from `noreply@openai.com`, received on that date, thanks the applicant for the submission and states that proposals are reviewed on a rolling basis. It provides no application number and does not indicate selection or funding.
 
-This is a documentation inconsistency. It must be reconciled in a separate, evidence-based update using the actual submission confirmation and the exact submitted version. This document does not silently resolve that discrepancy.
+The documentation was reconciled in a follow-up change: the English and Portuguese form-answer references, both proposal briefs, and the README badge now state that the application was submitted and receipt acknowledged, with review pending. These files are versioned proposal references, not verified verbatim exports of the external form payload. The actual acknowledgment is retained in the applicant's email account; the repository records its substance without publishing private correspondence.
 
 ## 5. Verification model and limits
 
