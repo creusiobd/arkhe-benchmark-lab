@@ -2,7 +2,8 @@
 
 **Candidatura:** ARKHÉ v0.6
 **Proponente:** Creusio Adolfo Gaspar Kizua — São Paulo, Brasil
-**Estado:** Rascunho para revisão humana. Não submetido.
+**Estado da submissão:** Enviada em 10/11/2026. E-mail de recebimento da OpenAI recebido; análise pendente.
+**Nota de registro:** Este arquivo é a referência versionada da proposta no repositório. O conteúdo exato, campo a campo, enviado pelo formulário externo não foi arquivado de forma independente; portanto, não se afirma identidade literal.
 
 ## Campo 1: Título do Projeto
 
@@ -138,6 +139,8 @@ Serão registrados identificador retornado pelo provedor, configuração, hash d
 
 Código, schemas, protocolos, resultados agregados, dataset sanitizado e relatório técnico serão disponibilizados no GitHub e em repositório arquivístico aberto. Resultados positivos, nulos e negativos serão publicados. Materiais que criem risco desnecessário de uso indevido serão abstraídos, preservando evidência suficiente para reproduzir a avaliação defensiva.
 
-## Gate de Submissão
+## Registro de Submissão
 
-Enviar somente após os testes de consistência EN/PT, nova verificação de modelos e preços, conferência dos links e contatos privados e aprovação final do proponente sobre texto, orçamento, termos do programa e submissão externa. Nenhum campo pode sugerir validação em produção, endosso da OpenAI ou evidência v0.6 já executada. O e-mail pessoal deve permanecer fora do repositório público.
+A candidatura v0.6 foi enviada em 10/11/2026. No mesmo dia, foi recebido um e-mail de confirmação de `noreply@openai.com`, agradecendo o envio e informando que as propostas são analisadas de forma contínua. O e-mail não apresentou número de candidatura ou protocolo. Este registro confirma o recebimento, não seleção, financiamento, endosso ou parceria.
+
+O texto deste repositório permanece como referência versionada da proposta. O conteúdo exato, campo a campo, enviado pelo formulário externo não foi arquivado de forma independente; não descrever este arquivo como exportação literal. Não enviar uma candidatura duplicada, salvo solicitação da OpenAI ou correção material, versionada e expressamente justificada. O e-mail pessoal deve permanecer fora do repositório público.

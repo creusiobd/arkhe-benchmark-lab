@@ -26,6 +26,14 @@ reprodutibilidade e v0.6 ainda em desenho, sem evidência confirmatória.
 
 ## Marco de submissão — 10/11/2026
 
+- evidência primária: e-mail de confirmação da OpenAI recebido em 10/11/2026,
+  assunto `OpenAI Security Grant Program submission confirmation`, remetente
+  `noreply@openai.com`;
+- a mensagem agradece o envio e informa análise contínua das propostas; não
+  comunica seleção, financiamento ou número de candidatura;
+- os arquivos do repositório são referências versionadas da proposta, não uma
+  exportação literal verificada dos campos enviados no formulário externo.
+
 - candidatura v0.6 submetida ao OpenAI Cybersecurity Grant Program;
 - orçamento total solicitado: **US$ 10.000**, composto por **US$ 9.700** em
   financiamento direto e **US$ 300** em créditos de API;
