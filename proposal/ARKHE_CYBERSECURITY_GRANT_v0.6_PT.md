@@ -1,6 +1,7 @@
 # ARKHÉ v0.6 — Resumo da Candidatura ao OpenAI Cybersecurity Grant
 
-**Estado:** Rascunho candidato; não submetido.
+**Estado da submissão:** Enviada em 10/11/2026; recebimento confirmado por e-mail da OpenAI; análise pendente.
+**Limite do registro:** Este resumo é a referência versionada da proposta no repositório, não uma exportação literal verificada do formulário externo.
 **Respostas canônicas:** [`form_answers_PT.md`](form_answers_PT.md)
 **Versão em inglês:** [`form_answers_EN.md`](form_answers_EN.md)
 
@@ -49,8 +50,10 @@ esses requisitos, nenhuma execução confirmatória ocorrerá.
 | Infraestrutura e publicação aberta | US$ 1.000 |
 | **Total** | **US$ 10.000** |
 
-## Regra de submissão
+## Registro de submissão
 
-As respostas canônicas devem passar nos testes EN/PT e na revisão humana. O envio
-depende de autorização expressa do proponente. Este documento não representa apoio,
-seleção ou parceria da OpenAI.
+A candidatura v0.6 foi enviada em 10/11/2026. A OpenAI confirmou o recebimento por
+e-mail na mesma data e informou que as propostas são analisadas de forma contínua.
+Nenhum número de candidatura foi fornecido. O recebimento não implica seleção,
+financiamento, endosso ou parceria. Não enviar candidatura duplicada, salvo se a
+OpenAI solicitar ou se houver correção material, versionada e expressamente justificada.
