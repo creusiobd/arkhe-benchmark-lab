@@ -1,6 +1,7 @@
 # ARKHÉ v0.6 — OpenAI Cybersecurity Grant Submission Brief
 
-**Status:** Candidate draft; not submitted.
+**Submission status:** Submitted on 2026-11-10; receipt acknowledged by OpenAI; review pending.
+**Record limitation:** This brief is the repository's versioned proposal reference, not a verified verbatim export of the external form payload.
 **Canonical form answers:** [`form_answers_EN.md`](form_answers_EN.md)
 **Portuguese review copy:** [`form_answers_PT.md`](form_answers_PT.md)
 
@@ -47,8 +48,10 @@ test-manifest SHA-256. Without those requirements, no confirmatory execution occ
 | Infrastructure and open dissemination | USD 1,000 |
 | **Total** | **USD 10,000** |
 
-## Submission rule
+## Submission record
 
-The canonical form answers must pass automated EN/PT checks and human review.
-Submission requires the applicant's explicit approval. This document is not evidence
-of OpenAI support, selection, or partnership.
+The v0.6 application was submitted on 2026-11-10. OpenAI acknowledged receipt by
+email on the same date and stated that proposals are reviewed on a rolling basis.
+No application number was provided. Receipt does not imply selection, funding,
+endorsement, or partnership. Do not submit a duplicate application unless OpenAI
+requests it or a material, versioned correction is explicitly warranted.
